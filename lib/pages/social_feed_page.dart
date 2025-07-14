@@ -8,6 +8,9 @@ import '../services/auth_service.dart';
 import '../widgets/dice_loading_widget.dart';
 import '../utils/loading_utils.dart';
 import 'picks/create_pick_page.dart';
+import 'dart:async';
+import 'dart:convert';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SocialFeedPage extends StatefulWidget {
   const SocialFeedPage({Key? key}) : super(key: key);
@@ -31,12 +34,174 @@ class _SocialFeedPageState extends State<SocialFeedPage> {
   bool _hasMore = true;
 
   final ScrollController _scrollController = ScrollController();
+  StreamSubscription<List<Map<String, dynamic>>>? _postsSubscription;
 
   @override
   void initState() {
     super.initState();
     _loadPosts();
     _scrollController.addListener(_onScroll);
+    _setupRealTimeUpdates();
+  }
+
+  void _setupRealTimeUpdates() {
+    try {
+      // Listen to real-time updates for new posts
+      // Only listen for posts created in the last hour to avoid loading too much data
+      final oneHourAgo = DateTime.now().subtract(const Duration(hours: 1)).toUtc().toIso8601String();
+      
+      _postsSubscription = SupabaseConfig.supabase
+          .from('posts')
+          .stream(primaryKey: ['id'])
+          .gte('created_at', oneHourAgo)
+          .order('created_at', ascending: false)
+          .listen(
+            (List<Map<String, dynamic>> data) {
+              _handleRealTimeUpdate(data);
+            },
+            onError: (error) {
+              print('Real-time subscription error: $error');
+              // Optionally retry the subscription after a delay
+              Future.delayed(const Duration(seconds: 5), () {
+                if (mounted) {
+                  _setupRealTimeUpdates();
+                }
+              });
+            },
+          );
+    } catch (e) {
+      print('Error setting up real-time updates: $e');
+    }
+  }
+
+  void _handleRealTimeUpdate(List<Map<String, dynamic>> data) async {
+    if (data.isEmpty || !mounted) return;
+    
+    // Process only new posts that aren't already in our list
+    final newPosts = <dynamic>[];
+    
+    for (final postData in data) {
+      final postId = postData['id'];
+      
+      // Check if this post is already in our list
+      bool postExists = _posts.any((post) {
+        final id = post is Post ? post.id : (post as PickPost).id;
+        return id == postId;
+      });
+      
+      if (!postExists) {
+        try {
+          // Fetch the full post data with profile information
+          final fullPostData = await SupabaseConfig.supabase
+              .from('posts')
+              .select('''
+                *,
+                profile:profiles!posts_profile_id_fkey (
+                  id, username, avatar_url
+                )
+              ''')
+              .eq('id', postId)
+              .single();
+          
+          // Convert to proper post object
+          final newPost = await _mapSinglePost(fullPostData);
+          
+          // Only add if it's newer than our newest post or if we have no posts
+          if (_posts.isEmpty || 
+              newPost.timestamp.isAfter(_getPostTimestamp(_posts.first))) {
+            newPosts.add(newPost);
+          }
+        } catch (e) {
+          print('Error fetching new post $postId: $e');
+        }
+      }
+    }
+    
+    // Add all new posts at once
+    if (newPosts.isNotEmpty && mounted) {
+      setState(() {
+        // Sort new posts by timestamp (newest first)
+        newPosts.sort((a, b) => _getPostTimestamp(b).compareTo(_getPostTimestamp(a)));
+        
+        // Insert all new posts at the beginning
+        for (final newPost in newPosts.reversed) {
+          _posts.insert(0, newPost);
+          _offset++;
+        }
+      });
+      
+      // Debug log
+      print('Added ${newPosts.length} new posts via real-time update');
+      
+      // Show a brief notification for new posts (only show if not from current user's post creation)
+      if (newPosts.length == 1) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('New post added'),
+            duration: const Duration(seconds: 1),
+            backgroundColor: Colors.green.withOpacity(0.8),
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.only(top: 50, left: 16, right: 16),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${newPosts.length} new posts added'),
+            duration: const Duration(seconds: 1),
+            backgroundColor: Colors.green.withOpacity(0.8),
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.only(top: 50, left: 16, right: 16),
+          ),
+        );
+      }
+    }
+  }
+
+  DateTime _getPostTimestamp(dynamic post) {
+    return post is Post ? post.timestamp : (post as PickPost).timestamp;
+  }
+
+  Future<dynamic> _mapSinglePost(Map<String, dynamic> postData) async {
+    final postType = postData['post_type'] ?? 'text';
+    
+    if (postType == 'pick' && postData['picks_data'] != null) {
+      // Parse picks data
+      List<Pick> picks = [];
+      try {
+        final picksJson = jsonDecode(postData['picks_data']);
+        picks = (picksJson as List).map((pickJson) => Pick.fromJson(pickJson)).toList();
+      } catch (e) {
+        print('Error parsing picks data: $e');
+      }
+      
+      return PickPost(
+        id: postData['id'],
+        username: postData['profile']['username'] ?? 'Anonymous',
+        content: postData['content'],
+        timestamp: DateTime.parse(postData['created_at']).toLocal(),
+        likes: 0,
+        comments: const [],
+        reposts: 0,
+        isLiked: false,
+        isReposted: false,
+        avatarUrl: postData['profile']['avatar_url'],
+        picks: picks,
+      );
+    } else {
+      return Post(
+        id: postData['id'],
+        username: postData['profile']['username'] ?? 'Anonymous',
+        content: postData['content'],
+        timestamp: DateTime.parse(postData['created_at']).toLocal(),
+        likes: 0,
+        comments: const [],
+        reposts: 0,
+        isLiked: false,
+        isReposted: false,
+        avatarUrl: postData['profile']['avatar_url'],
+      );
+    }
   }
 
   Widget _buildPickCard(Pick pick) {
@@ -186,9 +351,19 @@ class _SocialFeedPageState extends State<SocialFeedPage> {
       final newPost = await _socialFeedService.createPost(content);
       _postController.clear();
 
+      // The real-time subscription will handle adding the post to the list,
+      // but we can also add it immediately for instant feedback
       setState(() {
-        _posts.insert(0, newPost);
-        _offset++;
+        // Check if the post isn't already in the list (avoid duplicates)
+        bool postExists = _posts.any((post) {
+          final id = post is Post ? post.id : (post as PickPost).id;
+          return id == newPost.id;
+        });
+        
+        if (!postExists) {
+          _posts.insert(0, newPost);
+          _offset++;
+        }
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -897,13 +1072,17 @@ class _SocialFeedPageState extends State<SocialFeedPage> {
                   // Picks button with Flexible wrapper
                   Flexible(
                     child: OutlinedButton.icon(
-                      onPressed: () {
-                        Navigator.push(
+                      onPressed: () async {
+                        final result = await Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (context) => const CreatePickPage(),
                           ),
                         );
+                        // Refresh the feed when returning from create pick page
+                        if (result == true) {
+                          _loadPosts();
+                        }
                       },
                       style: OutlinedButton.styleFrom(
                         side: const BorderSide(color: Colors.green),
@@ -997,6 +1176,7 @@ class _SocialFeedPageState extends State<SocialFeedPage> {
     _postController.dispose();
     _commentController.dispose();
     _scrollController.dispose();
+    _postsSubscription?.cancel();
     super.dispose();
   }
 }

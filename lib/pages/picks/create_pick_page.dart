@@ -200,7 +200,7 @@ class _CreatePickPageState extends State<CreatePickPage> {
             backgroundColor: Colors.green,
           ),
         );
-        Navigator.pop(context);
+        Navigator.pop(context, true); // Return true to indicate success
       }
     } catch (e) {
       print('Error creating pick post: $e');
