@@ -1,0 +1,330 @@
+Key Characteristics of ESPN's Undocumented APIs
+Unofficial and Unstable: ESPN does not provide public support or documentation for these APIs. Endpoints, parameters, and response structures can change unexpectedly, potentially breaking applications that rely on them.
+
+Discovery through Reverse-Engineering: Most endpoints have been identified by monitoring network requests made by ESPN's own platforms (e.g., espn.com).
+
+Multiple Base URLs: ESPN uses several API subdomains, each likely serving different types of data or backend services. Examples include site.api.espn.com (general site data), sports.core.api.espn.com (core sports data), and fantasy.espn.com (fantasy sports data).
+
+Common Parameters and Headers:
+
+Path Parameters: Used within the URL path to specify resources (e.g., {sport}, {league}, {team_id}, {athlete_id}, {game_id}, {year}).
+
+Query Parameters: Appended to the URL for filtering, pagination, or modifying requests (e.g., limit, dates, season, seasontype, week, view, enable, active=true, xhr=1, query).
+
+HTTP Headers: X-Fantasy-Filter (for complex filtering in Fantasy API) and Accept: application/json are notable. Authentication cookies (espn_s2, SWID) are required for private fantasy leagues.
+
+Fantasy API Specifics: The Fantasy API, primarily under fantasy.espn.com, heavily uses the view query parameter and X-Fantasy-Filter header for data manipulation. It's often less intuitive due to its design for ESPN's internal application needs, leading many developers to use community-developed wrapper libraries.
+
+Overview of Identified API Endpoints
+ESPN's APIs are broadly categorized into General & Cross-Sport Endpoints and Sport-Specific Endpoints.
+
+General & Cross-Sport Endpoints
+These endpoints provide foundational information applicable across multiple sports.
+
+Function
+
+Base URL
+
+Path
+
+Key Parameters
+
+Example / Notes
+
+List All Sports
+
+site.api.espn.com
+
+/apis/site/v2/sports
+
+-
+
+http://site.api.espn.com/apis/site/v2/sports
+
+List Leagues (Sport)
+
+site.api.espn.com
+
+/apis/site/v2/sports/{sport}
+
+{sport}
+
+https://site.api.espn.com/apis/site/v2/sports/football
+
+General Search (v3)
+
+site.web.api.espn.com
+
+/apis/common/v3/search
+
+query, limit, mode
+
+.../search?query=nfl&limit=5&mode=prefix
+
+Calendar - Ondays
+
+sports.core.api.espn.com
+
+/v2/sports/{sport}/leagues/{league}/calendar/ondays
+
+{sport}, {league}
+
+.../football/leagues/nfl/calendar/ondays
+
+List Venues
+
+sports.core.api.espn.com
+
+/v2/sports/{sport}/leagues/{league}/venues
+
+{sport}, {league}, limit
+
+.../football/leagues/nfl/venues?limit=700
+
+List Seasons
+
+sports.core.api.espn.com
+
+/v2/sports/{sport}/leagues/{league}/seasons
+
+{sport}, {league}, limit
+
+.../football/leagues/nfl/seasons?limit=100
+
+List Events (Games)
+
+sports.core.api.espn.com
+
+/v2/sports/{sport}/leagues/{league}/events
+
+{sport}, {league}, dates, limit
+
+.../football/leagues/nfl/events?dates=2023
+
+List News (League)
+
+site.api.espn.com
+
+/apis/site/v2/sports/{sport}/{league}/news
+
+{sport}, {league}, limit
+
+.../football/nfl/news?limit=50
+
+
+Export to Sheets
+Sport-Specific Endpoints
+These endpoints are tailored for individual sports, often sharing similar structures but with sport-specific nuances.
+
+Football (NFL)
+Function
+
+Base URL
+
+Path
+
+Key Parameters
+
+Notes / Example
+
+Scoreboard (Site API)
+
+site.api.espn.com
+
+/apis/site/v2/sports/football/nfl/scoreboard
+
+dates, week, seasontype
+
+...?dates=2023&seasontype=2&week=1
+
+Scoreboard (CDN)
+
+cdn.espn.com
+
+/core/nfl/scoreboard
+
+xhr=1, limit
+
+...?xhr=1&limit=50 (Live updates)
+
+Standings (Site API)
+
+site.api.espn.com
+
+/apis/site/v2/sports/football/nfl/standings
+
+season
+
+...?season=2023
+
+List Teams (Site API)
+
+site.api.espn.com
+
+/apis/site/v2/sports/football/nfl/teams
+
+-
+
+Provides list with IDs, names, logos
+
+Get Team (Site API)
+
+site.api.espn.com
+
+/apis/site/v2/sports/football/nfl/teams/{team_id}
+
+{team_id}
+
+.../teams/1 (Team ID or Abbreviation sometimes works)
+
+Team Roster (Site API)
+
+site.api.espn.com
+
+/apis/site/v2/sports/football/nfl/teams/{team_id}/roster
+
+{team_id}, enable
+
+...?enable=roster,projection,stats for detailed view
+
+Athlete Overview
+
+site.web.api.espn.com
+
+/apis/common/v3/sports/football/nfl/athletes/{ath_id}/overview
+
+{ath_id}
+
+Comprehensive player overview
+
+Game Summary (Site API)
+
+site.api.espn.com
+
+/apis/site/v2/sports/football/nfl/summary
+
+event={event_id}
+
+Key game details, box score info
+
+Game Play-by-Play (CDN)
+
+cdn.espn.com
+
+/core/nfl/playbyplay
+
+xhr=1, gameId={event_id}
+
+Detailed play list
+
+
+Export to Sheets
+Football (College)
+Similar to NFL, but with features like rankings and conference filtering.
+
+Scoreboard: site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard?dates={date}&groups={id}&week={week}
+
+Rankings: site.api.espn.com/apis/site/v2/sports/football/college-football/rankings
+
+List Teams: site.api.espn.com/apis/site/v2/sports/football/college-football/teams
+
+Game Summary: site.api.espn.com/apis/site/v2/sports/football/college-football/summary?event={gameId}
+
+Basketball (NBA, WNBA, College)
+Follows common structures, with distinct paths for men's/women's college basketball.
+
+NBA Scoreboard: site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=YYYYMMDD
+
+WNBA Scores: http://site.api.espn.com/apis/site/v2/sports/basketball/wnba/scoreboard
+
+Men's College Basketball Scores: http://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/scoreboard
+
+Teams (NBA): site.api.espn.com/apis/site/v2/sports/basketball/nba/teams
+
+Player Stats (NBA): site.api.espn.com/apis/site/v2/sports/basketball/nba/statistics/players
+
+Baseball (MLB, College)
+Standard endpoints for scores, teams, and news.
+
+MLB Scoreboard: site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard?dates=YYYYMMDD
+
+MLB Player Details: site.web.api.espn.com/apis/common/v3/sports/baseball/mlb/athletes/{ath_id}
+
+College Baseball Scores: https://site.api.espn.com/apis/site/v2/sports/baseball/college-baseball/scoreboard
+
+Hockey (NHL)
+Standard endpoints for scores, teams, and players.
+
+NHL Scores: http://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard
+
+NHL Players: https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/players
+
+Soccer
+Requires specific league abbreviations in the path.
+
+Scoreboard / Schedule: site.api.espn.com/apis/site/v2/sports/soccer/{league}/scoreboard?dates={date} (e.g., {league}=eng.1 for Premier League)
+
+Standings: site.api.espn.com/apis/site/v2/sports/soccer/{league}/standings?season=YYYY
+
+List Leagues: site.api.espn.com/apis/site/v2/sports/soccer
+
+Other Sports (Golf, Racing, Tennis, etc.)
+While less documented, these sports likely follow similar structural patterns based on base URLs and known league abbreviations.
+
+Tennis Players: https://site.api.espn.com/apis/site/v2/sports/tennis/{tour}/players (e.g., {tour}=atp, wta)
+
+Fantasy Sports API Endpoints
+ESPN's Fantasy API is distinct, with access to private league data requiring authentication cookies. It heavily uses the view parameter and X-Fantasy-Filter header for data manipulation.
+
+Function
+
+Base URL Pattern
+
+Path/Query Structure
+
+Key Parameters/Headers
+
+Notes
+
+League Data (Current >2018)
+
+fantasy.espn.com
+
+/apis/v3/games/ffl/seasons/{yr}/segments/0/leagues/{id}
+
+view={view_name}, X-Fantasy-Filter
+
+Base endpoint for recent seasons.
+
+League Data (Historical <2018)
+
+fantasy.espn.com
+
+/apis/v3/games/ffl/leagueHistory/{id}?seasonId={yr}
+
+view={view_name}, X-Fantasy-Filter
+
+Separate endpoint for older seasons.
+
+Player Info List
+
+fantasy.espn.com
+
+/apis/v3/games/ffl/seasons/{yr}/players?view=players_wl
+
+view=players_wl, X-Fantasy-Filter
+
+Retrieves list of players available in the fantasy game for the season.
+
+Player Info Detailed
+
+fantasy.espn.com
+
+/apis/v3/games/ffl/seasons/{yr}/segments/0/leaguedefaults/{PPR_ID}?view=kona_player_info
+
+view=kona_player_info, X-Fantasy-Filter
+
+Provides rich player data including stats, projections. {PPR_ID} may vary.
+
+
+Export to Sheets
