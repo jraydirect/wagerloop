@@ -11,9 +11,9 @@ class AuthService {
     _googleSignIn = GoogleSignIn(
       clientId: !kIsWeb
           ? '454829996179-4g3cv5eiadbmf3tom9m5r1ae3n919j5r.apps.googleusercontent.com'
-          : '912814055492-4g3cv5eiadbmf3tom9m5r1ae3n919j5r.apps.googleusercontent.com',
+          : '454829996179-g92j5di0fuvv10c5l92dkh5nffgrgift.apps.googleusercontent.com',
       serverClientId: !kIsWeb
-          ? '912814055492-3jvoqo0na9mjhjl0e3t89t2g5q6mk8rs.apps.googleusercontent.com'
+          ? '454829996179-g92j5di0fuvv10c5l92dkh5nffgrgift.apps.googleusercontent.com'
           : null,
       scopes: ['email', 'profile'],
     );
