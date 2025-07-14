@@ -1,6 +1,6 @@
 {
-    "name": "wagerloop1",
-    "short_name": "wagerloop1",
+    "name": "WagerLoop",
+    "short_name": "WagerLoop",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

@@ -1,6 +1,6 @@
-# WagerLoop1 Authentication Fixes
+# WagerLoop Authentication Fixes
 
-This document outlines the fixes applied to resolve authentication issues in the WagerLoop1 Flutter application.
+This document outlines the fixes applied to resolve authentication issues in the WagerLoop Flutter application.
 
 ## Issues Fixed
 

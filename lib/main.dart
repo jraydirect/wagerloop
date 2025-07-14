@@ -12,6 +12,7 @@ import 'pages/dice_bouncy_splash_screen.dart';
 import 'pages/figma_bouncy_loader.dart';
 import 'pages/figma_ball_splash.dart';
 import 'layouts/main_layout.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:io' show Platform;
 
 void main() async {
@@ -25,7 +26,7 @@ void main() async {
 
   runApp(
     DevicePreview(
-      enabled: !Platform.isIOS && !const bool.fromEnvironment('dart.vm.product'),
+      enabled: !(kIsWeb || Platform.isIOS) && !const bool.fromEnvironment('dart.vm.product'),
       builder: (context) => const MyApp(),
     ),
   );

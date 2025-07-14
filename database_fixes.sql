@@ -1,4 +1,4 @@
--- Database fixes for WagerLoop1 authentication issues
+-- Database fixes for WagerLoop authentication issues
 -- Run this in your Supabase SQL Editor
 
 -- 1. Enable RLS on profiles table

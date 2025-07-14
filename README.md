@@ -1,4 +1,4 @@
-# wagerloop1
+# WagerLoop
 
 A new Flutter project.
 

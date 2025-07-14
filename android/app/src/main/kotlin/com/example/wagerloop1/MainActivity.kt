@@ -1,4 +1,4 @@
-package com.example.wagerloop1
+package com.example.WagerLoop
 
 import io.flutter.embedding.android.FlutterActivity
 

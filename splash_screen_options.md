@@ -1,4 +1,4 @@
-# 🎲 WagerLoop1 Splash Screens
+# 🎲 WagerLoop Splash Screens
 
 I've created three different splash screen options for your app. Each has a unique style and animation approach:
 

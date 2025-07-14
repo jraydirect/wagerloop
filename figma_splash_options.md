@@ -1,4 +1,4 @@
-# 🎨 WagerLoop1 Splash Screen Options - Updated with Figma-Inspired Designs
+# 🎨 WagerLoop Splash Screen Options - Updated with Figma-Inspired Designs
 
 ## **NEW: Figma-Inspired Splash Screens** ⭐
 

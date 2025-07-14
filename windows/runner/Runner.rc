@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "wagerloop1" "\0"
+            VALUE "FileDescription", "WagerLoop" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "wagerloop1" "\0"
+            VALUE "InternalName", "WagerLoop" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2024 com.example. All rights reserved." "\0"
-            VALUE "OriginalFilename", "wagerloop1.exe" "\0"
-            VALUE "ProductName", "wagerloop1" "\0"
+            VALUE "OriginalFilename", "WagerLoop.exe" "\0"
+            VALUE "ProductName", "WagerLoop" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END
