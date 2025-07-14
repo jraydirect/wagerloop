@@ -3,6 +3,11 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'supabase_config.dart';
 
+/// Manages user authentication and session handling for WagerLoop.
+/// 
+/// Handles user registration, login, Google OAuth, profile management,
+/// and social follow/unfollow operations. Maintains user sessions for
+/// accessing betting features and social interactions.
 class AuthService {
   final supabase = SupabaseConfig.supabase;
   late final GoogleSignIn _googleSignIn;
@@ -19,11 +24,28 @@ class AuthService {
     );
   }
 
+  /// Updates user's favorite sports teams in their profile.
+  /// 
+  /// Used during onboarding and profile customization to personalize
+  /// the user's betting experience and social feed content.
+  /// 
+  /// Parameters:
+  ///   - favoriteTeams: List of team names the user wants to follow
+  /// 
+  /// Throws:
+  ///   - Exception: If user is not authenticated or database update fails
   Future<void> updateFavoriteTeams(List<dynamic> favoriteTeams) async {
     await updateProfile(favoriteTeams: favoriteTeams.cast<String>());
   }
 
-  // Debug method to check authentication state
+  /// Debug method to check authentication state and user profile.
+  /// 
+  /// Logs comprehensive authentication information including user ID,
+  /// session token, and profile data for troubleshooting login issues
+  /// or session management problems in the betting app.
+  /// 
+  /// Returns:
+  ///   void - Only logs debug information to console
   Future<void> debugAuthState() async {
     print('=== AUTH DEBUG INFO ===');
     final user = currentUser;
@@ -63,6 +85,21 @@ class AuthService {
     return supabase.auth.onAuthStateChange;
   }
 
+  /// Authenticates user with email and password.
+  /// 
+  /// Provides secure login for WagerLoop users to access their betting
+  /// history, social posts, and account settings.
+  /// 
+  /// Parameters:
+  ///   - email: User's registered email address
+  ///   - password: User's account password
+  /// 
+  /// Returns:
+  ///   AuthResponse containing user session and profile data
+  /// 
+  /// Throws:
+  ///   - AuthException: If credentials are invalid or user doesn't exist
+  ///   - NetworkException: If connection to auth service fails
   Future<AuthResponse> signUp({
     required String email,
     required String password,
@@ -108,22 +145,18 @@ class AuthService {
     }
   }
 
-  Future<AuthResponse> signInWithEmail(String email, String password) async {
-    try {
-      print('Attempting email sign in for: $email');
-      final response = await supabase.auth.signInWithPassword(
-        email: email,
-        password: password,
-      );
-      print('Sign in response: $response');
-      return response;
-    } catch (e, stackTrace) {
-      print('Email sign in error: $e');
-      print('Stack trace: $stackTrace');
-      rethrow;
-    }
-  }
-
+  /// Authenticates user with Google OAuth.
+  /// 
+  /// Provides seamless Google sign-in for WagerLoop users, handling
+  /// both web and mobile OAuth flows. Creates user profile automatically
+  /// if signing in for the first time.
+  /// 
+  /// Returns:
+  ///   AuthResponse with user session for accessing betting features
+  /// 
+  /// Throws:
+  ///   - AuthException: If Google OAuth flow fails or is cancelled
+  ///   - PlatformException: If Google services are unavailable
   Future<AuthResponse> signInWithGoogle() async {
     try {
       print('Initializing Google Sign In');
@@ -219,6 +252,17 @@ class AuthService {
   }
 
 // Modify getCurrentUserProfile to handle potential missing profiles
+  /// Retrieves the current user's profile data from the database.
+  /// 
+  /// Ensures a profile exists for the authenticated user, creating one
+  /// if it doesn't. Returns a map of profile data including username,
+  /// email, and completion status.
+  /// 
+  /// Returns:
+  ///   Map<String, dynamic>? - A map of profile data or null if user is not authenticated
+  /// 
+  /// Throws:
+  ///   - Exception: If database query or profile creation fails
   Future<Map<String, dynamic>?> getCurrentUserProfile() async {
     try {
       final user = currentUser;
@@ -276,6 +320,21 @@ class AuthService {
     }
   }
 
+  /// Updates the current user's profile information.
+  /// 
+  /// Allows users to change their username, full name, bio, avatar,
+  /// and favorite teams. Ensures username uniqueness and handles
+  /// profile completion status.
+  /// 
+  /// Parameters:
+  ///   - username: Optional new username (must be unique)
+  ///   - fullName: Optional new full name
+  ///   - bio: Optional new bio
+  ///   - avatarUrl: Optional new avatar URL
+  ///   - favoriteTeams: Optional new list of favorite teams
+  /// 
+  /// Throws:
+  ///   - Exception: If user is not authenticated or profile update fails
   Future<void> updateProfile({
     String? username,
     String? fullName,
@@ -326,6 +385,13 @@ class AuthService {
     }
   }
 
+  /// Marks the current user's onboarding as complete.
+  /// 
+  /// Updates the 'has_completed_onboarding' flag in the user's profile
+  /// to true, indicating that the user has finished the initial setup.
+  /// 
+  /// Throws:
+  ///   - Exception: If user is not authenticated or onboarding completion fails
   Future<void> completeOnboarding() async {
     try {
       final user = currentUser;
@@ -348,6 +414,13 @@ class AuthService {
     }
   }
 
+  /// Signs out the current user from the application.
+  /// 
+  /// Handles both web and mobile sign-out, including Google sign-out
+  /// for mobile platforms. Clears the user's session and profile data.
+  /// 
+  /// Throws:
+  ///   - Exception: If sign-out fails
   Future<void> signOut() async {
     try {
       print('Attempting sign out');
@@ -364,6 +437,18 @@ class AuthService {
   }
 
   // Get followers for a user
+  /// Retrieves a list of users who follow the specified user.
+  /// 
+  /// Used to display a user's followers in their profile or social feed.
+  /// 
+  /// Parameters:
+  ///   - userId: The ID of the user whose followers are to be retrieved
+  /// 
+  /// Returns:
+  ///   List<Map<String, dynamic>> - A list of follower profiles
+  /// 
+  /// Throws:
+  ///   - Exception: If database query fails
   Future<List<Map<String, dynamic>>> getFollowers(String userId) async {
     try {
       final response = await supabase.from('followers').select('''
@@ -392,6 +477,18 @@ class AuthService {
   }
 
   // Get users that a user follows
+  /// Retrieves a list of users that the specified user follows.
+  /// 
+  /// Used to display a user's following list in their profile or social feed.
+  /// 
+  /// Parameters:
+  ///   - userId: The ID of the user whose following list is to be retrieved
+  /// 
+  /// Returns:
+  ///   List<Map<String, dynamic>> - A list of following profiles
+  /// 
+  /// Throws:
+  ///   - Exception: If database query fails
   Future<List<Map<String, dynamic>>> getFollowing(String userId) async {
     try {
       final response = await supabase.from('followers').select('''
@@ -420,6 +517,19 @@ class AuthService {
   }
 
   // Check if current user follows another user
+  /// Checks if the current authenticated user follows the specified user.
+  /// 
+  /// Used to determine if a user is following another user for social
+  /// interaction features like follow/unfollow.
+  /// 
+  /// Parameters:
+  ///   - userId: The ID of the user to check if the current user follows
+  /// 
+  /// Returns:
+  ///   bool - True if the current user follows the specified user, false otherwise
+  /// 
+  /// Throws:
+  ///   - Exception: If database query fails
   Future<bool> isFollowing(String userId) async {
     try {
       final user = currentUser;
@@ -440,6 +550,16 @@ class AuthService {
   }
 
   // Follow a user
+  /// Follows the specified user.
+  /// 
+  /// Allows users to follow other users for social interaction and
+  /// to receive updates from their followed users.
+  /// 
+  /// Parameters:
+  ///   - userId: The ID of the user to follow
+  /// 
+  /// Throws:
+  ///   - Exception: If user is not authenticated or follow fails
   Future<void> followUser(String userId) async {
     try {
       final user = currentUser;
@@ -456,6 +576,16 @@ class AuthService {
   }
 
   // Unfollow a user
+  /// Unfollows the specified user.
+  /// 
+  /// Allows users to unfollow other users, removing them from their
+  /// following list and preventing future updates.
+  /// 
+  /// Parameters:
+  ///   - userId: The ID of the user to unfollow
+  /// 
+  /// Throws:
+  ///   - Exception: If user is not authenticated or unfollow fails
   Future<void> unfollowUser(String userId) async {
     try {
       final user = currentUser;

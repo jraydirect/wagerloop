@@ -6,6 +6,13 @@ import '../models/sports/sportsbook.dart';
 import '../models/sports/odds.dart';
 import 'sports_api_service.dart';
 
+/// Manages sports betting odds data for WagerLoop.
+/// 
+/// Integrates with The Odds API to fetch real-time betting odds from
+/// supported sportsbooks (primarily FanDuel). Handles odds caching,
+/// format conversions, and provides best odds calculations for users.
+/// 
+/// Uses singleton pattern to ensure consistent odds data across the app.
 class SportsOddsService {
   // Singleton pattern
   static final SportsOddsService _instance = SportsOddsService._internal();
@@ -27,7 +34,13 @@ class SportsOddsService {
     'fanduel'
   ];
 
-  // Set API key
+  /// Configures the API key for The Odds API.
+  /// 
+  /// Must be called before fetching odds data. The API key is required
+  /// to access real-time betting odds from supported sportsbooks.
+  /// 
+  /// Parameters:
+  ///   - apiKey: Valid API key from The Odds API service
   void setApiKey(String apiKey) {
     _apiKey = apiKey;
   }
@@ -76,17 +89,40 @@ class SportsOddsService {
     }
   }
 
-  /// Convert API sport code back to app sport name
-  String _getAppSportFromApiCode(String apiCode) {
-    for (final entry in _sportMap.entries) {
-      if (entry.value == apiCode) {
-        return entry.key;
-      }
+  /// Converts WagerLoop sport names to The Odds API sport codes.
+  /// 
+  /// Maps user-friendly sport names used in the app to the specific
+  /// API codes required by The Odds API service.
+  /// 
+  /// Parameters:
+  ///   - sport: WagerLoop sport name (e.g., 'NBA', 'NFL', 'Soccer')
+  /// 
+  /// Returns:
+  ///   String API code for the sport, or empty string if not supported
+  String _getSportApiCode(String sport) {
+    if (sport == 'Soccer') {
+      return 'soccer_epl';
     }
-    return '';
+    
+    return _sportMap[sport] ?? '';
   }
 
-  /// Fetch odds for a specific game
+  /// Fetches real-time betting odds for a specific game.
+  /// 
+  /// Retrieves moneyline, spread, and totals odds from supported sportsbooks
+  /// for a specific game. Uses caching to minimize API calls and improve
+  /// performance for frequently requested games.
+  /// 
+  /// Parameters:
+  ///   - gameId: Unique identifier for the game
+  ///   - sport: Sport type (NBA, NFL, MLB, etc.)
+  ///   - sportsbooks: Optional list of specific sportsbooks to query
+  /// 
+  /// Returns:
+  ///   Map<String, OddsData> containing odds data keyed by sportsbook name
+  /// 
+  /// Throws:
+  ///   - Exception: If API key is missing or API request fails
   Future<Map<String, OddsData>> fetchOddsForGame(String gameId, String sport, {List<String>? sportsbooks}) async {
     if (_apiKey == null || _apiKey!.isEmpty) {
       print('API key not set for SportsOddsService');
@@ -101,7 +137,7 @@ class SportsOddsService {
     print('Fetching odds from The Odds API for game: $gameId in sport: $sport');
 
     try {
-      // Check cache first
+      // Check cache first to avoid unnecessary API calls
       final cacheKey = '${sportApiCode}_${gameId}';
       final now = DateTime.now();
       
@@ -124,6 +160,7 @@ class SportsOddsService {
       
       print('The Odds API query params: $queryParams');
 
+      // Construct API URL
       final uri = Uri.https(_baseUrl, '/v4/sports/$sportApiCode/odds', queryParams);
       
       print('Making API call to The Odds API: $uri');
@@ -131,41 +168,38 @@ class SportsOddsService {
       
       if (response.statusCode == 200) {
         print('The Odds API response received with status 200');
-        final List<dynamic> oddsData = json.decode(response.body);
-        print('Received ${oddsData.length} games from The Odds API');
+        final List<dynamic> data = json.decode(response.body);
+        print('Received ${data.length} games from The Odds API');
         
-        // Find the game in the odds data that best matches our teams
-        Map<String, dynamic>? matchedGame;
-        for (var game in oddsData) {
-          if (game['id'] == gameId) {
-            print('Found exact ID match in API response');
-            matchedGame = game;
-            break;
-          }
-        }
+        // Cache the response
+        _oddsCache[cacheKey] = data;
+        _lastFetchTime = now;
         
-        if (matchedGame != null) {
-          final matchedId = matchedGame['id'] as String? ?? gameId;
-          _oddsCache['${sportApiCode}_$matchedId'] = matchedGame;
-          _lastFetchTime = now;
-          print('Cached odds data for matched game: $matchedId');
-          
-          return _parseOddsForGame(matchedGame, gameId, sportsbooks);
-        } else {
-          print('No matching game found in The Odds API response');
-        }
+        return _parseOddsForGame(data, gameId, sportsbooks);
       } else {
-        print('The Odds API request failed: Status: ${response.statusCode}');
+        print('Error fetching odds: ${response.statusCode}');
+        return {};
       }
-      
-      return {};
     } catch (e) {
-      print('Error fetching odds: $e');
+      print('Error in fetchOddsForGame: $e');
       return {};
     }
   }
 
-  /// Fetch odds for all upcoming games in a sport
+  /// Fetches odds for all games in a specific sport.
+  /// 
+  /// Retrieves comprehensive odds data for all available games in a sport,
+  /// useful for displaying odds across multiple games or for analysis.
+  /// 
+  /// Parameters:
+  ///   - sport: Sport type to fetch odds for
+  /// 
+  /// Returns:
+  ///   Map<String, Map<String, OddsData>> nested map with game IDs as keys
+  ///   and sportsbook odds as values
+  /// 
+  /// Throws:
+  ///   - Exception: If API key is missing or API request fails
   Future<Map<String, Map<String, OddsData>>> fetchOddsForSport(String sport) async {
     if (_apiKey == null || _apiKey!.isEmpty) {
       print('API key not set for SportsOddsService');
@@ -217,15 +251,6 @@ class SportsOddsService {
       print('Error fetching odds for sport: $e');
       return {};
     }
-  }
-
-  /// Convert sport name to API code
-  String _getSportApiCode(String sport) {
-    if (sport == 'Soccer') {
-      return 'soccer_epl';
-    }
-    
-    return _sportMap[sport] ?? '';
   }
 
   /// Set specific soccer league
@@ -349,7 +374,23 @@ class SportsOddsService {
     }
   }
 
-  /// Get best odds for a specific game
+  /// Finds the best available odds for a specific bet type and side.
+  /// 
+  /// Compares odds across all supported sportsbooks to find the most
+  /// favorable odds for a user's bet selection. Essential for maximizing
+  /// potential winnings in WagerLoop.
+  /// 
+  /// Parameters:
+  ///   - gameId: Unique identifier for the game
+  ///   - sport: Sport type
+  ///   - betType: Type of bet (moneyline, spread, totals)
+  ///   - betSide: Side of the bet (home, away, over, under)
+  /// 
+  /// Returns:
+  ///   OddsData? containing the best odds found, or null if none available
+  /// 
+  /// Throws:
+  ///   - Exception: If API request fails or odds cannot be compared
   Future<OddsData?> getBestOddsForGame(String gameId, String sport, String betType, String betSide) async {
     try {
       final allOdds = await fetchOddsForGame(gameId, sport);

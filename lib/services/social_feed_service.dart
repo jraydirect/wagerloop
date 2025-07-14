@@ -4,11 +4,34 @@ import '../models/pick_post.dart';
 import '../models/comment.dart';
 import 'dart:convert';
 
+/// Manages social media functionality for WagerLoop.
+/// 
+/// Handles post creation, retrieval, and interactions including likes,
+/// comments, and reposts. Supports both regular text posts and betting
+/// pick posts with embedded sports picks and odds.
+/// 
+/// Integrates with Supabase for real-time social feed updates and
+/// user interaction tracking.
 class SocialFeedService {
   final SupabaseClient _supabase;
 
   SocialFeedService(this._supabase);
-// Fetch posts with user suggestions
+
+  /// Fetches posts for the social feed with user personalization.
+  /// 
+  /// Retrieves posts from all users with prioritization for followed users.
+  /// Includes both regular posts and betting pick posts with like/repost
+  /// status for the current user.
+  /// 
+  /// Parameters:
+  ///   - limit: Maximum number of posts to retrieve (default: 20)
+  ///   - offset: Number of posts to skip for pagination (default: 0)
+  /// 
+  /// Returns:
+  ///   List<dynamic> containing Post and PickPost objects with interaction status
+  /// 
+  /// Throws:
+  ///   - Exception: If user is not authenticated or database query fails
   Future<List<dynamic>> fetchPosts({int limit = 20, int offset = 0}) async {
     try {
       final user = _supabase.auth.currentUser;
@@ -84,8 +107,7 @@ class SocialFeedService {
             post.reposts = repostsCount.count ?? 0;
           }
         } catch (e) {
-          print('Error fetching post stats for $postId: $e');
-          // Continue with defaults if there's an error
+          print('Error checking like/repost status: $e');
         }
       }
 
@@ -96,7 +118,20 @@ class SocialFeedService {
     }
   }
 
-  // Update the fetchPosts method to handle timestamps and pick posts
+  /// Converts raw post data from database to Post or PickPost objects.
+  /// 
+  /// Transforms Supabase query results into typed objects with proper
+  /// interaction counts and user information. Handles both regular posts
+  /// and betting pick posts with embedded sports picks.
+  /// 
+  /// Parameters:
+  ///   - postData: Raw post data from Supabase query
+  /// 
+  /// Returns:
+  ///   List<dynamic> containing typed Post and PickPost objects
+  /// 
+  /// Throws:
+  ///   - Exception: If post data is malformed or missing required fields
   Future<List<dynamic>> _mapPosts(List<dynamic> postData) async {
     return postData.map((post) {
       final postType = post['post_type'] ?? 'text';
@@ -143,6 +178,19 @@ class SocialFeedService {
     }).toList();
   }
 
+  /// Fetches all posts created by a specific user.
+  /// 
+  /// Retrieves posts from a user's profile including both regular posts
+  /// and betting picks. Used for displaying user profiles and post history.
+  /// 
+  /// Parameters:
+  ///   - userId: ID of the user whose posts to retrieve
+  /// 
+  /// Returns:
+  ///   List<dynamic> containing the user's Post and PickPost objects
+  /// 
+  /// Throws:
+  ///   - Exception: If database query fails or user not found
   Future<List<dynamic>> fetchUserPosts(String userId) async {
     try {
       final response = await _supabase.from('posts').select('''
@@ -211,6 +259,20 @@ class SocialFeedService {
     }
   }
 
+  /// Creates a new text post in the social feed.
+  /// 
+  /// Allows users to share thoughts, comments, and reactions with the
+  /// WagerLoop community. Posts are displayed in followers' feeds and
+  /// can be liked, commented on, and reposted.
+  /// 
+  /// Parameters:
+  ///   - content: Text content of the post
+  /// 
+  /// Returns:
+  ///   Post object representing the newly created post
+  /// 
+  /// Throws:
+  ///   - Exception: If user is not authenticated or post creation fails
   Future<Post> createPost(String content) async {
     try {
       final user = _supabase.auth.currentUser;
@@ -257,6 +319,20 @@ class SocialFeedService {
     }
   }
 
+  /// Creates a new betting pick post in the social feed.
+  /// 
+  /// Allows users to share their sports betting picks with the community,
+  /// including odds, reasoning, and stake amounts. Pick posts can be
+  /// liked, commented on, and serve as a betting history.
+  /// 
+  /// Parameters:
+  ///   - pickPost: PickPost object containing picks and post content
+  /// 
+  /// Returns:
+  ///   PickPost object representing the newly created betting post
+  /// 
+  /// Throws:
+  ///   - Exception: If user is not authenticated or pick post creation fails
   Future<PickPost> createPickPost(PickPost pickPost) async {
     try {
       final user = _supabase.auth.currentUser;
@@ -305,7 +381,20 @@ class SocialFeedService {
     }
   }
 
-  // Add a comment to a post
+  /// Adds a comment to a post or pick post.
+  /// 
+  /// Enables users to engage with posts through comments, fostering
+  /// discussion around betting picks and social content.
+  /// 
+  /// Parameters:
+  ///   - postId: ID of the post to comment on
+  ///   - content: Text content of the comment
+  /// 
+  /// Returns:
+  ///   Comment object representing the newly created comment
+  /// 
+  /// Throws:
+  ///   - Exception: If user is not authenticated or comment creation fails
   Future<Comment> addComment(String postId, String content) async {
     try {
       final user = _supabase.auth.currentUser;
@@ -344,7 +433,19 @@ class SocialFeedService {
     }
   }
 
-  // Fetch comments for a post
+  /// Retrieves all comments for a specific post.
+  /// 
+  /// Fetches comments with user information for display in post threads.
+  /// Comments are ordered by creation time to show conversation flow.
+  /// 
+  /// Parameters:
+  ///   - postId: ID of the post whose comments to retrieve
+  /// 
+  /// Returns:
+  ///   List<Comment> containing all comments for the post
+  /// 
+  /// Throws:
+  ///   - Exception: If database query fails
   Future<List<Comment>> fetchComments(String postId) async {
     try {
       final response = await _supabase.from('comments').select('''
@@ -371,7 +472,16 @@ class SocialFeedService {
     }
   }
 
-  // Toggle like on a post
+  /// Toggles like status for a post or pick post.
+  /// 
+  /// Allows users to like or unlike posts and betting picks. Updates
+  /// like counts and tracks user interactions for feed personalization.
+  /// 
+  /// Parameters:
+  ///   - postId: ID of the post to like/unlike
+  /// 
+  /// Throws:
+  ///   - Exception: If user is not authenticated or like toggle fails
   Future<void> toggleLike(String postId) async {
     try {
       final user = _supabase.auth.currentUser;
@@ -403,7 +513,16 @@ class SocialFeedService {
     }
   }
 
-  // Toggle repost on a post
+  /// Toggles repost status for a post or pick post.
+  /// 
+  /// Allows users to repost (share) content to their own feed, amplifying
+  /// popular picks and posts within the WagerLoop community.
+  /// 
+  /// Parameters:
+  ///   - postId: ID of the post to repost/unrepost
+  /// 
+  /// Throws:
+  ///   - Exception: If user is not authenticated or repost toggle fails
   Future<void> toggleRepost(String postId) async {
     try {
       final user = _supabase.auth.currentUser;
@@ -435,7 +554,16 @@ class SocialFeedService {
     }
   }
 
-  // Delete a post (only by the owner)
+  /// Deletes a post or pick post from the social feed.
+  /// 
+  /// Removes a post and all associated likes, comments, and reposts.
+  /// Only the post creator can delete their own posts.
+  /// 
+  /// Parameters:
+  ///   - postId: ID of the post to delete
+  /// 
+  /// Throws:
+  ///   - Exception: If user is not authenticated, not the post owner, or deletion fails
   Future<void> deletePost(String postId) async {
     try {
       final user = _supabase.auth.currentUser;
