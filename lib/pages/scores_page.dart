@@ -6,7 +6,7 @@ import 'dart:convert';
 import '../utils/team_logo_utils.dart';
 import 'game_details_page.dart';
 
-enum GameTimeFilter { today, tomorrow, upcoming }
+enum GameTimeFilter { today, upcoming }
 
 class ScoresPage extends StatefulWidget {
   @override
@@ -54,9 +54,6 @@ class _ScoresPageState extends State<ScoresPage> {
       case GameTimeFilter.today:
         await fetchTodayGames();
         break;
-      case GameTimeFilter.tomorrow:
-        await fetchTomorrowGames();
-        break;
       case GameTimeFilter.upcoming:
         await fetchUpcomingGames();
         break;
@@ -97,49 +94,19 @@ class _ScoresPageState extends State<ScoresPage> {
     }
   }
 
-  Future<void> fetchTomorrowGames() async {
-    try {
-      final tomorrow = DateTime.now().add(const Duration(days: 1));
-      
-      // Format date for ESPN API (YYYYMMDD)
-      final tomorrowFormatted = tomorrow.toIso8601String().split('T')[0].replaceAll('-', '');
 
-      final response = await http.get(Uri.parse(
-          'https://site.api.espn.com/apis/site/v2/sports/$selectedSport/scoreboard?dates=$tomorrowFormatted'));
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        final events = data['events'] ?? [];
-        print('ESPN API Tomorrow Response: Found ${events.length} events');
-        setState(() {
-          scores = events;
-          isLoading = false;
-        });
-      } else {
-        setState(() {
-          error = 'Failed to load tomorrow\'s games';
-          isLoading = false;
-        });
-      }
-    } catch (e) {
-      setState(() {
-        error = 'Error connecting to the server';
-        isLoading = false;
-      });
-    }
-  }
 
   Future<void> fetchUpcomingGames() async {
     try {
-      final today = DateTime.now();
-      final futureDate = today.add(const Duration(days: 7)); // Next 7 days
+      final tomorrow = DateTime.now().add(const Duration(days: 1));
+      final futureDate = tomorrow.add(const Duration(days: 7)); // Next 7 days from tomorrow
       
       // Format dates for ESPN API (YYYYMMDD)
-      final todayFormatted = today.toIso8601String().split('T')[0].replaceAll('-', '');
+      final tomorrowFormatted = tomorrow.toIso8601String().split('T')[0].replaceAll('-', '');
       final futureFormatted = futureDate.toIso8601String().split('T')[0].replaceAll('-', '');
 
       final response = await http.get(Uri.parse(
-          'https://site.api.espn.com/apis/site/v2/sports/$selectedSport/scoreboard?dates=$todayFormatted-$futureFormatted'));
+          'https://site.api.espn.com/apis/site/v2/sports/$selectedSport/scoreboard?dates=$tomorrowFormatted-$futureFormatted'));
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -277,8 +244,6 @@ class _ScoresPageState extends State<ScoresPage> {
     switch (selectedTimeFilter) {
       case GameTimeFilter.today:
         return 'No scores available';
-      case GameTimeFilter.tomorrow:
-        return 'No games scheduled for tomorrow';
       case GameTimeFilter.upcoming:
         return 'No upcoming games found';
     }
@@ -320,13 +285,13 @@ class _ScoresPageState extends State<ScoresPage> {
 
     final competitions = game['competitions'];
     if (competitions == null || !(competitions is List) || competitions.isEmpty) {
-      return (selectedTimeFilter == GameTimeFilter.tomorrow || selectedTimeFilter == GameTimeFilter.upcoming) ? 'vs' : '-';
+      return (selectedTimeFilter == GameTimeFilter.upcoming) ? 'vs' : '-';
     }
 
     final competition = competitions[0];
     final competitors = competition['competitors'];
     if (competitors == null || !(competitors is List) || competitors.length < 2) {
-      return (selectedTimeFilter == GameTimeFilter.tomorrow || selectedTimeFilter == GameTimeFilter.upcoming) ? 'vs' : '-';
+      return (selectedTimeFilter == GameTimeFilter.upcoming) ? 'vs' : '-';
     }
 
     // Find home and away teams
@@ -377,7 +342,6 @@ class _ScoresPageState extends State<ScoresPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   _buildTimeFilterButton('Today', GameTimeFilter.today),
-                  _buildTimeFilterButton('Tomorrow', GameTimeFilter.tomorrow),
                   _buildTimeFilterButton('Upcoming', GameTimeFilter.upcoming),
                 ],
               ),

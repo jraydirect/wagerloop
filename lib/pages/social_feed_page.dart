@@ -52,13 +52,10 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
   void _setupRealTimeUpdates() {
     try {
       // Listen to real-time updates for new posts
-      // Only listen for posts created in the last hour to avoid loading too much data
-      final oneHourAgo = DateTime.now().subtract(const Duration(hours: 1)).toUtc().toIso8601String();
-      
+      // Listen to all posts to catch new ones immediately
       _postsSubscription = SupabaseConfig.supabase
           .from('posts')
           .stream(primaryKey: ['id'])
-          .gte('created_at', oneHourAgo)
           .order('created_at', ascending: false)
           .listen(
             (List<Map<String, dynamic>> data) {
@@ -84,9 +81,11 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
     
     // Process only new posts that aren't already in our list
     final newPosts = <dynamic>[];
+    final currentUserId = _authService.currentUser?.id;
     
     for (final postData in data) {
       final postId = postData['id'];
+      final postUserId = postData['user_id'] ?? postData['profile_id'];
       
       // Check if this post is already in our list
       bool postExists = _posts.any((post) {
@@ -95,34 +94,25 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
       });
       
       if (!postExists) {
-        try {
-          // Fetch the full post data with profile information
-          final fullPostData = await SupabaseConfig.supabase
-              .from('posts')
-              .select('''
-                *,
-                profile:profiles!posts_profile_id_fkey (
-                  id, username, avatar_url
-                )
-              ''')
-              .eq('id', postId)
-              .single();
-          
-          // Convert to proper post object
-          final newPost = await _mapSinglePost(fullPostData);
-          
-          // Only add if it's newer than our newest post or if we have no posts
-          if (_posts.isEmpty || 
-              newPost.timestamp.isAfter(_getPostTimestamp(_posts.first))) {
+        // Only add posts that are newer than our current load time and not from current user
+        // (current user posts are handled immediately in _createPost)
+        final postCreatedAt = DateTime.parse(postData['created_at']).toLocal();
+        final shouldAdd = postUserId != currentUserId && 
+                          (_posts.isEmpty || postCreatedAt.isAfter(_getPostTimestamp(_posts.first)));
+        
+        if (shouldAdd) {
+          try {
+            // Use the data we already have instead of fetching again
+            final newPost = await _mapSinglePostFromRealTimeData(postData);
             newPosts.add(newPost);
+          } catch (e) {
+            print('Error mapping real-time post $postId: $e');
           }
-        } catch (e) {
-          print('Error fetching new post $postId: $e');
         }
       }
     }
     
-    // Add all new posts at once
+    // Add all new posts at once if we have any
     if (newPosts.isNotEmpty && mounted) {
       setState(() {
         // Sort new posts by timestamp (newest first)
@@ -137,29 +127,6 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
       
       // Debug log
       print('Added ${newPosts.length} new posts via real-time update');
-      
-      // Show a brief notification for new posts (only show if not from current user's post creation)
-      if (newPosts.length == 1) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('New post added'),
-            duration: const Duration(seconds: 1),
-            backgroundColor: Colors.green.withOpacity(0.8),
-            behavior: SnackBarBehavior.floating,
-            margin: const EdgeInsets.only(top: 50, left: 16, right: 16),
-          ),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${newPosts.length} new posts added'),
-            duration: const Duration(seconds: 1),
-            backgroundColor: Colors.green.withOpacity(0.8),
-            behavior: SnackBarBehavior.floating,
-            margin: const EdgeInsets.only(top: 50, left: 16, right: 16),
-          ),
-        );
-      }
     }
   }
 
@@ -207,6 +174,67 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
         isLiked: false,
         isReposted: false,
         avatarUrl: postData['profile']['avatar_url'],
+      );
+    }
+  }
+
+  Future<dynamic> _mapSinglePostFromRealTimeData(Map<String, dynamic> postData) async {
+    final postType = postData['post_type'] ?? 'text';
+    
+    // Get profile data - we need to fetch this since it's not in the real-time data
+    String username = 'Anonymous';
+    String? avatarUrl;
+    
+    try {
+      final profileData = await SupabaseConfig.supabase
+          .from('profiles')
+          .select('username, avatar_url')
+          .eq('id', postData['user_id'] ?? postData['profile_id'] ?? '')
+          .single();
+      
+      username = profileData['username'] ?? 'Anonymous';
+      avatarUrl = profileData['avatar_url'];
+    } catch (e) {
+      print('Error fetching profile for real-time post: $e');
+    }
+    
+    if (postType == 'pick' && postData['picks_data'] != null) {
+      // Parse picks data
+      List<Pick> picks = [];
+      try {
+        final picksJson = jsonDecode(postData['picks_data']);
+        picks = (picksJson as List).map((pickJson) => Pick.fromJson(pickJson)).toList();
+      } catch (e) {
+        print('Error parsing picks data: $e');
+      }
+      
+      return PickPost(
+        id: postData['id'],
+        userId: postData['user_id'] ?? postData['profile_id'] ?? '',
+        username: username,
+        content: postData['content'],
+        timestamp: DateTime.parse(postData['created_at']).toLocal(),
+        likes: 0,
+        comments: const [],
+        reposts: 0,
+        isLiked: false,
+        isReposted: false,
+        avatarUrl: avatarUrl,
+        picks: picks,
+      );
+    } else {
+      return Post(
+        id: postData['id'],
+        userId: postData['user_id'] ?? postData['profile_id'] ?? '',
+        username: username,
+        content: postData['content'],
+        timestamp: DateTime.parse(postData['created_at']).toLocal(),
+        likes: 0,
+        comments: const [],
+        reposts: 0,
+        isLiked: false,
+        isReposted: false,
+        avatarUrl: avatarUrl,
       );
     }
   }
@@ -291,19 +319,10 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
       final newPost = await _socialFeedService.createPost(content);
       _postController.clear();
 
-      // The real-time subscription will handle adding the post to the list,
-      // but we can also add it immediately for instant feedback
+      // Add the post immediately to the local state for instant feedback
       setState(() {
-        // Check if the post isn't already in the list (avoid duplicates)
-        bool postExists = _posts.any((post) {
-          final id = post is Post ? post.id : (post as PickPost).id;
-          return id == newPost.id;
-        });
-        
-        if (!postExists) {
-          _posts.insert(0, newPost);
-          _offset++;
-        }
+        _posts.insert(0, newPost);
+        _offset++;
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1274,9 +1293,12 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
                             builder: (context) => const CreatePickPage(),
                           ),
                         );
-                        // Refresh the feed when returning from create pick page
-                        if (result == true) {
-                          _loadPosts();
+                        // If a pick post was created, add it instantly to the feed
+                        if (result != null && result is PickPost) {
+                          setState(() {
+                            _posts.insert(0, result);
+                            _offset++;
+                          });
                         }
                       },
                       style: OutlinedButton.styleFrom(

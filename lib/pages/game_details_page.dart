@@ -9,7 +9,7 @@ class GameDetailsPage extends StatefulWidget {
   final dynamic game; // ESPN game object
   final String sport; // Sport key for API calls
   
-  const GameDetailsPage({Key? key, required this.game, required this.sport}) : super(key: key);
+  GameDetailsPage({super.key, required this.game, required this.sport});
   
   @override
   _GameDetailsPageState createState() => _GameDetailsPageState();
@@ -18,7 +18,9 @@ class GameDetailsPage extends StatefulWidget {
 class _GameDetailsPageState extends State<GameDetailsPage> {
   Map<String, dynamic>? gameDetails;
   Map<String, dynamic>? fanDuelOdds;
+  Map<String, List<Map<String, dynamic>>>? teamRosters; // Store both teams' rosters
   bool isLoading = true;
+  bool isLoadingRosters = false;
   String? error;
 
   @override
@@ -34,7 +36,7 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
         error = null;
       });
 
-      // Load both ESPN game details and FanDuel odds in parallel
+      // Load ESPN game details and FanDuel odds in parallel
       final results = await Future.wait([
         _fetchESPNGameDetails(),
         _fetchFanDuelOdds(),
@@ -45,11 +47,109 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
         fanDuelOdds = results[1];
         isLoading = false;
       });
+
+      // Load team rosters after main data is loaded
+      _loadTeamRosters();
     } catch (e) {
       setState(() {
         error = 'Failed to load game details';
         isLoading = false;
       });
+    }
+  }
+
+  Future<void> _loadTeamRosters() async {
+    try {
+      setState(() {
+        isLoadingRosters = true;
+      });
+
+      final homeTeamId = _getTeamId(true);
+      final awayTeamId = _getTeamId(false);
+
+      if (homeTeamId != null && awayTeamId != null) {
+        // Fetch both team rosters in parallel
+        final results = await Future.wait([
+          _fetchTeamRoster(homeTeamId, true),
+          _fetchTeamRoster(awayTeamId, false),
+        ]);
+
+        setState(() {
+          teamRosters = {
+            'home': results[0],
+            'away': results[1],
+          };
+          isLoadingRosters = false;
+        });
+      } else {
+        print('Could not find team IDs for roster lookup');
+        setState(() {
+          isLoadingRosters = false;
+        });
+      }
+    } catch (e) {
+      print('Error loading team rosters: $e');
+      setState(() {
+        isLoadingRosters = false;
+      });
+    }
+  }
+
+  String? _getTeamId(bool isHome) {
+    final competitions = widget.game['competitions'];
+    if (competitions == null || !(competitions is List) || competitions.isEmpty) {
+      return null;
+    }
+
+    final competition = competitions[0];
+    final competitors = competition['competitors'];
+    if (competitors == null || !(competitors is List) || competitors.length < 2) {
+      return null;
+    }
+
+    final team = competitors.firstWhere(
+      (comp) => comp['homeAway'] == (isHome ? 'home' : 'away'),
+      orElse: () => competitors[isHome ? 0 : 1],
+    );
+
+    return team['team']['id']?.toString();
+  }
+
+  Future<List<Map<String, dynamic>>> _fetchTeamRoster(String teamId, bool isHome) async {
+    try {
+      final sportPath = widget.sport; // e.g., 'football/nfl'
+      final response = await http.get(Uri.parse(
+        'https://site.api.espn.com/apis/site/v2/sports/$sportPath/teams/$teamId/roster'
+      ));
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        print('ESPN Roster API: Found data for team $teamId');
+        
+        // Extract athletes from the roster
+        final roster = data['athletes'] as List<dynamic>? ?? [];
+        return roster.map((athlete) {
+          final items = athlete['items'] as List<dynamic>? ?? [];
+          return items.map((item) {
+            return {
+              'id': item['id']?.toString() ?? '',
+              'name': item['displayName'] ?? item['name'] ?? 'Unknown',
+              'position': item['position']?['abbreviation'] ?? 'N/A',
+              'jerseyNumber': item['jersey']?.toString() ?? '',
+              'headshot': item['headshot']?['href'] ?? '',
+              'age': item['age']?.toString() ?? '',
+              'height': item['displayHeight'] ?? '',
+              'weight': item['displayWeight'] ?? '',
+            };
+          }).toList();
+        }).expand((element) => element).toList();
+      } else {
+        print('ESPN Roster API Error: ${response.statusCode}');
+        return [];
+      }
+    } catch (e) {
+      print('ESPN Roster API Error: $e');
+      return [];
     }
   }
 
@@ -82,11 +182,21 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
       
       // Get game date for filtering
       final gameDate = DateTime.parse(widget.game['date']);
+      final now = DateTime.now();
+      
+      // Only fetch odds for upcoming games (not past games)
+      if (gameDate.isBefore(now.subtract(const Duration(hours: 2)))) {
+        print('FanDuel Odds: Game is in the past, odds not available');
+        return null;
+      }
+      
       final dateStart = DateTime(gameDate.year, gameDate.month, gameDate.day);
       final dateEnd = dateStart.add(const Duration(days: 1));
       
       final commenceTimeFrom = dateStart.toUtc().toIso8601String();
       final commenceTimeTo = dateEnd.toUtc().toIso8601String();
+      
+      print('FanDuel Odds: Fetching odds for $oddsApiSport from $commenceTimeFrom to $commenceTimeTo');
       
       final response = await http.get(Uri.parse(
         'https://api.the-odds-api.com/v4/sports/$oddsApiSport/odds?apiKey=37a6ab2abd9938d21be970bb794eb6a3&regions=us&markets=h2h,spreads,totals&bookmakers=fanduel&commenceTimeFrom=$commenceTimeFrom&commenceTimeTo=$commenceTimeTo'
@@ -185,7 +295,7 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
       child: SafeArea(
         child: isLoading
             ? const Center(
-                child: CupertinoActivityIndicator(
+                child: const CupertinoActivityIndicator(
                   color: Color(0xFF4CAF50),
                   radius: 20,
                 ),
@@ -195,7 +305,7 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
+                        const Icon(
                           CupertinoIcons.exclamationmark_triangle,
                           color: CupertinoColors.destructiveRed,
                           size: 48,
@@ -225,6 +335,7 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
                         _buildGameScore(),
                         _buildFanDuelOdds(),
                         _buildGameStats(),
+                        _buildTeamRosters(),
                       ],
                     ),
                   ),
@@ -574,6 +685,230 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
           _buildInfoRow('Week', _getWeekInfo()),
           _buildInfoRow('Venue', _getVenueInfo()),
         ],
+      ),
+    );
+  }
+
+  Widget _buildTeamRosters() {
+    return Container(
+      margin: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF616161),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Padding(
+            padding: EdgeInsets.all(16),
+            child: Text(
+              'Team Rosters',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          if (isLoadingRosters)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.all(32),
+                child: CupertinoActivityIndicator(
+                  color: Color(0xFF4CAF50),
+                ),
+              ),
+            )
+          else if (teamRosters != null)
+            Material(
+              color: Colors.transparent,
+              child: DefaultTabController(
+                length: 2,
+                child: Column(
+                  children: [
+                    Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF424242),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: TabBar(
+                        indicator: BoxDecoration(
+                          color: const Color(0xFF4CAF50),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        labelColor: Colors.white,
+                        unselectedLabelColor: Colors.grey[400],
+                        tabs: [
+                          Tab(text: _getESPNTeamName(widget.game, false)), // Away team
+                          Tab(text: _getESPNTeamName(widget.game, true)),  // Home team
+                        ],
+                      ),
+                    ),
+                    SizedBox(
+                      height: 400, // Fixed height for roster display
+                      child: TabBarView(
+                        children: [
+                          _buildRosterList(teamRosters!['away'] ?? []),
+                          _buildRosterList(teamRosters!['home'] ?? []),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else
+            Container(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                children: [
+                  Icon(
+                    CupertinoIcons.person_3,
+                    color: Colors.grey[400],
+                    size: 48,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Roster information not available',
+                    style: TextStyle(
+                      color: Colors.grey[400],
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRosterList(List<Map<String, dynamic>> roster) {
+    if (roster.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              CupertinoIcons.person_3,
+              color: Colors.grey[400],
+              size: 48,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'No roster data available',
+              style: TextStyle(
+                color: Colors.grey[400],
+                fontSize: 16,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: roster.length,
+      itemBuilder: (context, index) {
+        final player = roster[index];
+        return _buildPlayerCard(player);
+      },
+    );
+  }
+
+  Widget _buildPlayerCard(Map<String, dynamic> player) {
+    final jerseyNumber = player['jerseyNumber'] ?? '';
+    final name = player['name'] ?? 'Unknown';
+    final position = player['position'] ?? 'N/A';
+    final height = player['height'] ?? '';
+    final weight = player['weight'] ?? '';
+    final age = player['age'] ?? '';
+    final headshot = player['headshot'] ?? '';
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFF424242),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          // Player headshot or jersey number
+          Container(
+            width: 50,
+            height: 50,
+            decoration: BoxDecoration(
+              color: const Color(0xFF4CAF50),
+              borderRadius: BorderRadius.circular(25),
+            ),
+            child: headshot.isNotEmpty
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(25),
+                    child: Image.network(
+                      headshot,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return _buildJerseyNumberWidget(jerseyNumber);
+                      },
+                    ),
+                  )
+                : _buildJerseyNumberWidget(jerseyNumber),
+          ),
+          const SizedBox(width: 12),
+          // Player information
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  position,
+                  style: TextStyle(
+                    color: Colors.grey[300],
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                if (height.isNotEmpty || weight.isNotEmpty || age.isNotEmpty)
+                  const SizedBox(height: 4),
+                if (height.isNotEmpty || weight.isNotEmpty || age.isNotEmpty)
+                  Text(
+                    [height, weight, age.isNotEmpty ? '${age}y' : '']
+                        .where((s) => s.isNotEmpty)
+                        .join(' • '),
+                    style: TextStyle(
+                      color: Colors.grey[400],
+                      fontSize: 12,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildJerseyNumberWidget(String jerseyNumber) {
+    return Center(
+      child: Text(
+        jerseyNumber.isNotEmpty ? '#$jerseyNumber' : '?',
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }

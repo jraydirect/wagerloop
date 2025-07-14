@@ -248,7 +248,7 @@ class _CreatePickPageState extends State<CreatePickPage> {
       );
 
       // Save to Supabase using social feed service
-      await _socialFeedService.createPickPost(pickPost);
+      final createdPickPost = await _socialFeedService.createPickPost(pickPost);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -257,7 +257,7 @@ class _CreatePickPageState extends State<CreatePickPage> {
             backgroundColor: Colors.green,
           ),
         );
-        Navigator.pop(context, true); // Return true to indicate success
+        Navigator.pop(context, createdPickPost); // Return the created post for instant addition
       }
     } catch (e) {
       print('Error creating pick post: $e');
