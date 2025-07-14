@@ -48,7 +48,7 @@ class _ScoresPageState extends State<ScoresPage> {
 
     try {
       final response = await http.get(Uri.parse(
-          'https://api.the-odds-api.com/v4/sports/$selectedSport/scores?apiKey=d759f3f3cec2c2aaf1f987c54a0d4a13&daysFrom=2'));
+          'https://api.the-odds-api.com/v4/sports/$selectedSport/scores?apiKey=37a6ab2abd9938d21be970bb794eb6a3&daysFrom=2'));
 
       if (response.statusCode == 200) {
         setState(() {

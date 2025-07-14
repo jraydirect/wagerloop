@@ -1,5 +1,5 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart'; // Still good for Colors, etc.
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:xml/xml.dart';
@@ -132,7 +132,7 @@ class _NewsPageState extends State<NewsPage> {
                     child: CupertinoButton(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       borderRadius: BorderRadius.circular(20),
-                      color: isSelected 
+                      color: isSelected
                           ? const Color(0xFF4CAF50) // Same green as Colors.green
                           : const Color(0xFF616161), // Same as Colors.grey[700]
                       onPressed: () {
@@ -231,7 +231,7 @@ class _NewsPageState extends State<NewsPage> {
   Widget _buildNewsCard(Map<String, dynamic> article) {
     return CupertinoButton(
       padding: EdgeInsets.zero,
-      onPressed: () => _openArticle(article['link']),
+      onPressed: () => _showArticleDetails(context, article),
       child: Container(
         decoration: BoxDecoration(
           color: const Color(0xFF616161), // Same as Colors.grey[700]
@@ -247,7 +247,7 @@ class _NewsPageState extends State<NewsPage> {
         child: ClipRRect(
           borderRadius: BorderRadius.circular(12),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start, // Ensure main column content is left-aligned
             children: [
               // Article Image
               if (article['imageUrl'] != null)
@@ -271,63 +271,39 @@ class _NewsPageState extends State<NewsPage> {
                     },
                   ),
                 ),
-              // Article Content
+              // Article Content (Title and CBS Sports)
               Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(16), // Consistent padding
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start, // Ensure nested column content is left-aligned
+                  mainAxisSize: MainAxisSize.min, // Allow column to shrink wrap its content vertically
                   children: [
-                    // Title
+                    // Title - No maxLines or overflow.ellipsis here!
                     Text(
                       article['title'] ?? 'No title',
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
+                        height: 1.2,
                       ),
+                      textAlign: TextAlign.start, // Explicitly set to start
+                      softWrap: true,
                     ),
-                    const SizedBox(height: 8),
-                    // Description
-                    if (article['description'] != null)
-                      Text(
-                        article['description'],
-                        style: const TextStyle(
-                          color: Color(0xFFE0E0E0), // Same as Colors.grey[300]
-                          fontSize: 14,
-                        ),
-                        maxLines: 3,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    const SizedBox(height: 16),
-                    // Footer with date and author
+                    const SizedBox(height: 10), // Space between title and "CBS Sports"
+                    // Add "CBS Sports" in the bottom right corner
+                    // Use a Row with Spacer to push CBS Sports to the right
                     Row(
                       children: [
-                        const Icon(
-                          CupertinoIcons.clock,
-                          size: 16,
-                          color: Color(0xFF4CAF50), // Same green
-                        ),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: Text(
-                            _formatDate(article['pubDate'] ?? ''),
-                            style: const TextStyle(
-                              color: Color(0xFFBDBDBD), // Same as Colors.grey[400]
-                              fontSize: 12,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                        Spacer(), // This pushes the following widget to the right
+                        Text(
+                          'CBS Sports',
+                          style: TextStyle(
+                            color: Color(0xFFBDBDBD), // A lighter grey for subtle branding
+                            fontSize: 12,
+                            fontStyle: FontStyle.italic,
                           ),
                         ),
-                        if (article['creator'] != null)
-                          Text(
-                            'by ${article['creator']}',
-                            style: const TextStyle(
-                              color: Color(0xFF4CAF50), // Same green
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
                       ],
                     ),
                   ],
@@ -340,6 +316,79 @@ class _NewsPageState extends State<NewsPage> {
     );
   }
 
+  // NEW: ArticleDetailModal is now pushed as a full-screen route
+  void _showArticleDetails(BuildContext context, Map<String, dynamic> article) {
+    Navigator.of(context).push(
+      CupertinoPageRoute(
+        fullscreenDialog: true, // Makes it a full-screen modal presentation
+        builder: (context) => ArticleDetailModal(article: article),
+      ),
+    );
+  }
+
+  String _formatDate(String dateString) {
+    try {
+      final date = DateTime.parse(dateString);
+      final now = DateTime.now();
+      final difference = now.difference(date);
+
+      if (difference.inDays == 0) {
+        if (difference.inHours == 0) {
+          return '${difference.inMinutes}m ago';
+        }
+        return '${difference.inHours}h ago';
+      } else if (difference.inDays == 1) {
+        return 'Yesterday';
+      } else {
+        // You might want to format this more robustly for older dates, e.g., 'MMM dd, yyyy'
+        return '${difference.inDays}d ago';
+      }
+    } catch (e) {
+      return dateString;
+    }
+  }
+
+  // Renamed _openArticle to _openArticleExternal to clarify its purpose
+  Future<void> _openArticleExternal(String? url) async {
+    if (url != null) {
+      final uri = Uri.parse(url);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        showCupertinoDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return CupertinoAlertDialog(
+              title: const Text('Error'),
+              content: const Text('Could not open article'),
+              actions: [
+                CupertinoDialogAction(
+                  child: const Text('OK'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      }
+    }
+  }
+}
+
+// Separate StatefulWidget for the Article Detail Modal to match app theme
+class ArticleDetailModal extends StatefulWidget {
+  final Map<String, dynamic> article;
+
+  const ArticleDetailModal({Key? key, required this.article}) : super(key: key);
+
+  @override
+  _ArticleDetailModalState createState() => _ArticleDetailModalState();
+}
+
+class _ArticleDetailModalState extends State<ArticleDetailModal> {
+  // Helper to format date, copied from NewsPage for self-containment
   String _formatDate(String dateString) {
     try {
       final date = DateTime.parse(dateString);
@@ -361,16 +410,16 @@ class _NewsPageState extends State<NewsPage> {
     }
   }
 
-  Future<void> _openArticle(String? url) async {
+  // Helper to open external link
+  Future<void> _openArticleExternal(String? url, BuildContext context) async {
     if (url != null) {
       final uri = Uri.parse(url);
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
       } else {
-        // Show Cupertino-style alert dialog instead of SnackBar
         showCupertinoDialog(
           context: context,
-          builder: (BuildContext context) {
+          builder: (BuildContext dialogContext) { // Use dialogContext to avoid conflicts
             return CupertinoAlertDialog(
               title: const Text('Error'),
               content: const Text('Could not open article'),
@@ -378,7 +427,7 @@ class _NewsPageState extends State<NewsPage> {
                 CupertinoDialogAction(
                   child: const Text('OK'),
                   onPressed: () {
-                    Navigator.of(context).pop();
+                    Navigator.of(dialogContext).pop();
                   },
                 ),
               ],
@@ -387,5 +436,152 @@ class _NewsPageState extends State<NewsPage> {
         );
       }
     }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final article = widget.article;
+
+    // A more aggressive regex to strip out all HTML tags and entities.
+    // This is crucial for cleaning the description.
+    String cleanDescription = (article['description'] as String?)
+            ?.replaceAll(RegExp(r'<[^>]*>|&[^;]+;'), '') // Strip HTML tags and entities
+            .replaceAll(RegExp(r'\s+'), ' ') // Replace multiple spaces with a single space
+            .trim() ??
+        ''; // Trim leading/trailing whitespace
+
+    return CupertinoPageScaffold(
+      backgroundColor: const Color(0xFF424242), // Match app background
+      navigationBar: CupertinoNavigationBar(
+        backgroundColor: const Color(0xFF424242), // Match app background
+        middle: const Text(
+          'Article Details',
+          style: TextStyle(color: Colors.white), // Title for the modal screen
+        ),
+        leading: CupertinoNavigationBarBackButton(
+          color: const Color(0xFF4CAF50), // Green back button
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        border: null, // Remove default border
+      ),
+      child: SafeArea(
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start, // Ensure column content is left-aligned
+            children: [
+              // Article Image
+              if (article['imageUrl'] != null)
+                Image.network(
+                  article['imageUrl']!,
+                  height: 250,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      height: 250,
+                      color: const Color(0xFF757575),
+                      child: const Icon(
+                        CupertinoIcons.sportscourt,
+                        size: 70,
+                        color: Color(0xFF9E9E9E),
+                      ),
+                    );
+                  },
+                ),
+              Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start, // Ensure nested column content is left-aligned
+                  children: [
+                    // Title
+                    Text(
+                      article['title'] ?? 'No title',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        height: 1.2,
+                        decoration: TextDecoration.none, // Explicitly ensure no decoration
+                      ),
+                      textAlign: TextAlign.start, // Explicitly set to start
+                      softWrap: true,
+                    ),
+                    const SizedBox(height: 12),
+                    // Description (Full)
+                    if (cleanDescription.isNotEmpty) // Use the cleaned description
+                      Text(
+                        cleanDescription,
+                        style: const TextStyle(
+                          color: Color(0xFFE0E0E0),
+                          fontSize: 16,
+                          height: 1.5,
+                          decoration: TextDecoration.none, // Explicitly ensure no decoration
+                        ),
+                        textAlign: TextAlign.start, // Explicitly set to start
+                        softWrap: true,
+                      ),
+                    const SizedBox(height: 20),
+                    // Footer with date and author
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(
+                              CupertinoIcons.clock,
+                              size: 18,
+                              color: Color(0xFF4CAF50),
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              _formatDate(article['pubDate'] ?? ''),
+                              style: const TextStyle(
+                                color: Color(0xFFBDBDBD),
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (article['creator'] != null)
+                          Flexible(
+                            child: Text(
+                              'by ${article['creator']}',
+                              style: const TextStyle(
+                                color: Color(0xFF4CAF50),
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              textAlign: TextAlign.end,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    // Button to open original article
+                    Center(
+                      child: CupertinoTheme(
+                        data: CupertinoTheme.of(context).copyWith(
+                          primaryColor: const Color(0xFF4CAF50), // Green for the button
+                        ),
+                        child: CupertinoButton.filled(
+                          onPressed: () {
+                            _openArticleExternal(article['link'], context);
+                          },
+                          child: const Text('Read Full Article on CBS Sports'),
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

@@ -332,69 +332,74 @@ class _CreatePickPageState extends State<CreatePickPage> {
             ),
         ],
       ),
-      body: Column(
-        children: [
-          // Show selected picks summary if any
-          if (_selectedPicks.isNotEmpty) _buildSelectedPicksSummary(),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              // Show selected picks summary if any
+              if (_selectedPicks.isNotEmpty) _buildSelectedPicksSummary(),
 
-          // Search Section
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _selectedPicks.isEmpty 
-                      ? 'Search for a game:' 
-                      : 'Add another game:',
-                  style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: _searchController,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    hintText: 'Enter team name (e.g., "Kentucky", "Lakers")',
-                    hintStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
-                    prefixIcon: const Icon(Icons.search, color: Colors.white),
-                    suffixIcon: _isSearching
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: Padding(
-                              padding: EdgeInsets.all(12),
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            ),
-                          )
-                        : null,
-                    filled: true,
-                    fillColor: Colors.grey[700],
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
+              // Search Section
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _selectedPicks.isEmpty 
+                          ? 'Search for a game:' 
+                          : 'Add another game:',
+                      style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                     ),
-                  ),
-                  onChanged: (value) {
-                    // Debounce search
-                    Future.delayed(const Duration(milliseconds: 500), () {
-                      if (_searchController.text == value) {
-                        _searchGames(value);
-                      }
-                    });
-                  },
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: _searchController,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: InputDecoration(
+                        hintText: 'Enter team name (e.g., "Kentucky", "Lakers")',
+                        hintStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
+                        prefixIcon: const Icon(Icons.search, color: Colors.white),
+                        suffixIcon: _isSearching
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: Padding(
+                                  padding: EdgeInsets.all(12),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              )
+                            : null,
+                        filled: true,
+                        fillColor: Colors.grey[700],
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                      onChanged: (value) {
+                        // Debounce search
+                        Future.delayed(const Duration(milliseconds: 500), () {
+                          if (_searchController.text == value) {
+                            _searchGames(value);
+                          }
+                        });
+                      },
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
+              ),
 
-          // Main content area
-          Expanded(
-            child: _buildMainContent(),
+              // Main content area
+              SizedBox(
+                height: MediaQuery.of(context).size.height * 0.5,
+                child: _buildMainContent(),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -404,9 +409,9 @@ class _CreatePickPageState extends State<CreatePickPage> {
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: _isParlay ? Colors.purple.withOpacity(0.2) : Colors.green.withOpacity(0.2),
+        color: _isParlay ? Colors.green.withOpacity(0.2) : Colors.green.withOpacity(0.2),
         border: Border.all(
-          color: _isParlay ? Colors.purple.withOpacity(0.5) : Colors.green.withOpacity(0.5),
+          color: _isParlay ? Colors.green.withOpacity(0.5) : Colors.green.withOpacity(0.5),
         ),
         borderRadius: BorderRadius.circular(12),
       ),
@@ -418,14 +423,14 @@ class _CreatePickPageState extends State<CreatePickPage> {
             children: [
               Icon(
                 _isParlay ? Icons.layers : Icons.sports_basketball,
-                color: _isParlay ? Colors.purple : Colors.green,
+                color: _isParlay ? Colors.green : Colors.green,
                 size: 20,
               ),
               const SizedBox(width: 8),
               Text(
                 _isParlay ? '${_selectedPicks.length}-Leg Parlay' : 'Single Pick',
                 style: TextStyle(
-                  color: _isParlay ? Colors.purple : Colors.green,
+                  color: _isParlay ? Colors.green : Colors.green,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
@@ -464,7 +469,7 @@ class _CreatePickPageState extends State<CreatePickPage> {
                   color: Colors.grey[800],
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: _isParlay ? Colors.purple.withOpacity(0.3) : Colors.green.withOpacity(0.3),
+                    color: _isParlay ? Colors.green.withOpacity(0.3) : Colors.green.withOpacity(0.3),
                   ),
                 ),
                 child: Column(
@@ -510,10 +515,10 @@ class _CreatePickPageState extends State<CreatePickPage> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: (_isParlay ? Colors.purple : Colors.green).withOpacity(0.1),
+                        color: (_isParlay ? Colors.green : Colors.green).withOpacity(0.1),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: (_isParlay ? Colors.purple : Colors.green).withOpacity(0.3),
+                          color: (_isParlay ? Colors.green : Colors.green).withOpacity(0.3),
                         ),
                       ),
                       child: Row(
@@ -523,7 +528,7 @@ class _CreatePickPageState extends State<CreatePickPage> {
                             child: Text(
                               _getPickDisplayText(pick),
                               style: TextStyle(
-                                color: _isParlay ? Colors.purple : Colors.green,
+                                color: _isParlay ? Colors.green : Colors.green,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 14,
                               ),
@@ -583,14 +588,14 @@ class _CreatePickPageState extends State<CreatePickPage> {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    Colors.purple.withOpacity(0.3),
-                    Colors.purple.withOpacity(0.1),
+                    Colors.green.withOpacity(0.3),
+                    Colors.green.withOpacity(0.1),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.purple.withOpacity(0.5)),
+                border: Border.all(color: Colors.green.withOpacity(0.5)),
               ),
               child: Column(
                 children: [

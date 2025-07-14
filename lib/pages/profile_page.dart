@@ -11,6 +11,7 @@ import 'package:timeago/timeago.dart' as timeago;
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'followers_list_page.dart';
+import 'dart:convert'; // Added for jsonDecode
 
 class ProfilePage extends StatefulWidget {
   @override
@@ -44,6 +45,10 @@ class _ProfilePageState extends State<ProfilePage> {
   // Teams data
   List<dynamic> _userPosts = []; // Can contain both Post and PickPost objects
   bool _isLoadingPosts = false;
+
+  // Add state for liked posts
+  List<dynamic> _likedPosts = [];
+  bool _isLoadingLikedPosts = false;
 
   // Available teams for selection
   final Map<String, List<String>> _availableTeams = {
@@ -95,7 +100,7 @@ class _ProfilePageState extends State<ProfilePage> {
     _loadUserProfile();
     _loadUserPosts();
     _loadFollowerCounts();
-    
+    _loadLikedPosts();
     // Listen for follow events to update counts instantly
     _followNotifier.addListener(_onFollowChanged);
   }
@@ -1037,6 +1042,163 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+  // Fetch liked posts for the current user
+  Future<void> _loadLikedPosts() async {
+    setState(() => _isLoadingLikedPosts = true);
+    try {
+      final user = _authService.currentUser;
+      if (user != null) {
+        // Query posts that the user has liked
+        final response = await _authService.supabase
+            .from('likes')
+            .select('post_id, post:posts(*)')
+            .eq('user_id', user.id);
+        final likedPostsRaw = response as List<dynamic>;
+        final posts = <dynamic>[];
+        for (final item in likedPostsRaw) {
+          final postData = item['post'];
+          if (postData == null) continue;
+          final postType = postData['post_type'] ?? 'text';
+          if (postType == 'pick' && postData['picks_data'] != null) {
+            List<Pick> picks = [];
+            try {
+              final picksJson = jsonDecode(postData['picks_data']);
+              picks = (picksJson as List).map((pickJson) => Pick.fromJson(pickJson)).toList();
+            } catch (e) {
+              print('Error parsing picks data: $e');
+            }
+            posts.add(PickPost(
+              id: postData['id'],
+              userId: postData['profile_id'] ?? postData['user_id'] ?? '',
+              username: postData['username'] ?? 'Anonymous',
+              content: postData['content'],
+              timestamp: DateTime.parse(postData['created_at']).toLocal(),
+              likes: 0,
+              comments: const [],
+              reposts: 0,
+              isLiked: true,
+              isReposted: false,
+              avatarUrl: postData['avatar_url'],
+              picks: picks,
+            ));
+          } else {
+            posts.add(Post(
+              id: postData['id'],
+              userId: postData['profile_id'] ?? postData['user_id'] ?? '',
+              username: postData['username'] ?? 'Anonymous',
+              content: postData['content'],
+              timestamp: DateTime.parse(postData['created_at']).toLocal(),
+              likes: 0,
+              comments: const [],
+              reposts: 0,
+              isLiked: true,
+              isReposted: false,
+              avatarUrl: postData['avatar_url'],
+            ));
+          }
+        }
+        setState(() => _likedPosts = posts);
+      }
+    } catch (e) {
+      print('Error loading liked posts: $e');
+    } finally {
+      setState(() => _isLoadingLikedPosts = false);
+    }
+  }
+
+  Widget _buildLikedPostsList() {
+    if (_isLoadingLikedPosts) {
+      return const Center(child: CircularProgressIndicator(color: Colors.green));
+    }
+    if (_likedPosts.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.all(16),
+        child: Text(
+          'No liked posts yet',
+          style: TextStyle(color: Colors.grey),
+        ),
+      );
+    }
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: _likedPosts.length,
+      itemBuilder: (context, index) {
+        final post = _likedPosts[index];
+        final content = post is Post ? post.content : (post as PickPost).content;
+        final timestamp = post is Post ? post.timestamp : (post as PickPost).timestamp;
+        final likes = post is Post ? post.likes : (post as PickPost).likes;
+        final comments = post is Post ? post.comments : (post as PickPost).comments;
+        final reposts = post is Post ? post.reposts : (post as PickPost).reposts;
+        final isLiked = true;
+        final isReposted = post is Post ? post.isReposted : (post as PickPost).isReposted;
+        return Card(
+          color: Colors.grey[700],
+          margin: const EdgeInsets.only(bottom: 8),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        content,
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ],
+                ),
+                if (post is PickPost && post.hasPicks) ...[
+                  const SizedBox(height: 12),
+                  PicksDisplayWidget(
+                    picks: post.picks,
+                    showParlayBadge: true,
+                    compact: true,
+                  ),
+                ],
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Text(
+                      timeago.format(timestamp, locale: 'en'),
+                      style: TextStyle(color: Colors.grey[400], fontSize: 12),
+                    ),
+                    const Spacer(),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _buildActionButton(
+                      icon: Icons.favorite,
+                      label: likes.toString(),
+                      onTap: () {},
+                      color: Colors.red,
+                    ),
+                    _buildActionButton(
+                      icon: Icons.comment_outlined,
+                      label: comments.length.toString(),
+                      onTap: () {},
+                    ),
+                    _buildActionButton(
+                      icon: Icons.repeat,
+                      label: reposts.toString(),
+                      onTap: () {},
+                      color: isReposted ? Colors.green : Colors.grey,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -1329,6 +1491,18 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
                 SizedBox(height: 16),
                 _buildPostsList(),
+
+                SizedBox(height: 32),
+                Text(
+                  'Liked Posts',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 16),
+                _buildLikedPostsList(),
 
                 SizedBox(height: 32),
                 ElevatedButton(
