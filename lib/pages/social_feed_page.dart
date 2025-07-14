@@ -828,6 +828,34 @@ class _SocialFeedPageState extends State<SocialFeedPage> {
     );
   }
 
+  // Utility functions for odds conversion (copied from create_pick_page.dart)
+  double _americanToDecimal(String oddsStr) {
+    int odds = int.tryParse(oddsStr) ?? 0;
+    if (odds > 0) {
+      return (odds / 100) + 1;
+    } else {
+      return 1 + (100 / -odds);
+    }
+  }
+
+  String _decimalToAmerican(double dec) {
+    if (dec >= 2) {
+      return '+ 2${((dec - 1) * 100).round()}';
+    } else {
+      return '-${(100 / (dec - 1)).round()}';
+    }
+  }
+
+  String? _getParlayOdds(List picks) {
+    if (picks.length < 2) return null;
+    double product = 1.0;
+    for (var pick in picks) {
+      double decimal = _americanToDecimal(pick.odds);
+      product *= decimal;
+    }
+    return _decimalToAmerican(product);
+  }
+
   Widget _buildPostCard(dynamic post) {
     // Extract common properties
     final id = post is Post ? post.id : (post as PickPost).id;
@@ -846,6 +874,218 @@ class _SocialFeedPageState extends State<SocialFeedPage> {
     final currentUserId = _authService.currentUser?.id;
     final isOwnPost = currentUserId != null && userId == currentUserId;
 
+    // Show picks if this is a PickPost
+    if (post is PickPost && post.hasPicks) {
+      final isParlay = post.picks.length > 1;
+      return Card(
+        margin: const EdgeInsets.only(bottom: 8),
+        color: Colors.grey[700], // Use green theme for all
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  CircleAvatar(
+                    radius: 20,
+                    backgroundColor: Colors.blue,
+                    backgroundImage: avatarUrl != null
+                        ? NetworkImage(avatarUrl!)
+                        : null,
+                    child: avatarUrl == null
+                        ? Text(
+                            username[0].toUpperCase(),
+                            style: const TextStyle(color: Colors.white),
+                          )
+                        : null,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          username,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          timeago.format(timestamp),
+                          style: TextStyle(color: Colors.grey[400], fontSize: 12),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (isParlay)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.green.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.green.withOpacity(0.5)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.layers, color: Colors.green, size: 18),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${post.picks.length}-Leg Parlay',
+                            style: const TextStyle(
+                              color: Colors.green,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                          if (_getParlayOdds(post.picks) != null) ...[
+                            const SizedBox(width: 8),
+                            Text(
+                              _getParlayOdds(post.picks)!,
+                              style: const TextStyle(
+                                color: Colors.green,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              // Content
+              Text(
+                content,
+                style: const TextStyle(color: Colors.white),
+              ),
+              const SizedBox(height: 12),
+              // Picks list with improved formatting
+              Column(
+                children: post.picks.asMap().entries.map<Widget>((entry) {
+                  final index = entry.key;
+                  final pick = entry.value;
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[800],
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Colors.green.withOpacity(0.3),
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '${pick.game.awayTeam} @ ${pick.game.homeTeam}',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    '${pick.game.formattedGameTime} • ${pick.game.sport}',
+                                    style: TextStyle(
+                                      color: Colors.grey[400],
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.green.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: Colors.green.withOpacity(0.3),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  pick.displayText,
+                                  style: const TextStyle(
+                                    color: Colors.green,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.yellow.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  pick.odds,
+                                  style: const TextStyle(
+                                    color: Colors.yellow,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 8),
+              // Actions
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildActionButton(
+                    icon: isLiked ? Icons.favorite : Icons.favorite_border,
+                    label: likes.toString(),
+                    onTap: () => _toggleLike(post),
+                    color: isLiked ? Colors.red : Colors.grey,
+                  ),
+                  _buildActionButton(
+                    icon: Icons.comment_outlined,
+                    label: comments.length.toString(),
+                    onTap: () => _showComments(post),
+                  ),
+                  _buildActionButton(
+                    icon: Icons.repeat,
+                    label: reposts.toString(),
+                    onTap: () => _toggleRepost(post),
+                    color: isReposted ? Colors.green : Colors.grey,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    // For regular posts, use the existing _buildPostCard logic
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       color: Colors.grey[700],
