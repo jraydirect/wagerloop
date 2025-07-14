@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:convert';
 import '../utils/team_logo_utils.dart';
+import 'game_details_page.dart';
 
 enum GameTimeFilter { today, tomorrow, upcoming }
 
@@ -532,23 +533,35 @@ class _ScoresPageState extends State<ScoresPage> {
   }
 
   Widget _buildScoreCard(dynamic game) {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFF616161), // Same as Colors.grey[700]
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          CupertinoPageRoute(
+            builder: (context) => GameDetailsPage(
+              game: game,
+              sport: selectedSport,
+            ),
           ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+        );
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFF616161), // Same as Colors.grey[700]
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.2),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
             // Game Status Row
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -612,9 +625,10 @@ class _ScoresPageState extends State<ScoresPage> {
                 _buildTeamInfoFromCompetition(game, false),
               ],
             ),
-          ],
-        ),
-      ),
-    );
+            ], // Closes Column children
+          ), // Closes Column
+        ), // Closes Padding
+      ), // Closes Container
+    ); // Closes GestureDetector
   }
 }
