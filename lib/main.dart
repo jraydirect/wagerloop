@@ -26,7 +26,7 @@ void main() async {
 
   runApp(
     DevicePreview(
-      enabled: !(kIsWeb || Platform.isIOS) && !const bool.fromEnvironment('dart.vm.product'),
+      enabled: kIsWeb && !const bool.fromEnvironment('dart.vm.product'),
       builder: (context) => const MyApp(),
     ),
   );
