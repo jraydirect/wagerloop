@@ -19,6 +19,10 @@ class AuthService {
     );
   }
 
+  Future<void> updateFavoriteTeams(List<dynamic> favoriteTeams) async {
+    await updateProfile(favoriteTeams: favoriteTeams.cast<String>());
+  }
+
   // Debug method to check authentication state
   Future<void> debugAuthState() async {
     print('=== AUTH DEBUG INFO ===');

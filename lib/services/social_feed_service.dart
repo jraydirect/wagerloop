@@ -301,4 +301,27 @@ class SocialFeedService {
       rethrow;
     }
   }
+
+  // Delete a post (only by the owner)
+  Future<void> deletePost(String postId) async {
+    try {
+      final user = _supabase.auth.currentUser;
+      if (user == null) throw 'User not authenticated';
+
+      // First delete all related data
+      await _supabase.from('likes').delete().eq('post_id', postId);
+      await _supabase.from('comments').delete().eq('post_id', postId);
+      await _supabase.from('reposts').delete().eq('post_id', postId);
+      
+      // Then delete the post (only if user owns it)
+      await _supabase
+          .from('posts')
+          .delete()
+          .eq('id', postId)
+          .eq('user_id', user.id); // Ensure only owner can delete
+    } catch (e) {
+      print('Error deleting post: $e');
+      rethrow;
+    }
+  }
 }

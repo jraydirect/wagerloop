@@ -25,9 +25,53 @@ class _ProfilePageState extends State<ProfilePage> {
   final _bioController = TextEditingController();
   final _emailController = TextEditingController();
 
-  // Posts data
+  // Teams data
   List<Post> _userPosts = [];
   bool _isLoadingPosts = false;
+
+  // Available teams for selection
+  final Map<String, List<String>> _availableTeams = {
+    'NFL': [
+      'Arizona Cardinals', 'Atlanta Falcons', 'Baltimore Ravens', 'Buffalo Bills',
+      'Carolina Panthers', 'Chicago Bears', 'Cincinnati Bengals', 'Cleveland Browns',
+      'Dallas Cowboys', 'Denver Broncos', 'Detroit Lions', 'Green Bay Packers',
+      'Houston Texans', 'Indianapolis Colts', 'Jacksonville Jaguars', 'Kansas City Chiefs',
+      'Las Vegas Raiders', 'Los Angeles Chargers', 'Los Angeles Rams', 'Miami Dolphins',
+      'Minnesota Vikings', 'New England Patriots', 'New Orleans Saints', 'New York Giants',
+      'New York Jets', 'Philadelphia Eagles', 'Pittsburgh Steelers', 'San Francisco 49ers',
+      'Seattle Seahawks', 'Tampa Bay Buccaneers', 'Tennessee Titans', 'Washington Commanders'
+    ],
+    'NBA': [
+      'Atlanta Hawks', 'Boston Celtics', 'Brooklyn Nets', 'Charlotte Hornets',
+      'Chicago Bulls', 'Cleveland Cavaliers', 'Dallas Mavericks', 'Denver Nuggets',
+      'Detroit Pistons', 'Golden State Warriors', 'Houston Rockets', 'Indiana Pacers',
+      'LA Clippers', 'Los Angeles Lakers', 'Memphis Grizzlies', 'Miami Heat',
+      'Milwaukee Bucks', 'Minnesota Timberwolves', 'New Orleans Pelicans', 'New York Knicks',
+      'Oklahoma City Thunder', 'Orlando Magic', 'Philadelphia 76ers', 'Phoenix Suns',
+      'Portland Trail Blazers', 'Sacramento Kings', 'San Antonio Spurs', 'Toronto Raptors',
+      'Utah Jazz', 'Washington Wizards'
+    ],
+    'MLB': [
+      'Arizona Diamondbacks', 'Atlanta Braves', 'Baltimore Orioles', 'Boston Red Sox',
+      'Chicago Cubs', 'Chicago White Sox', 'Cincinnati Reds', 'Cleveland Guardians',
+      'Colorado Rockies', 'Detroit Tigers', 'Houston Astros', 'Kansas City Royals',
+      'Los Angeles Angels', 'Los Angeles Dodgers', 'Miami Marlins', 'Milwaukee Brewers',
+      'Minnesota Twins', 'New York Mets', 'New York Yankees', 'Oakland Athletics',
+      'Philadelphia Phillies', 'Pittsburgh Pirates', 'San Diego Padres', 'San Francisco Giants',
+      'Seattle Mariners', 'St. Louis Cardinals', 'Tampa Bay Rays', 'Texas Rangers',
+      'Toronto Blue Jays', 'Washington Nationals'
+    ],
+    'NHL': [
+      'Anaheim Ducks', 'Arizona Coyotes', 'Boston Bruins', 'Buffalo Sabres',
+      'Calgary Flames', 'Carolina Hurricanes', 'Chicago Blackhawks', 'Colorado Avalanche',
+      'Columbus Blue Jackets', 'Dallas Stars', 'Detroit Red Wings', 'Edmonton Oilers',
+      'Florida Panthers', 'Los Angeles Kings', 'Minnesota Wild', 'Montreal Canadiens',
+      'Nashville Predators', 'New Jersey Devils', 'New York Islanders', 'New York Rangers',
+      'Ottawa Senators', 'Philadelphia Flyers', 'Pittsburgh Penguins', 'San Jose Sharks',
+      'Seattle Kraken', 'St Louis Blues', 'Tampa Bay Lightning', 'Toronto Maple Leafs',
+      'Vancouver Canucks', 'Vegas Golden Knights', 'Washington Capitals', 'Winnipeg Jets'
+    ],
+  };
 
   @override
   void initState() {
@@ -60,6 +104,133 @@ class _ProfilePageState extends State<ProfilePage> {
       print('Error loading profile: $e');
     } finally {
       setState(() => _isLoading = false);
+    }
+  }
+
+  void _showTeamSelectionDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          backgroundColor: Colors.grey[700],
+          title: const Text(
+            'Select Favorite Teams',
+            style: TextStyle(color: Colors.white),
+          ),
+          content: SizedBox(
+            width: double.maxFinite,
+            height: 400,
+            child: DefaultTabController(
+              length: 4,
+              child: Column(
+                children: [
+                  const TabBar(
+                    labelColor: Colors.green,
+                    unselectedLabelColor: Colors.grey,
+                    indicatorColor: Colors.green,
+                    tabs: [
+                      Tab(text: 'NFL'),
+                      Tab(text: 'NBA'),
+                      Tab(text: 'MLB'),
+                      Tab(text: 'NHL'),
+                    ],
+                  ),
+                  Expanded(
+                    child: TabBarView(
+                      children: _availableTeams.entries.map((entry) {
+                        return _buildTeamSelectionList(entry.key, entry.value, setDialogState);
+                      }).toList(),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text(
+                'Done',
+                style: TextStyle(color: Colors.green),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTeamSelectionList(String league, List<String> teams, StateSetter setDialogState) {
+    final favoriteTeams = (_userData?['favorite_teams'] as List<dynamic>?) ?? [];
+    
+    return ListView.builder(
+      itemCount: teams.length,
+      itemBuilder: (context, index) {
+        final team = teams[index];
+        final isSelected = favoriteTeams.contains(team);
+        
+        return CheckboxListTile(
+          title: Text(
+            team,
+            style: const TextStyle(color: Colors.white, fontSize: 14),
+          ),
+          value: isSelected,
+          activeColor: Colors.green,
+          checkColor: Colors.white,
+          onChanged: (bool? value) {
+            _toggleFavoriteTeam(team, value ?? false);
+            // Update the dialog state immediately
+            setDialogState(() {});
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _toggleFavoriteTeam(String team, bool isSelected) async {
+    try {
+      List<dynamic> currentTeams = List.from(_userData?['favorite_teams'] ?? []);
+      
+      if (isSelected && !currentTeams.contains(team)) {
+        currentTeams.add(team);
+      } else if (!isSelected && currentTeams.contains(team)) {
+        currentTeams.remove(team);
+      }
+
+      // Update local state IMMEDIATELY for instant UI feedback
+      setState(() {
+        _userData!['favorite_teams'] = currentTeams;
+      });
+
+      // Update in database
+      await _authService.updateFavoriteTeams(currentTeams);
+    } catch (e) {
+      // If database update fails, revert the local state
+      await _loadUserProfile();
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error updating favorite teams: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _signOut() async {
+    try {
+      await _authService.signOut();
+      if (mounted) {
+        Navigator.of(context)
+            .pushNamedAndRemoveUntil('/auth/login', (route) => false);
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error signing out: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -109,45 +280,130 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  Future<void> _signOut() async {
-    try {
-      await _authService.signOut();
-      if (mounted) {
-        Navigator.of(context)
-            .pushNamedAndRemoveUntil('/auth/login', (route) => false);
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error signing out: ${e.toString()}'),
-          backgroundColor: Colors.red,
+  Future<void> _deletePost(String postId) async {
+    // Show confirmation dialog
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey[700],
+        title: const Text(
+          'Delete Post',
+          style: TextStyle(color: Colors.white),
         ),
-      );
+        content: const Text(
+          'Are you sure you want to delete this post? This action cannot be undone.',
+          style: TextStyle(color: Colors.white),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: Colors.grey),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldDelete == true) {
+      try {
+        await _socialFeedService.deletePost(postId);
+        
+        // Remove from local list
+        setState(() {
+          _userPosts.removeWhere((post) => post.id == postId);
+        });
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Post deleted successfully'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error deleting post: ${e.toString()}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
     }
   }
 
   Widget _buildTeamsList() {
     final favoriteTeams = _userData?['favorite_teams'] as List<dynamic>? ?? [];
-    if (favoriteTeams.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.all(16),
-        child: Text(
-          'No favorite teams selected',
-          style: TextStyle(color: Colors.grey),
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Favorite Teams',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            TextButton(
+              onPressed: _showTeamSelectionDialog,
+              child: Text(
+                'Edit',
+                style: TextStyle(
+                  color: Colors.green,
+                  fontSize: 16,
+                ),
+              ),
+            ),
+          ],
         ),
-      );
-    }
-
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: favoriteTeams
-          .map((team) => Chip(
-                label: Text(team),
-                backgroundColor: Colors.green.withOpacity(0.2), // Changed from blue to green
-                labelStyle: const TextStyle(color: Colors.white),
-              ))
-          .toList(),
+        SizedBox(height: 8),
+        if (favoriteTeams.isEmpty)
+          const Padding(
+            padding: EdgeInsets.all(16),
+            child: Text(
+              'No favorite teams selected',
+              style: TextStyle(color: Colors.grey),
+            ),
+          )
+        else
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: favoriteTeams
+                .map((team) => Chip(
+                      label: Text(
+                        team,
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                      backgroundColor: Colors.grey[600],
+                      deleteIcon: const Icon(
+                        Icons.close, 
+                        size: 18, 
+                        color: Colors.white70,
+                      ),
+                      onDeleted: () => _toggleFavoriteTeam(team, false),
+                      side: BorderSide(
+                        color: Colors.grey[500]!,
+                        width: 1,
+                      ),
+                    ))
+                .toList(),
+          ),
+      ],
     );
   }
 
@@ -180,9 +436,26 @@ class _ProfilePageState extends State<ProfilePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  post.content,
-                  style: const TextStyle(color: Colors.white),
+                // Post header with delete button
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        post.content,
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(
+                        Icons.delete_outline,
+                        color: Colors.red,
+                        size: 20,
+                      ),
+                      onPressed: () => _deletePost(post.id),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 8),
                 Row(
@@ -463,14 +736,6 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
 
                 SizedBox(height: 32),
-                Text(
-                  'Favorite Teams',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
                 _buildTeamsList(),
 
                 SizedBox(height: 32),
