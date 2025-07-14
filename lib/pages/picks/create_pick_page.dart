@@ -278,6 +278,33 @@ class _CreatePickPageState extends State<CreatePickPage> {
     }
   }
 
+  double americanToDecimal(String oddsStr) {
+    int odds = int.parse(oddsStr);
+    if (odds > 0) {
+      return (odds / 100) + 1;
+    } else {
+      return 1 + (100 / -odds);
+    }
+  }
+
+  String decimalToAmerican(double dec) {
+    if (dec >= 2) {
+      return '+${((dec - 1) * 100).round()}';
+    } else {
+      return '-${(100 / (dec - 1)).round()}';
+    }
+  }
+
+  String? getParlayOdds() {
+    if (!_isParlay) return null;
+    double product = 1.0;
+    for (var pick in _selectedPicks) {
+      double decimal = americanToDecimal(pick.odds);
+      product *= decimal;
+    }
+    return decimalToAmerican(product);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -439,12 +466,24 @@ class _CreatePickPageState extends State<CreatePickPage> {
                             ),
                           ),
                           const SizedBox(height: 4),
-                          Text(
-                            pick.displayText,
-                            style: TextStyle(
-                              color: _isParlay ? Colors.purple : Colors.green,
-                              fontWeight: FontWeight.bold,
-                            ),
+                          Row(
+                            children: [
+                              Text(
+                                pick.displayText,
+                                style: TextStyle(
+                                  color: _isParlay ? Colors.purple : Colors.green,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                pick.odds,
+                                style: TextStyle(
+                                  color: Colors.yellow,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -476,6 +515,35 @@ class _CreatePickPageState extends State<CreatePickPage> {
               ),
             ),
           ],
+          if (_isParlay)
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.purple.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text(
+                    'Parlay Odds: ',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    getParlayOdds() ?? '',
+                    style: const TextStyle(
+                      color: Colors.yellow,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
         ],
       ),
     );
