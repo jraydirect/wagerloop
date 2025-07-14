@@ -20,13 +20,15 @@ class _CreatePickPageState extends State<CreatePickPage> {
   final _authService = AuthService();
   
   List<Game> _searchResults = [];
-  Game? _selectedGame;
+  List<Pick> _selectedPicks = []; // Changed: Now storing multiple picks
+  Game? _currentGame; // Currently selected game for making a pick
   PickType? _selectedPickType;
   PickSide? _selectedPickSide;
   String? _selectedOdds;
   double? _stake;
   bool _isSearching = false;
   bool _isCreatingPost = false;
+  bool _isParlay = false; // New: Track if this is a parlay
 
   @override
   void initState() {
@@ -85,7 +87,7 @@ class _CreatePickPageState extends State<CreatePickPage> {
 
   void _selectGame(Game game) {
     setState(() {
-      _selectedGame = game;
+      _currentGame = game;
       _selectedPickType = null;
       _selectedPickSide = null;
       _selectedOdds = null;
@@ -108,13 +110,13 @@ class _CreatePickPageState extends State<CreatePickPage> {
   }
 
   void _updateOdds() {
-    if (_selectedGame == null || _selectedPickType == null || _selectedPickSide == null) {
+    if (_currentGame == null || _selectedPickType == null || _selectedPickSide == null) {
       return;
     }
 
     // Try to get odds from sportsbook data first
-    if (_selectedGame!.sportsbookOdds != null && _selectedGame!.sportsbookOdds!.isNotEmpty) {
-      final oddsData = _selectedGame!.sportsbookOdds!.values.first;
+    if (_currentGame!.sportsbookOdds != null && _currentGame!.sportsbookOdds!.isNotEmpty) {
+      final oddsData = _currentGame!.sportsbookOdds!.values.first;
       
       switch (_selectedPickType!) {
         case PickType.moneyline:
@@ -136,11 +138,68 @@ class _CreatePickPageState extends State<CreatePickPage> {
     }
   }
 
-  Future<void> _createPickPost() async {
-    if (_selectedGame == null || _selectedPickType == null || _selectedPickSide == null) {
+  // New: Add current pick to the list
+  void _addPickToList() {
+    if (_currentGame == null || _selectedPickType == null || _selectedPickSide == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please select a game and make a pick'),
+          content: Text('Please complete your pick selection'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    final pick = Pick(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      game: _currentGame!,
+      pickType: _selectedPickType!,
+      pickSide: _selectedPickSide!,
+      odds: _selectedOdds ?? '-110',
+      stake: _stake,
+    );
+
+    setState(() {
+      _selectedPicks.add(pick);
+      _currentGame = null;
+      _selectedPickType = null;
+      _selectedPickSide = null;
+      _selectedOdds = null;
+      _stake = null;
+      _searchController.clear();
+      _searchResults.clear();
+      
+      // If this is the second pick, automatically make it a parlay
+      if (_selectedPicks.length >= 2) {
+        _isParlay = true;
+      }
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Pick added! (${_selectedPicks.length} total)'),
+        backgroundColor: Colors.green,
+      ),
+    );
+  }
+
+  // New: Remove pick from list
+  void _removePick(int index) {
+    setState(() {
+      _selectedPicks.removeAt(index);
+      
+      // If we go below 2 picks, it's no longer a parlay
+      if (_selectedPicks.length < 2) {
+        _isParlay = false;
+      }
+    });
+  }
+
+  Future<void> _createPickPost() async {
+    if (_selectedPicks.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please add at least one pick'),
           backgroundColor: Colors.red,
         ),
       );
@@ -168,26 +227,24 @@ class _CreatePickPageState extends State<CreatePickPage> {
         username = currentUser.email ?? 'current_user';
       }
 
-      final pick = Pick(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        game: _selectedGame!,
-        pickType: _selectedPickType!,
-        pickSide: _selectedPickSide!,
-        odds: _selectedOdds ?? '-110',
-        stake: _stake,
-        reasoning: _contentController.text.trim().isEmpty ? null : _contentController.text.trim(),
-      );
+      // Create default content if none provided
+      String content = _contentController.text.trim();
+      if (content.isEmpty) {
+        if (_isParlay) {
+          content = 'My ${_selectedPicks.length}-leg parlay';
+        } else {
+          content = 'My pick: ${_selectedPicks.first.displayText}';
+        }
+      }
 
       // Create the pick post
       final pickPost = PickPost(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         userId: currentUser.id,
         username: username,
-        content: _contentController.text.trim().isEmpty 
-            ? 'My pick: ${pick.displayText}' 
-            : _contentController.text.trim(),
+        content: content,
         timestamp: DateTime.now(),
-        picks: [pick],
+        picks: _selectedPicks,
       );
 
       // Save to Supabase using social feed service
@@ -195,8 +252,8 @@ class _CreatePickPageState extends State<CreatePickPage> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Pick posted successfully!'),
+          SnackBar(
+            content: Text(_isParlay ? 'Parlay posted successfully!' : 'Pick posted successfully!'),
             backgroundColor: Colors.green,
           ),
         );
@@ -226,10 +283,10 @@ class _CreatePickPageState extends State<CreatePickPage> {
     return Scaffold(
       backgroundColor: Colors.grey[800],
       appBar: AppBar(
-        title: const Text('Create Pick'),
+        title: Text(_isParlay ? 'Create Parlay' : 'Create Pick'),
         backgroundColor: Colors.grey[800],
         actions: [
-          if (_selectedGame != null && _selectedPickType != null && _selectedPickSide != null)
+          if (_selectedPicks.isNotEmpty)
             TextButton(
               onPressed: _isCreatingPost ? null : _createPickPost,
               child: _isCreatingPost
@@ -250,15 +307,20 @@ class _CreatePickPageState extends State<CreatePickPage> {
       ),
       body: Column(
         children: [
+          // Show selected picks summary if any
+          if (_selectedPicks.isNotEmpty) _buildSelectedPicksSummary(),
+
           // Search Section
           Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Search for a game:',
-                  style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                Text(
+                  _selectedPicks.isEmpty 
+                      ? 'Search for a game:' 
+                      : 'Add another game:',
+                  style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
                 TextField(
@@ -301,27 +363,153 @@ class _CreatePickPageState extends State<CreatePickPage> {
             ),
           ),
 
-          // Search Results
-          if (_searchResults.isNotEmpty)
-            Expanded(
-              child: _selectedGame == null
-                  ? _buildGamesList()
-                  : _buildPickSelection(),
-            )
-          else if (_selectedGame != null)
-            Expanded(child: _buildPickSelection())
-          else
-            const Expanded(
-              child: Center(
-                child: Text(
-                  'Search for a team to see available games',
-                  style: TextStyle(color: Colors.grey, fontSize: 16),
-                ),
-              ),
-            ),
+          // Main content area
+          Expanded(
+            child: _buildMainContent(),
+          ),
         ],
       ),
     );
+  }
+
+  Widget _buildSelectedPicksSummary() {
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: _isParlay ? Colors.purple.withOpacity(0.2) : Colors.green.withOpacity(0.2),
+        border: Border.all(
+          color: _isParlay ? Colors.purple.withOpacity(0.5) : Colors.green.withOpacity(0.5),
+        ),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                _isParlay ? Icons.layers : Icons.sports_basketball,
+                color: _isParlay ? Colors.purple : Colors.green,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                _isParlay ? '${_selectedPicks.length}-Leg Parlay' : 'Single Pick',
+                style: TextStyle(
+                  color: _isParlay ? Colors.purple : Colors.green,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                '${_selectedPicks.length} pick${_selectedPicks.length == 1 ? '' : 's'}',
+                style: TextStyle(
+                  color: Colors.grey[400],
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Column(
+            children: _selectedPicks.asMap().entries.map((entry) {
+              final index = entry.key;
+              final pick = entry.value;
+              return Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.grey[700],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${pick.game.awayTeam} @ ${pick.game.homeTeam}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            pick.displayText,
+                            style: TextStyle(
+                              color: _isParlay ? Colors.purple : Colors.green,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => _removePick(index),
+                      icon: const Icon(Icons.close, color: Colors.red, size: 20),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+          if (_selectedPicks.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            TextField(
+              controller: _contentController,
+              style: const TextStyle(color: Colors.white),
+              maxLines: 2,
+              decoration: InputDecoration(
+                hintText: _isParlay ? 'Add a comment about your parlay...' : 'Add a comment about your pick...',
+                hintStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
+                filled: true,
+                fillColor: Colors.grey[600],
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMainContent() {
+    if (_searchResults.isNotEmpty) {
+      return _currentGame == null
+          ? _buildGamesList()
+          : _buildPickSelection();
+    } else if (_currentGame != null) {
+      return _buildPickSelection();
+    } else {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              _selectedPicks.isEmpty ? Icons.search : Icons.add,
+              color: Colors.grey[400],
+              size: 64,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              _selectedPicks.isEmpty 
+                  ? 'Search for a team to see available games'
+                  : 'Search for another team to add more picks',
+              style: TextStyle(color: Colors.grey[400], fontSize: 16),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      );
+    }
   }
 
   Widget _buildGamesList() {
@@ -330,12 +518,16 @@ class _CreatePickPageState extends State<CreatePickPage> {
       itemCount: _searchResults.length,
       itemBuilder: (context, index) {
         final game = _searchResults[index];
+        
+        // Check if this game is already selected
+        final isAlreadySelected = _selectedPicks.any((pick) => pick.game.id == game.id);
+        
         return Card(
-          color: Colors.grey[700],
+          color: isAlreadySelected ? Colors.grey[600] : Colors.grey[700],
           margin: const EdgeInsets.only(bottom: 8),
           child: ListTile(
             leading: CircleAvatar(
-              backgroundColor: Colors.blue,
+              backgroundColor: isAlreadySelected ? Colors.grey : Colors.blue,
               child: Text(
                 game.sport,
                 style: const TextStyle(color: Colors.white, fontSize: 10),
@@ -343,7 +535,10 @@ class _CreatePickPageState extends State<CreatePickPage> {
             ),
             title: Text(
               '${game.awayTeam} @ ${game.homeTeam}',
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                color: isAlreadySelected ? Colors.grey[400] : Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             subtitle: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -356,10 +551,23 @@ class _CreatePickPageState extends State<CreatePickPage> {
                   '${game.sport} • ${game.status.toUpperCase()}',
                   style: TextStyle(color: Colors.grey[400], fontSize: 12),
                 ),
+                if (isAlreadySelected)
+                  Text(
+                    'Already selected',
+                    style: TextStyle(
+                      color: Colors.orange[300],
+                      fontSize: 12,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
               ],
             ),
-            trailing: const Icon(Icons.arrow_forward_ios, color: Colors.white, size: 16),
-            onTap: () => _selectGame(game),
+            trailing: Icon(
+              isAlreadySelected ? Icons.check_circle : Icons.arrow_forward_ios,
+              color: isAlreadySelected ? Colors.orange : Colors.white,
+              size: 16,
+            ),
+            onTap: isAlreadySelected ? null : () => _selectGame(game),
           ),
         );
       },
@@ -367,7 +575,7 @@ class _CreatePickPageState extends State<CreatePickPage> {
   }
 
   Widget _buildPickSelection() {
-    if (_selectedGame == null) return const SizedBox.shrink();
+    if (_currentGame == null) return const SizedBox.shrink();
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -387,7 +595,7 @@ class _CreatePickPageState extends State<CreatePickPage> {
                     children: [
                       Expanded(
                         child: Text(
-                          '${_selectedGame!.awayTeam} @ ${_selectedGame!.homeTeam}',
+                          '${_currentGame!.awayTeam} @ ${_currentGame!.homeTeam}',
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 18,
@@ -398,7 +606,7 @@ class _CreatePickPageState extends State<CreatePickPage> {
                       TextButton(
                         onPressed: () {
                           setState(() {
-                            _selectedGame = null;
+                            _currentGame = null;
                             _selectedPickType = null;
                             _selectedPickSide = null;
                             _selectedOdds = null;
@@ -410,11 +618,11 @@ class _CreatePickPageState extends State<CreatePickPage> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    _selectedGame!.formattedGameTime,
+                    _currentGame!.formattedGameTime,
                     style: TextStyle(color: Colors.grey[400]),
                   ),
                   Text(
-                    '${_selectedGame!.sport} • ${_selectedGame!.status.toUpperCase()}',
+                    '${_currentGame!.sport} • ${_currentGame!.status.toUpperCase()}',
                     style: TextStyle(color: Colors.grey[400], fontSize: 12),
                   ),
                 ],
@@ -461,29 +669,6 @@ class _CreatePickPageState extends State<CreatePickPage> {
 
           if (_selectedPickSide != null) ...[
             const SizedBox(height: 16),
-            // Content/Reasoning
-            const Text(
-              'Add a comment (optional):',
-              style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _contentController,
-              style: const TextStyle(color: Colors.white),
-              maxLines: 3,
-              decoration: InputDecoration(
-                hintText: 'Why do you like this pick?',
-                hintStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
-                filled: true,
-                fillColor: Colors.grey[700],
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 16),
 
             // Pick Summary
             Card(
@@ -517,6 +702,25 @@ class _CreatePickPageState extends State<CreatePickPage> {
                 ),
               ),
             ),
+
+            const SizedBox(height: 16),
+
+            // Add Pick Button
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _addPickToList,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+                child: Text(
+                  _selectedPicks.isEmpty ? 'Add Pick' : 'Add Another Pick',
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
           ],
         ],
       ),
@@ -530,7 +734,7 @@ class _CreatePickPageState extends State<CreatePickPage> {
     switch (_selectedPickType!) {
       case PickType.moneyline:
         availableSides = [PickSide.home, PickSide.away];
-        if (_selectedGame!.sport == 'Soccer') {
+        if (_currentGame!.sport == 'Soccer') {
           availableSides.add(PickSide.draw);
         }
         break;
@@ -581,9 +785,9 @@ class _CreatePickPageState extends State<CreatePickPage> {
   String _getPickSideDisplayName(PickSide side) {
     switch (side) {
       case PickSide.home:
-        return _selectedGame?.homeTeam ?? 'Home';
+        return _currentGame?.homeTeam ?? 'Home';
       case PickSide.away:
-        return _selectedGame?.awayTeam ?? 'Away';
+        return _currentGame?.awayTeam ?? 'Away';
       case PickSide.over:
         return 'Over';
       case PickSide.under:
@@ -594,18 +798,18 @@ class _CreatePickPageState extends State<CreatePickPage> {
   }
 
   String _getPickDisplayText() {
-    if (_selectedGame == null || _selectedPickType == null || _selectedPickSide == null) {
+    if (_currentGame == null || _selectedPickType == null || _selectedPickSide == null) {
       return '';
     }
 
     switch (_selectedPickType!) {
       case PickType.moneyline:
-        String team = _selectedPickSide == PickSide.home ? _selectedGame!.homeTeam : 
-                     _selectedPickSide == PickSide.away ? _selectedGame!.awayTeam : 'Draw';
+        String team = _selectedPickSide == PickSide.home ? _currentGame!.homeTeam : 
+                     _selectedPickSide == PickSide.away ? _currentGame!.awayTeam : 'Draw';
         return '$team Moneyline';
       
       case PickType.spread:
-        String team = _selectedPickSide == PickSide.home ? _selectedGame!.homeTeam : _selectedGame!.awayTeam;
+        String team = _selectedPickSide == PickSide.home ? _currentGame!.homeTeam : _currentGame!.awayTeam;
         return '$team Spread';
       
       case PickType.total:
