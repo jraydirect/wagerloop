@@ -3,7 +3,6 @@ import '../services/auth_service.dart';
 import '../services/supabase_config.dart';
 import '../services/follow_notifier.dart';
 import '../services/image_upload_service.dart';
-import '../services/storage_diagnostics.dart';
 import '../models/post.dart';
 import '../widgets/profile_avatar.dart';
 import 'package:timeago/timeago.dart' as timeago;
@@ -293,17 +292,6 @@ class _ProfilePageState extends State<ProfilePage> {
                 _runStorageDiagnostics();
               },
             ),
-            ListTile(
-              leading: const Icon(Icons.storage, color: Colors.blue),
-              title: const Text(
-                'Test Storage Setup',
-                style: TextStyle(color: Colors.white),
-              ),
-              onTap: () {
-                Navigator.of(context).pop();
-                _testStorageSetup();
-              },
-            ),
           ],
         ),
         actions: [
@@ -433,118 +421,6 @@ class _ProfilePageState extends State<ProfilePage> {
         ],
       ),
     );
-  }
-
-  Future<void> _testStorageSetup() async {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const AlertDialog(
-        backgroundColor: Colors.grey,
-        content: Row(
-          children: [
-            CircularProgressIndicator(color: Colors.green),
-            SizedBox(width: 16),
-            Text('Testing storage setup...', style: TextStyle(color: Colors.white)),
-          ],
-        ),
-      ),
-    );
-
-    try {
-      final results = await StorageDiagnostics.runFullDiagnostic();
-      
-      if (mounted) {
-        Navigator.of(context).pop(); // Close loading dialog
-        
-        // Print results to console for debugging
-        StorageDiagnostics.printDiagnosticResults(results);
-        
-        // Show results dialog
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            backgroundColor: Colors.grey[700],
-            title: const Text(
-              'Storage Setup Test',
-              style: TextStyle(color: Colors.white),
-            ),
-            content: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _buildDiagnosticItem('Bucket Exists', results['bucketExists']),
-                  _buildDiagnosticItem('Can Access Bucket', results['canAccessBucket']),
-                  _buildDiagnosticItem('Can List Files', results['canListFiles']),
-                  _buildDiagnosticItem('Can Upload', results['canUpload']),
-                  _buildDiagnosticItem('Can Download', results['canDownload']),
-                  _buildDiagnosticItem('Can Delete', results['canDelete']),
-                  
-                  if (results['errors'].isNotEmpty) ...[
-                    const SizedBox(height: 16),
-                    const Text(
-                      'Errors:',
-                      style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
-                    ),
-                    ...(results['errors'] as List).map<Widget>((error) => 
-                      Padding(
-                        padding: const EdgeInsets.only(left: 8, top: 4),
-                        child: Text('• $error', style: const TextStyle(color: Colors.red)),
-                      )
-                    ),
-                  ],
-                  
-                  if (results['warnings'].isNotEmpty) ...[
-                    const SizedBox(height: 16),
-                    const Text(
-                      'Warnings:',
-                      style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold),
-                    ),
-                    ...(results['warnings'] as List).map<Widget>((warning) => 
-                      Padding(
-                        padding: const EdgeInsets.only(left: 8, top: 4),
-                        child: Text('• $warning', style: const TextStyle(color: Colors.orange)),
-                      )
-                    ),
-                  ],
-                  
-                  if (results['suggestions'].isNotEmpty) ...[
-                    const SizedBox(height: 16),
-                    const Text(
-                      'Suggestions:',
-                      style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
-                    ),
-                    ...(results['suggestions'] as List).map<Widget>((suggestion) => 
-                      Padding(
-                        padding: const EdgeInsets.only(left: 8, top: 4),
-                        child: Text('• $suggestion', style: const TextStyle(color: Colors.blue)),
-                      )
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Close', style: TextStyle(color: Colors.green)),
-              ),
-            ],
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        Navigator.of(context).pop(); // Close loading dialog
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Storage test failed: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
   }
 
   Future<void> _removeProfilePicture() async {
