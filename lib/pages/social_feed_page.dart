@@ -12,6 +12,7 @@ import 'picks/create_pick_page.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../services/realtime_profile_service.dart';
 
 class SocialFeedPage extends StatefulWidget {
   const SocialFeedPage({Key? key}) : super(key: key);
@@ -20,7 +21,7 @@ class SocialFeedPage extends StatefulWidget {
   _SocialFeedPageState createState() => _SocialFeedPageState();
 }
 
-class _SocialFeedPageState extends State<SocialFeedPage> {
+class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMixin<SocialFeedPage> {
   final _socialFeedService = SupabaseConfig.socialFeedService;
   final _postController = TextEditingController();
   final _commentController = TextEditingController();
@@ -43,6 +44,7 @@ class _SocialFeedPageState extends State<SocialFeedPage> {
     _loadPosts();
     _scrollController.addListener(_onScroll);
     _setupRealTimeUpdates();
+    RealTimeProfileService().initializeProfileUpdates();
   }
 
   void _setupRealTimeUpdates() {
@@ -1350,6 +1352,24 @@ class _SocialFeedPageState extends State<SocialFeedPage> {
         ),
       ),
     );
+  }
+
+  @override
+  void onProfileUpdate(Map<String, dynamic> update) {
+    if (!mounted) return;
+    if (update['type'] == 'profile_update' && update['user_id'] != null) {
+      final updatedUserId = update['user_id'];
+      final updatedProfile = update['profile'];
+      final newAvatarUrl = updatedProfile['avatar_url'];
+      setState(() {
+        for (var post in _posts) {
+          if ((post is Post && post.userId == updatedUserId) ||
+              (post is PickPost && post.userId == updatedUserId)) {
+            post.avatarUrl = newAvatarUrl;
+          }
+        }
+      });
+    }
   }
 
   @override

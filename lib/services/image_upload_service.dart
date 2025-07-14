@@ -1,11 +1,14 @@
 import 'dart:typed_data';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'supabase_config.dart';
+import 'realtime_profile_service.dart';
 
 class ImageUploadService {
   static final _supabase = SupabaseConfig.supabase;
+  static final _profileService = RealTimeProfileService();
   static const String _bucketName = 'avatars';
 
+  /// Upload profile image with immediate cache busting and real-time updates
   static Future<String?> uploadProfileImage(Uint8List imageBytes, String userId) async {
     try {
       // Check if user is authenticated
@@ -20,7 +23,10 @@ class ImageUploadService {
         throw 'Storage bucket "$_bucketName" does not exist or is not accessible';
       }
 
-      // Create a unique filename
+      // Delete old image first
+      await _deleteOldProfileImage(userId);
+
+      // Create a unique filename with timestamp for cache busting
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       final fileName = 'profile_${userId}_$timestamp.jpg';
       final filePath = 'profiles/$fileName';
@@ -28,29 +34,48 @@ class ImageUploadService {
       print('Uploading image to: $filePath');
       print('Image size: ${imageBytes.length} bytes');
       
-      // Try to upload the file
+      // Try to upload the file with no-cache settings
       final response = await _supabase.storage
           .from(_bucketName)
           .uploadBinary(
             filePath,
             imageBytes,
             fileOptions: const FileOptions(
-              cacheControl: '3600',
+              cacheControl: '0', // Disable caching for immediate updates
               upsert: true,
             ),
           );
 
       print('Upload response: $response');
       
-      // Get the public URL
-      final publicUrl = _supabase.storage
+      // Get the public URL with cache-busting parameter
+      final baseUrl = _supabase.storage
           .from(_bucketName)
           .getPublicUrl(filePath);
+      
+      final cacheBustingUrl = '$baseUrl?v=$timestamp&cb=${DateTime.now().millisecondsSinceEpoch}';
 
-      print('Public URL: $publicUrl');
+      print('Generated cache-busting URL: $cacheBustingUrl');
+      
+      // Update profile in database with new URL
+      await _supabase
+          .from('profiles')
+          .update({
+            'avatar_url': cacheBustingUrl,
+            'updated_at': DateTime.now().toUtc().toIso8601String(),
+          })
+          .eq('id', userId);
+
+      // Force refresh the profile in real-time service
+      await _profileService.refreshProfile(userId);
+      
+      // Clear any cached profile data
+      _profileService.clearProfileCache(userId);
+      
+      print('Profile image updated successfully with real-time notification');
       
       // Test the URL immediately to catch 400 errors
-      final isAccessible = await _testUrlImmediately(publicUrl);
+      final isAccessible = await _testUrlImmediately(cacheBustingUrl);
       if (!isAccessible) {
         print('Warning: URL returned 400 error, this usually means RLS policies need to be set up');
         print('Please run the storage_setup_simple.sql script in your Supabase SQL Editor');
@@ -65,10 +90,10 @@ class ImageUploadService {
         // If fallback also fails, return the original URL anyway
         // The user can fix the RLS policies and the image should work
         print('Returning original URL - user needs to fix RLS policies');
-        return publicUrl;
+        return cacheBustingUrl;
       }
       
-      return publicUrl;
+      return cacheBustingUrl;
     } on StorageException catch (e) {
       print('Storage error: ${e.message}');
       print('Storage error details: ${e.error}');
@@ -76,6 +101,62 @@ class ImageUploadService {
     } catch (e) {
       print('Error uploading image: $e');
       throw 'Failed to upload image: $e';
+    }
+  }
+
+  /// Delete old profile image to free up storage
+  static Future<void> _deleteOldProfileImage(String userId) async {
+    try {
+      // Get current profile to find old image
+      final profile = await _supabase
+          .from('profiles')
+          .select('avatar_url')
+          .eq('id', userId)
+          .maybeSingle();
+
+      if (profile == null || profile['avatar_url'] == null) {
+        return;
+      }
+
+      final oldAvatarUrl = profile['avatar_url'] as String;
+      await deleteProfileImage(oldAvatarUrl);
+    } catch (e) {
+      print('Error deleting old profile image: $e');
+      // Don't throw here as this is cleanup
+    }
+  }
+
+  /// Delete profile image with real-time update
+  static Future<bool> deleteProfileImageWithRealTimeUpdate(String userId) async {
+    try {
+      // Get current avatar URL
+      final profile = await _supabase
+          .from('profiles')
+          .select('avatar_url')
+          .eq('id', userId)
+          .maybeSingle();
+
+      if (profile != null && profile['avatar_url'] != null) {
+        await deleteProfileImage(profile['avatar_url']);
+      }
+
+      // Update profile to remove avatar URL
+      await _supabase
+          .from('profiles')
+          .update({
+            'avatar_url': null,
+            'updated_at': DateTime.now().toUtc().toIso8601String(),
+          })
+          .eq('id', userId);
+
+      // Force refresh the profile
+      await _profileService.refreshProfile(userId);
+      
+      print('Profile image removed with real-time notification');
+      return true;
+    } catch (e) {
+      print('Error removing profile image: $e');
+      return false;
     }
   }
 
@@ -105,7 +186,7 @@ class ImageUploadService {
       
       if (filePath == null) {
         // Fallback: assume last segment is the filename and it's in profiles folder
-        filePath = 'profiles/${pathSegments.last}';
+        filePath = 'profiles/${pathSegments.last.split('?')[0]}'; // Remove query params
       }
       
       print('Deleting file: $filePath');
@@ -317,6 +398,26 @@ class ImageUploadService {
     } catch (e) {
       print('Fallback upload also failed: $e');
       return null;
+    }
+  }
+
+  /// Create a cache-busting URL for any image URL
+  static String createCacheBustingUrl(String originalUrl) {
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    final separator = originalUrl.contains('?') ? '&' : '?';
+    return '$originalUrl${separator}cb=$timestamp';
+  }
+
+  /// Test if an image URL is accessible
+  static Future<bool> testImageAccessibility(String url) async {
+    try {
+      final response = await _supabase.storage
+          .from(_bucketName)
+          .download(url.split('/').last.split('?')[0]); // Remove query params
+      return response.isNotEmpty;
+    } catch (e) {
+      print('Image accessibility test failed: $e');
+      return false;
     }
   }
 
