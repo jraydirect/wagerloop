@@ -6,6 +6,7 @@ import '../services/image_upload_service.dart';
 import '../models/post.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:image_picker/image_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'followers_list_page.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -137,6 +138,12 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Future<void> _pickAndUploadImage() async {
     try {
+      // First check if we have storage access
+      final hasAccess = await ImageUploadService.checkStorageAccess();
+      if (!hasAccess) {
+        throw 'Unable to access storage. Please check your connection and try again.';
+      }
+
       final XFile? image = await _imagePicker.pickImage(
         source: ImageSource.gallery,
         maxWidth: 512,
@@ -155,18 +162,30 @@ class _ProfilePageState extends State<ProfilePage> {
         throw 'User not authenticated';
       }
 
+      print('Starting image upload for user: $userId');
+      print('Image size: ${bytes.length} bytes');
+
       // Delete old image if exists
       final oldAvatarUrl = _userData?['avatar_url'];
       if (oldAvatarUrl != null && oldAvatarUrl.isNotEmpty) {
+        print('Deleting old avatar: $oldAvatarUrl');
         await ImageUploadService.deleteProfileImage(oldAvatarUrl);
       }
 
       // Upload new image
-      final imageUrl = await ImageUploadService.uploadProfileImage(bytes, userId);
-      
-      if (imageUrl == null) {
-        throw 'Failed to upload image';
+      String? imageUrl;
+      try {
+        imageUrl = await ImageUploadService.uploadProfileImage(bytes, userId);
+      } catch (e) {
+        print('Primary upload failed, trying fallback method: $e');
+        imageUrl = await ImageUploadService.uploadProfileImageFallback(bytes, userId);
       }
+      
+      if (imageUrl == null || imageUrl.isEmpty) {
+        throw 'Failed to get image URL from upload';
+      }
+
+      print('Image uploaded successfully: $imageUrl');
 
       // Update profile with new image URL
       await _authService.updateProfile(avatarUrl: imageUrl);
@@ -182,12 +201,25 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         );
       }
+    } on StorageException catch (e) {
+      print('Storage exception: ${e.message}');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Storage error: ${e.message}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
     } catch (e) {
+      print('Upload error: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error updating profile picture: ${e.toString()}'),
             backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
           ),
         );
       }
@@ -231,6 +263,18 @@ class _ProfilePageState extends State<ProfilePage> {
                   _removeProfilePicture();
                 },
               ),
+            const Divider(color: Colors.grey),
+            ListTile(
+              leading: const Icon(Icons.bug_report, color: Colors.orange),
+              title: const Text(
+                'Run Storage Diagnostics',
+                style: TextStyle(color: Colors.white),
+              ),
+              onTap: () {
+                Navigator.of(context).pop();
+                _runStorageDiagnostics();
+              },
+            ),
           ],
         ),
         actions: [
@@ -239,6 +283,122 @@ class _ProfilePageState extends State<ProfilePage> {
             child: const Text(
               'Cancel',
               style: TextStyle(color: Colors.grey),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _runStorageDiagnostics() async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const AlertDialog(
+        backgroundColor: Colors.grey,
+        content: Row(
+          children: [
+            CircularProgressIndicator(color: Colors.green),
+            SizedBox(width: 16),
+            Text('Running storage diagnostics...', style: TextStyle(color: Colors.white)),
+          ],
+        ),
+      ),
+    );
+
+    try {
+      final result = await ImageUploadService.diagnoseStorageIssue();
+      
+      if (mounted) {
+        Navigator.of(context).pop(); // Close loading dialog
+        
+        // Show results dialog
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            backgroundColor: Colors.grey[700],
+            title: const Text(
+              'Storage Diagnostics',
+              style: TextStyle(color: Colors.white),
+            ),
+            content: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildDiagnosticItem('Authentication', result['isAuthenticated']),
+                  _buildDiagnosticItem('Bucket Access', result['canAccessBucket']),
+                  _buildDiagnosticItem('List Files', result['canListFiles']),
+                  _buildDiagnosticItem('Test Upload', result['canUploadTest']),
+                  
+                  if (result['errors'].isNotEmpty) ...[
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Errors:',
+                      style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                    ),
+                    ...(result['errors'] as List).map<Widget>((error) => 
+                      Padding(
+                        padding: const EdgeInsets.only(left: 8, top: 4),
+                        child: Text('• $error', style: const TextStyle(color: Colors.red)),
+                      )
+                    ),
+                  ],
+                  
+                  if (result['suggestions'].isNotEmpty) ...[
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Suggestions:',
+                      style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
+                    ),
+                    ...(result['suggestions'] as List).map<Widget>((suggestion) => 
+                      Padding(
+                        padding: const EdgeInsets.only(left: 8, top: 4),
+                        child: Text('• $suggestion', style: const TextStyle(color: Colors.blue)),
+                      )
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Close', style: TextStyle(color: Colors.green)),
+              ),
+            ],
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.of(context).pop(); // Close loading dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Diagnostic failed: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Widget _buildDiagnosticItem(String label, bool isSuccess) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Icon(
+            isSuccess ? Icons.check_circle : Icons.error,
+            color: isSuccess ? Colors.green : Colors.red,
+            size: 20,
+          ),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: TextStyle(
+              color: isSuccess ? Colors.green : Colors.red,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],

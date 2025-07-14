@@ -177,6 +177,7 @@ class _SocialFeedPageState extends State<SocialFeedPage> {
       
       return PickPost(
         id: postData['id'],
+        userId: postData['user_id'] ?? postData['profile_id'] ?? '',
         username: postData['profile']['username'] ?? 'Anonymous',
         content: postData['content'],
         timestamp: DateTime.parse(postData['created_at']).toLocal(),
@@ -191,6 +192,7 @@ class _SocialFeedPageState extends State<SocialFeedPage> {
     } else {
       return Post(
         id: postData['id'],
+        userId: postData['user_id'] ?? postData['profile_id'] ?? '',
         username: postData['profile']['username'] ?? 'Anonymous',
         content: postData['content'],
         timestamp: DateTime.parse(postData['created_at']).toLocal(),
