@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'dart:async';
 
 class ProfileAvatar extends StatefulWidget {
   final String? avatarUrl;
@@ -23,6 +24,15 @@ class ProfileAvatar extends StatefulWidget {
 
 class _ProfileAvatarState extends State<ProfileAvatar> {
   bool _hasImageError = false;
+  bool _isLoading = false;
+  String? _lastUrl;
+  Timer? _debounceTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _lastUrl = widget.avatarUrl;
+  }
 
   @override
   void didUpdateWidget(ProfileAvatar oldWidget) {
@@ -30,7 +40,15 @@ class _ProfileAvatarState extends State<ProfileAvatar> {
     // Reset error state if avatar URL changes
     if (oldWidget.avatarUrl != widget.avatarUrl) {
       _hasImageError = false;
+      _lastUrl = widget.avatarUrl;
+      _testUrlAccessibility();
     }
+  }
+
+  @override
+  void dispose() {
+    _debounceTimer?.cancel();
+    super.dispose();
   }
 
   @override
@@ -45,24 +63,27 @@ class _ProfileAvatarState extends State<ProfileAvatar> {
     print('- Username: ${widget.username}');
     print('- Has valid URL: $hasValidUrl');
     print('- Has image error: $_hasImageError');
+    print('- Is loading: $_isLoading');
     
-    // Test URL accessibility if we have a URL
-    if (hasValidUrl) {
-      _testUrlAccessibility(widget.avatarUrl!);
-    }
-
     return GestureDetector(
       onTap: widget.onTap,
       child: CircleAvatar(
         radius: widget.radius,
         backgroundColor: widget.backgroundColor ?? Colors.green,
         backgroundImage: hasValidUrl
-            ? NetworkImage(widget.avatarUrl!)
+            ? NetworkImage(
+                widget.avatarUrl!,
+                headers: {
+                  'Cache-Control': 'no-cache',
+                  'Pragma': 'no-cache',
+                },
+              )
             : null,
         onBackgroundImageError: hasValidUrl
             ? (exception, stackTrace) {
                 print('Error loading avatar image: $exception');
                 print('Stack trace: $stackTrace');
+                print('Failed URL: ${widget.avatarUrl}');
                 if (mounted) {
                   setState(() {
                     _hasImageError = true;
@@ -84,14 +105,53 @@ class _ProfileAvatarState extends State<ProfileAvatar> {
     );
   }
   
-  Future<void> _testUrlAccessibility(String url) async {
+  void _testUrlAccessibility() {
+    // Debounce the URL test to avoid too many requests
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(const Duration(milliseconds: 500), () {
+      if (widget.avatarUrl != null && widget.avatarUrl!.isNotEmpty) {
+        _performUrlTest(widget.avatarUrl!);
+      }
+    });
+  }
+
+  Future<void> _performUrlTest(String url) async {
+    if (_isLoading) return;
+    
+    setState(() => _isLoading = true);
+    
     try {
       print('Testing URL accessibility: $url');
-      final response = await http.head(Uri.parse(url));
+      final response = await http.head(
+        Uri.parse(url),
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache',
+        },
+      ).timeout(const Duration(seconds: 10));
+      
       print('URL test response: ${response.statusCode}');
       print('Content-Type: ${response.headers['content-type']}');
+      
+      if (response.statusCode != 200) {
+        print('Warning: URL returned status code ${response.statusCode}');
+        if (mounted && !_hasImageError) {
+          setState(() {
+            _hasImageError = true;
+          });
+        }
+      }
     } catch (e) {
       print('URL accessibility test failed: $e');
+      if (mounted && !_hasImageError) {
+        setState(() {
+          _hasImageError = true;
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
