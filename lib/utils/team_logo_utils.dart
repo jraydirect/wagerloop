@@ -1,187 +1,152 @@
-// lib/utils/team_logo_utils.dart
-
 class TeamLogoUtils {
-  static String getTeamLogo(String teamName, String sport) {
-    switch (sport) {
-      case 'basketball_nba':
-        return _getNBALogo(teamName);
-      case 'icehockey_nhl':
-        return _getNHLLogo(teamName);
-      case 'americanfootball_nfl':
-        return _getNFLLogo(teamName);
-      case 'baseball_mlb':
-        return _getMLBLogo(teamName);
+  // Map team names to their logo assets
+  static const Map<String, String> _teamLogos = {
+    // NBA Teams
+    'Lakers': 'assets/nbaLogos/los-angeles-lakers.svg',
+    'Warriors': 'assets/nbaLogos/golden-state-warriors.svg',
+    'Celtics': 'assets/nbaLogos/boston-celtics.svg',
+    'Bulls': 'assets/nbaLogos/chicago-bulls.svg',
+    'Heat': 'assets/nbaLogos/miami-heat.svg',
+    'Knicks': 'assets/nbaLogos/new-york-knicks.svg',
+    'Nets': 'assets/nbaLogos/brooklyn-nets.svg',
+    'Clippers': 'assets/nbaLogos/los-angeles-clippers.svg',
+    'Rockets': 'assets/nbaLogos/houston-rockets.svg',
+    'Mavericks': 'assets/nbaLogos/dallas-mavericks.svg',
+    'Nuggets': 'assets/nbaLogos/denver-nuggets.svg',
+    'Hawks': 'assets/nbaLogos/atlanta-hawks-basketball-club.svg',
+    'Hornets': 'assets/nbaLogos/charlotte-hornets.svg',
+    'Cavaliers': 'assets/nbaLogos/cleveland-cavaliers.svg',
+    'Pistons': 'assets/nbaLogos/detroit-pistons.svg', 
+    'Pacers': 'assets/nbaLogos/indiana-pacers.svg',
+    'Bucks': 'assets/nbaLogos/milwaukee-bucks.svg',
+    'Timberwolves': 'assets/nbaLogos/minnesota-timberwolves.svg',
+    'Pelicans': 'assets/nbaLogos/orleans-pelicans.svg',
+    'Magic': 'assets/nbaLogos/orlando-magic.svg',
+    '76ers': 'assets/nbaLogos/philidephia-76ers.svg',
+    'Suns': 'assets/nbaLogos/phoenix-suns.svg',
+    'Trail Blazers': 'assets/nbaLogos/portland-trail-blazers.svg',
+    'Kings': 'assets/nbaLogos/sacramento-kings.svg',
+    'Spurs': 'assets/nbaLogos/san-antonio-spurs.svg',
+    'Raptors': 'assets/nbaLogos/toronto-raptors.svg',
+    'Jazz': 'assets/nbaLogos/utah-jazz.svg',
+    'Wizards': 'assets/nbaLogos/washington-wizards.svg',
+    'Grizzlies': 'assets/nbaLogos/memphis-grizzlies.svg',
+    
+    // NFL Teams
+    '49ers': 'assets/nflLogos/49ers.png',
+    'Bears': 'assets/nflLogos/bears.png',
+    'Bengals': 'assets/nflLogos/bengals.png',
+    'Bills': 'assets/nflLogos/bills.png',
+    'Broncos': 'assets/nflLogos/broncos.png',
+    'Browns': 'assets/nflLogos/browns.png',
+    'Buccaneers': 'assets/nflLogos/buccaneers.png',
+    'Arizona Cardinals': 'assets/nflLogos/cardinals.png',
+    'Chargers': 'assets/nflLogos/chargers.png',
+    'Chiefs': 'assets/nflLogos/chiefs.png',
+    'Colts': 'assets/nflLogos/colts.png',
+    'Commanders': 'assets/nflLogos/commanders.png',
+    'Cowboys': 'assets/nflLogos/cowboys.png',
+    'Dolphins': 'assets/nflLogos/dolphins.png',
+    'Eagles': 'assets/nflLogos/eagles.png',
+    'Falcons': 'assets/nflLogos/falcons.png',
+    'Giants': 'assets/nflLogos/giants.png',
+    'Jaguars': 'assets/nflLogos/jaguars.png',
+    'Jets': 'assets/nflLogos/jets.png',
+    'Lions': 'assets/nflLogos/lions.png',
+    'Packers': 'assets/nflLogos/packers.png',
+    'Panthers': 'assets/nflLogos/panthers.png',
+    'Patriots': 'assets/nflLogos/patriots.png',
+    'Raiders': 'assets/nflLogos/raiders.png',
+    'Rams': 'assets/nflLogos/rams.png',
+    'Ravens': 'assets/nflLogos/ravens.png',
+    'Saints': 'assets/nflLogos/saints.png',
+    'Seahawks': 'assets/nflLogos/seahawks.png',
+    'Steelers': 'assets/nflLogos/steelers.png',
+    'Texans': 'assets/nflLogos/texans.png',
+    'Titans': 'assets/nflLogos/titans.png',
+    'Vikings': 'assets/nflLogos/vikings.png',
+    
+    // MLB Teams
+    'Angels': 'assets/mlbLogos/angels.png',
+    'Astros': 'assets/mlbLogos/astros.png',
+    'Athletics': 'assets/mlbLogos/athletics.png',
+    'Blue Jays': 'assets/mlbLogos/blueJays.png',
+    'Braves': 'assets/mlbLogos/braves.png',
+    'Brewers': 'assets/mlbLogos/brewers.png',
+    'St. Louis Cardinals': 'assets/mlbLogos/cardinals.png',
+    'Cubs': 'assets/mlbLogos/cubs.png',
+    'Diamondbacks': 'assets/mlbLogos/diamondbacks.png',
+    'Dodgers': 'assets/mlbLogos/dodgers.png',
+    'SF Giants': 'assets/mlbLogos/giants.png',
+    'Guardians': 'assets/mlbLogos/indians.png', // Updated name
+    'Mariners': 'assets/mlbLogos/mariners.png',
+    'Marlins': 'assets/mlbLogos/marlins.png',
+    'Mets': 'assets/mlbLogos/mets.png',
+    'Nationals': 'assets/mlbLogos/nationals.png',
+    'Orioles': 'assets/mlbLogos/orioles.png',
+    'Padres': 'assets/mlbLogos/padres.png',
+    'Phillies': 'assets/mlbLogos/phillies.png',
+    'Pirates': 'assets/mlbLogos/pirates.png',
+    'Rangers': 'assets/mlbLogos/rangers.png',
+    'Rays': 'assets/mlbLogos/rays.png',
+    'Reds': 'assets/mlbLogos/reds.png',
+    'Red Sox': 'assets/mlbLogos/redSox.png',
+    'Rockies': 'assets/mlbLogos/rockies.png',
+    'Royals': 'assets/mlbLogos/royals.png',
+    'Tigers': 'assets/mlbLogos/tigers.png',
+    'Twins': 'assets/mlbLogos/twins.png',
+    'White Sox': 'assets/mlbLogos/whiteSox.png',
+    'Yankees': 'assets/mlbLogos/yankees.png',
+  };
+
+  /// Get the logo asset path for a team name
+  static String? getTeamLogo(String teamName) {
+    // Try exact match first
+    if (_teamLogos.containsKey(teamName)) {
+      return _teamLogos[teamName];
+    }
+    
+    // Try partial matches
+    for (final entry in _teamLogos.entries) {
+      if (teamName.toLowerCase().contains(entry.key.toLowerCase()) ||
+          entry.key.toLowerCase().contains(teamName.toLowerCase())) {
+        return entry.value;
+      }
+    }
+    
+    return null;
+  }
+
+  /// Get sport-specific logo based on team name
+  static String? getSportLogo(String sport) {
+    switch (sport.toUpperCase()) {
+      case 'NBA':
+        return 'assets/leagueLogos/nba.png';
+      case 'NFL':
+        return 'assets/leagueLogos/nfl.png';
+      case 'MLB':
+        return 'assets/leagueLogos/mlb.png';
+      case 'NHL':
+        return 'assets/leagueLogos/nhl.png';
+      case 'NCAAB':
+      case 'NCAAF':
+        return 'assets/leagueLogos/ncaa.png';
       default:
-        return '';
+        return null;
     }
   }
 
-  static String _getNFLLogo(String teamName) {
-    final Map<String, String> nflTeamLogoMap = {
-      'Arizona Cardinals': 'cardinals.png',
-      'Atlanta Falcons': 'falcons.png',
-      'Baltimore Ravens': 'ravens.png',
-      'Buffalo Bills': 'bills.png',
-      'Carolina Panthers': 'panthers.png',
-      'Chicago Bears': 'bears.png',
-      'Cincinnati Bengals': 'bengals.png',
-      'Cleveland Browns': 'browns.png',
-      'Dallas Cowboys': 'cowboys.png',
-      'Denver Broncos': 'broncos.png',
-      'Detroit Lions': 'lions.png',
-      'Green Bay Packers': 'packers.png',
-      'Houston Texans': 'texans.png',
-      'Indianapolis Colts': 'colts.png',
-      'Jacksonville Jaguars': 'jaguars.png',
-      'Kansas City Chiefs': 'chiefs.png',
-      'Las Vegas Raiders': 'raiders.png',
-      'Los Angeles Chargers': 'chargers.png',
-      'Los Angeles Rams': 'rams.png',
-      'Miami Dolphins': 'dolphins.png',
-      'Minnesota Vikings': 'vikings.png',
-      'New England Patriots': 'patriots.png',
-      'New Orleans Saints': 'saints.png',
-      'New York Giants': 'giants.png',
-      'New York Jets': 'jets.png',
-      'Philadelphia Eagles': 'eagles.png',
-      'Pittsburgh Steelers': 'steelers.png',
-      'San Francisco 49ers': '49ers.png',
-      'Seattle Seahawks': 'seahawks.png',
-      'Tampa Bay Buccaneers': 'buccaneers.png',
-      'Tennessee Titans': 'titans.png',
-      'Washington Commanders': 'commanders.png',
+  /// Get team colors for UI theming
+  static Map<String, dynamic>? getTeamColors(String teamName) {
+    final Map<String, Map<String, dynamic>> teamColors = {
+      'Lakers': {'primary': 0xFF552583, 'secondary': 0xFFFDB927},
+      'Warriors': {'primary': 0xFF1D428A, 'secondary': 0xFFFFC72C},
+      'Celtics': {'primary': 0xFF007A33, 'secondary': 0xFFBA9653},
+      'Chiefs': {'primary': 0xFFE31837, 'secondary': 0xFFFFB81C},
+      'Cowboys': {'primary': 0xFF003594, 'secondary': 0xFF869397},
+      // Add more team colors as needed
     };
-
-    return nflTeamLogoMap[teamName] ?? '';
-  }
-
-  static String _getMLBLogo(String teamName) {
-    final Map<String, String> mlbTeamLogoMap = {
-      'Los Angeles Angels': 'angels.png',
-      'Houston Astros': 'astros.png',
-      'Oakland Athletics': 'athletics.png',
-      'Toronto Blue Jays': 'blueJays.png',
-      'Atlanta Braves': 'braves.png',
-      'Milwaukee Brewers': 'brewers.png',
-      'St. Louis Cardinals': 'cardinals.png',
-      'Chicago Cubs': 'cubs.png',
-      'Arizona Diamondbacks': 'diamondbacks.png',
-      'Los Angeles Dodgers': 'dodgers.png',
-      'San Francisco Giants': 'giants.png',
-      'Cleveland Guardians': 'indians.png', // Note: keeping old filename for now
-      'Seattle Mariners': 'mariners.png',
-      'Miami Marlins': 'marlins.png',
-      'New York Mets': 'mets.png',
-      'Washington Nationals': 'nationals.png',
-      'Baltimore Orioles': 'orioles.png',
-      'San Diego Padres': 'padres.png',
-      'Philadelphia Phillies': 'phillies.png',
-      'Pittsburgh Pirates': 'pirates.png',
-      'Texas Rangers': 'rangers.png',
-      'Tampa Bay Rays': 'rays.png',
-      'Cincinnati Reds': 'reds.png',
-      'Boston Red Sox': 'redSox.png',
-      'Colorado Rockies': 'rockies.png',
-      'Kansas City Royals': 'royals.png',
-      'Detroit Tigers': 'tigers.png',
-      'Minnesota Twins': 'twins.png',
-      'Chicago White Sox': 'whiteSox.png',
-      'New York Yankees': 'yankees.png',
-    };
-
-    return mlbTeamLogoMap[teamName] ?? '';
-  }
-
-  static String _getNBALogo(String teamName) {
-    final Map<String, String> nbaTeamLogoMap = {
-      'Atlanta Hawks': 'atlanta-hawks-basketball-club.svg',
-      'Boston Celtics': 'boston-celtics.svg',
-      'Brooklyn Nets': 'brooklyn-nets.svg',
-      'Charlotte Hornets': 'charlotte-hornets.svg',
-      'Chicago Bulls': 'chicago-bulls.svg',
-      'Cleveland Cavaliers': 'cleveland-cavaliers.svg',
-      'Dallas Mavericks': 'dallas-mavericks.svg',
-      'Denver Nuggets': 'denver-nuggets.svg',
-      'Golden State Warriors': 'golden-state-warriors.svg',
-      'Houston Rockets': 'houston-rockets.svg',
-      'Indiana Pacers': 'indiana-pacers.svg',
-      'LA Clippers': 'los-angeles-clippers.svg',
-      'Los Angeles Lakers': 'los-angeles-lakers.svg',
-      'Memphis Grizzlies': 'memphis-grizzlies.svg',
-      'Miami Heat': 'miami-heat.svg',
-      'Milwaukee Bucks': 'milwaukee-bucks.svg',
-      'Minnesota Timberwolves': 'minnesota-timberwolves.svg',
-      'New Orleans Pelicans': 'orleans-pelicans.svg',
-      'New York Knicks': 'new-york-knicks.svg',
-      'Oklahoma City Thunder': 'oklahoma-city-thunder.svg',
-      'Orlando Magic': 'orlando-magic.svg',
-      'Philadelphia 76ers': 'philidephia-76ers.svg',
-      'Phoenix Suns': 'phoenix-suns.svg',
-      'Portland Trail Blazers': 'portland-trail-blazers.svg',
-      'Sacramento Kings': 'sacramento-kings.svg',
-      'San Antonio Spurs': 'san-antonio-spurs.svg',
-      'Toronto Raptors': 'toronto-raptors.svg',
-      'Utah Jazz': 'utah-jazz.svg',
-      'Washington Wizards': 'washington-wizards.svg',
-    };
-
-    return nbaTeamLogoMap[teamName] ?? '';
-  }
-
-  static String _getNHLLogo(String teamName) {
-    final Map<String, String> nhlTeamLogoMap = {
-      'Anaheim Ducks': 'ana_l.svg',
-      'Arizona Coyotes': 'ari_l.svg',
-      'Boston Bruins': 'bos_l.svg',
-      'Buffalo Sabres': 'buf_l.svg',
-      'Calgary Flames': 'cgy_l.svg',
-      'Carolina Hurricanes': 'car_l.svg',
-      'Chicago Blackhawks': 'chi_l.svg',
-      'Colorado Avalanche': 'col_l.svg',
-      'Columbus Blue Jackets': 'cbj_l.svg',
-      'Dallas Stars': 'dal_l.svg',
-      'Detroit Red Wings': 'det_l.svg',
-      'Edmonton Oilers': 'edm_l.svg',
-      'Florida Panthers': 'fla_l.svg',
-      'Los Angeles Kings': 'lak_l.svg',
-      'Minnesota Wild': 'min_l.svg',
-      'Montreal Canadiens': 'mtl_l.svg',
-      'Nashville Predators': 'nsh_l.svg',
-      'New Jersey Devils': 'njd_l.svg',
-      'New York Islanders': 'nyi_l.svg',
-      'New York Rangers': 'nyr_l.svg',
-      'Ottawa Senators': 'ott_l.svg',
-      'Philadelphia Flyers': 'phi_l.svg',
-      'Pittsburgh Penguins': 'pit_l.svg',
-      'San Jose Sharks': 'sjs_l.svg',
-      'St Louis Blues': 'stl_l.svg',
-      'Tampa Bay Lightning': 'tbl_l.svg',
-      'Toronto Maple Leafs': 'tor_l.svg',
-      'Vancouver Canucks': 'van_l.svg',
-      'Vegas Golden Knights': 'vgk_l.svg',
-      'Washington Capitals': 'wsh_l.svg',
-      'Winnipeg Jets': 'wng_l.svg',
-      'Utah Club': 'uth_l.svg',
-    };
-
-    return nhlTeamLogoMap[teamName] ?? '';
-  }
-
-  static String getLogoPath(String teamName, String sport) {
-    String logoFile = getTeamLogo(teamName, sport);
-    if (logoFile.isEmpty) return '';
-
-    switch (sport) {
-      case 'basketball_nba':
-        return 'assets/nbaLogos/$logoFile';
-      case 'icehockey_nhl':
-        return 'assets/nhlLogos/$logoFile';
-      case 'americanfootball_nfl':
-        return 'assets/nflLogos/$logoFile';
-      case 'baseball_mlb':
-        return 'assets/mlbLogos/$logoFile';
-      default:
-        return '';
-    }
+    
+    return teamColors[teamName];
   }
 }

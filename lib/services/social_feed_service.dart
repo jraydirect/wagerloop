@@ -1,13 +1,15 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/post.dart';
+import '../models/pick_post.dart';
 import '../models/comment.dart';
+import 'dart:convert';
 
 class SocialFeedService {
   final SupabaseClient _supabase;
 
   SocialFeedService(this._supabase);
 // Fetch posts with user suggestions
-  Future<List<Post>> fetchPosts({int limit = 20, int offset = 0}) async {
+  Future<List<dynamic>> fetchPosts({int limit = 20, int offset = 0}) async {
     try {
       final user = _supabase.auth.currentUser;
       if (user == null) throw 'User not authenticated';
@@ -29,39 +31,60 @@ class SocialFeedService {
       
       // Fetch like and repost status for current user
       for (final post in posts) {
+        final postId = post is Post ? post.id : (post as PickPost).id;
         try {
           // Check if user liked this post
           final likeExists = await _supabase
               .from('likes')
               .select()
-              .eq('post_id', post.id)
+              .eq('post_id', postId)
               .eq('user_id', user.id)
               .maybeSingle();
-          post.isLiked = likeExists != null;
+          
+          if (post is Post) {
+            post.isLiked = likeExists != null;
+          } else if (post is PickPost) {
+            post.isLiked = likeExists != null;
+          }
 
           // Check if user reposted this post
           final repostExists = await _supabase
               .from('reposts')
               .select()
-              .eq('post_id', post.id)
+              .eq('post_id', postId)
               .eq('user_id', user.id)
               .maybeSingle();
-          post.isReposted = repostExists != null;
+          
+          if (post is Post) {
+            post.isReposted = repostExists != null;
+          } else if (post is PickPost) {
+            post.isReposted = repostExists != null;
+          }
 
           // Get actual counts
           final likesCount = await _supabase
               .from('likes')
               .select('id', const FetchOptions(count: CountOption.exact))
-              .eq('post_id', post.id);
-          post.likes = likesCount.count ?? 0;
+              .eq('post_id', postId);
+          
+          if (post is Post) {
+            post.likes = likesCount.count ?? 0;
+          } else if (post is PickPost) {
+            post.likes = likesCount.count ?? 0;
+          }
 
           final repostsCount = await _supabase
               .from('reposts')
               .select('id', const FetchOptions(count: CountOption.exact))
-              .eq('post_id', post.id);
-          post.reposts = repostsCount.count ?? 0;
+              .eq('post_id', postId);
+          
+          if (post is Post) {
+            post.reposts = repostsCount.count ?? 0;
+          } else if (post is PickPost) {
+            post.reposts = repostsCount.count ?? 0;
+          }
         } catch (e) {
-          print('Error fetching post stats for ${post.id}: $e');
+          print('Error fetching post stats for $postId: $e');
           // Continue with defaults if there's an error
         }
       }
@@ -73,22 +96,48 @@ class SocialFeedService {
     }
   }
 
-  // Update the fetchPosts method to handle timestamps
-  Future<List<Post>> _mapPosts(List<dynamic> postData) async {
+  // Update the fetchPosts method to handle timestamps and pick posts
+  Future<List<dynamic>> _mapPosts(List<dynamic> postData) async {
     return postData.map((post) {
-      return Post(
-        id: post['id'],
-        username: post['profile']['username'] ?? 'Anonymous',
-        content: post['content'],
-        timestamp: DateTime.parse(post['created_at'])
-            .toLocal(), // Convert to local time
-        likes: 0, // Will be updated in fetchPosts
-        comments: const [],
-        reposts: 0, // Will be updated in fetchPosts
-        isLiked: false, // Will be updated in fetchPosts
-        isReposted: false, // Will be updated in fetchPosts
-        avatarUrl: post['profile']['avatar_url'],
-      );
+      final postType = post['post_type'] ?? 'text';
+      
+      if (postType == 'pick' && post['picks_data'] != null) {
+        // Parse picks data
+        List<Pick> picks = [];
+        try {
+          final picksJson = jsonDecode(post['picks_data']);
+          picks = (picksJson as List).map((pickJson) => Pick.fromJson(pickJson)).toList();
+        } catch (e) {
+          print('Error parsing picks data: $e');
+        }
+        
+        return PickPost(
+          id: post['id'],
+          username: post['profile']['username'] ?? 'Anonymous',
+          content: post['content'],
+          timestamp: DateTime.parse(post['created_at']).toLocal(),
+          likes: 0, // Will be updated in fetchPosts
+          comments: const [],
+          reposts: 0, // Will be updated in fetchPosts
+          isLiked: false, // Will be updated in fetchPosts
+          isReposted: false, // Will be updated in fetchPosts
+          avatarUrl: post['profile']['avatar_url'],
+          picks: picks,
+        );
+      } else {
+        return Post(
+          id: post['id'],
+          username: post['profile']['username'] ?? 'Anonymous',
+          content: post['content'],
+          timestamp: DateTime.parse(post['created_at']).toLocal(),
+          likes: 0, // Will be updated in fetchPosts
+          comments: const [],
+          reposts: 0, // Will be updated in fetchPosts
+          isLiked: false, // Will be updated in fetchPosts
+          isReposted: false, // Will be updated in fetchPosts
+          avatarUrl: post['profile']['avatar_url'],
+        );
+      }
     }).toList();
   }
 
@@ -145,6 +194,7 @@ class SocialFeedService {
         'user_id': user.id,
         'profile_id': user.id,
         'content': content,
+        'post_type': 'text',
         'created_at': DateTime.now().toUtc().toIso8601String(),
         'updated_at': DateTime.now().toUtc().toIso8601String(),
       }).select('''
@@ -168,6 +218,53 @@ class SocialFeedService {
       );
     } catch (e) {
       print('Error creating post: $e');
+      rethrow;
+    }
+  }
+
+  Future<PickPost> createPickPost(PickPost pickPost) async {
+    try {
+      final user = _supabase.auth.currentUser;
+      if (user == null) throw 'User not authenticated';
+
+      // Get the user's profile
+      final profileResponse = await _supabase
+          .from('profiles')
+          .select('username, avatar_url')
+          .eq('id', user.id)
+          .single();
+
+      // Create post with picks data
+      final response = await _supabase.from('posts').insert({
+        'user_id': user.id,
+        'profile_id': user.id,
+        'content': pickPost.content,
+        'post_type': 'pick',
+        'picks_data': jsonEncode(pickPost.picks.map((pick) => pick.toJson()).toList()),
+        'created_at': DateTime.now().toUtc().toIso8601String(),
+        'updated_at': DateTime.now().toUtc().toIso8601String(),
+      }).select('''
+      *,
+      profile:profiles!posts_profile_id_fkey (
+        username,
+        avatar_url
+      )
+    ''').single();
+
+      // Create and return a PickPost object with local timestamp
+      return PickPost(
+        id: response['id'],
+        username: profileResponse['username'] ?? 'Anonymous',
+        content: response['content'],
+        timestamp: DateTime.parse(response['created_at']).toLocal(),
+        likes: 0,
+        comments: const [],
+        reposts: 0,
+        avatarUrl: profileResponse['avatar_url'],
+        picks: pickPost.picks,
+      );
+    } catch (e) {
+      print('Error creating pick post: $e');
       rethrow;
     }
   }

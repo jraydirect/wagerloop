@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import '../models/post.dart';
+import '../models/pick_post.dart';
 import '../models/comment.dart';
 import '../services/supabase_config.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import '../services/auth_service.dart';
 import '../widgets/dice_loading_widget.dart';
 import '../utils/loading_utils.dart';
+import 'picks/create_pick_page.dart';
 
 class SocialFeedPage extends StatefulWidget {
   const SocialFeedPage({Key? key}) : super(key: key);
@@ -20,7 +22,7 @@ class _SocialFeedPageState extends State<SocialFeedPage> {
   final _commentController = TextEditingController();
   final _authService = AuthService();
 
-  final List<Post> _posts = [];
+  final List<dynamic> _posts = []; // Can contain both Post and PickPost objects
   bool _isLoading = false;
   bool _isSubmitting = false;
   String? _error;
@@ -35,6 +37,75 @@ class _SocialFeedPageState extends State<SocialFeedPage> {
     super.initState();
     _loadPosts();
     _scrollController.addListener(_onScroll);
+  }
+
+  Widget _buildPickCard(Pick pick) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.green.withOpacity(0.1),
+        border: Border.all(color: Colors.green.withOpacity(0.3)),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.sports_basketball, color: Colors.green, size: 16),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  '${pick.game.awayTeam} @ ${pick.game.homeTeam}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+              Text(
+                pick.game.sport.toUpperCase(),
+                style: TextStyle(
+                  color: Colors.grey[400],
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            pick.displayText,
+            style: const TextStyle(
+              color: Colors.green,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          if (pick.reasoning != null && pick.reasoning!.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              pick.reasoning!,
+              style: TextStyle(
+                color: Colors.grey[300],
+                fontSize: 12,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ],
+          const SizedBox(height: 4),
+          Text(
+            pick.game.formattedGameTime,
+            style: TextStyle(
+              color: Colors.grey[400],
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   void _onScroll() {
@@ -95,7 +166,6 @@ class _SocialFeedPageState extends State<SocialFeedPage> {
       });
     } catch (e) {
       print('Error loading more posts: $e');
-      // Show a snackbar but don't update error state to maintain existing posts
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Could not load more posts. Please try again.')),
       );
@@ -113,19 +183,14 @@ class _SocialFeedPageState extends State<SocialFeedPage> {
     });
 
     try {
-      // Create the post and get the response
       final newPost = await _socialFeedService.createPost(content);
-
-      // Clear the input field
       _postController.clear();
 
-      // Add the new post to the beginning of the list
       setState(() {
         _posts.insert(0, newPost);
-        _offset++; // Increment offset to account for the new post
+        _offset++;
       });
 
-      // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Post created successfully!')),
       );
@@ -144,20 +209,31 @@ class _SocialFeedPageState extends State<SocialFeedPage> {
     }
   }
 
-  Future<void> _toggleLike(Post post) async {
+  Future<void> _toggleLike(dynamic post) async {
     // Optimistically update UI
     setState(() {
-      post.isLiked = !post.isLiked;
-      post.likes += post.isLiked ? 1 : -1;
+      if (post is Post) {
+        post.isLiked = !post.isLiked;
+        post.likes += post.isLiked ? 1 : -1;
+      } else if (post is PickPost) {
+        post.isLiked = !post.isLiked;
+        post.likes += post.isLiked ? 1 : -1;
+      }
     });
 
     try {
-      await _socialFeedService.toggleLike(post.id);
+      final postId = post is Post ? post.id : (post as PickPost).id;
+      await _socialFeedService.toggleLike(postId);
     } catch (e) {
       // Revert on error
       setState(() {
-        post.isLiked = !post.isLiked;
-        post.likes += post.isLiked ? 1 : -1;
+        if (post is Post) {
+          post.isLiked = !post.isLiked;
+          post.likes += post.isLiked ? 1 : -1;
+        } else if (post is PickPost) {
+          post.isLiked = !post.isLiked;
+          post.likes += post.isLiked ? 1 : -1;
+        }
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to update like. Please try again.')),
@@ -166,20 +242,31 @@ class _SocialFeedPageState extends State<SocialFeedPage> {
     }
   }
 
-  Future<void> _toggleRepost(Post post) async {
+  Future<void> _toggleRepost(dynamic post) async {
     // Optimistically update UI
     setState(() {
-      post.isReposted = !post.isReposted;
-      post.reposts += post.isReposted ? 1 : -1;
+      if (post is Post) {
+        post.isReposted = !post.isReposted;
+        post.reposts += post.isReposted ? 1 : -1;
+      } else if (post is PickPost) {
+        post.isReposted = !post.isReposted;
+        post.reposts += post.isReposted ? 1 : -1;
+      }
     });
 
     try {
-      await _socialFeedService.toggleRepost(post.id);
+      final postId = post is Post ? post.id : (post as PickPost).id;
+      await _socialFeedService.toggleRepost(postId);
     } catch (e) {
       // Revert on error
       setState(() {
-        post.isReposted = !post.isReposted;
-        post.reposts += post.isReposted ? 1 : -1;
+        if (post is Post) {
+          post.isReposted = !post.isReposted;
+          post.reposts += post.isReposted ? 1 : -1;
+        } else if (post is PickPost) {
+          post.isReposted = !post.isReposted;
+          post.reposts += post.isReposted ? 1 : -1;
+        }
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to update repost. Please try again.')),
@@ -188,28 +275,29 @@ class _SocialFeedPageState extends State<SocialFeedPage> {
     }
   }
 
-  void _showComments(Post post) async {
+  void _showComments(dynamic post) async {
+    final postId = post is Post ? post.id : (post as PickPost).id;
     bool isSubmitting = false;
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.grey[700], // Changed from dark color to gray
+      backgroundColor: Colors.grey[700],
       isScrollControlled: true,
       builder: (context) => StatefulBuilder(
         builder: (context, setModalState) => Padding(
           padding: EdgeInsets.only(
             bottom: MediaQuery.of(context).viewInsets.bottom,
           ),
-          child: Container(
+          child: SizedBox(
             height: MediaQuery.of(context).size.height * 0.75,
             child: Column(
               children: [
                 Padding(
-                  padding: EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(16),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
+                      const Text(
                         'Comments',
                         style: TextStyle(
                           color: Colors.white,
@@ -218,7 +306,7 @@ class _SocialFeedPageState extends State<SocialFeedPage> {
                         ),
                       ),
                       IconButton(
-                        icon: Icon(Icons.close, color: Colors.white),
+                        icon: const Icon(Icons.close, color: Colors.white),
                         onPressed: () => Navigator.pop(context),
                       ),
                     ],
@@ -226,14 +314,14 @@ class _SocialFeedPageState extends State<SocialFeedPage> {
                 ),
                 Expanded(
                   child: FutureBuilder<List<Comment>>(
-                    future: _socialFeedService.fetchComments(post.id),
+                    future: _socialFeedService.fetchComments(postId),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
-                        return Center(child: CircularProgressIndicator(color: Colors.green)); // Added green color
+                        return const Center(child: CircularProgressIndicator(color: Colors.green));
                       }
 
                       if (snapshot.hasError) {
-                        return Center(
+                        return const Center(
                           child: Text(
                             'Failed to load comments',
                             style: TextStyle(color: Colors.red),
@@ -244,7 +332,7 @@ class _SocialFeedPageState extends State<SocialFeedPage> {
                       final comments = snapshot.data ?? [];
 
                       if (comments.isEmpty) {
-                        return Center(
+                        return const Center(
                           child: Text(
                             'No comments yet',
                             style: TextStyle(color: Colors.grey),
@@ -261,12 +349,12 @@ class _SocialFeedPageState extends State<SocialFeedPage> {
                               backgroundColor: Colors.blue,
                               child: Text(
                                 comment.username[0].toUpperCase(),
-                                style: TextStyle(color: Colors.white),
+                                style: const TextStyle(color: Colors.white),
                               ),
                             ),
                             title: Text(
                               comment.username,
-                              style: TextStyle(
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -276,12 +364,12 @@ class _SocialFeedPageState extends State<SocialFeedPage> {
                               children: [
                                 Text(
                                   comment.content,
-                                  style: TextStyle(color: Colors.white),
+                                  style: const TextStyle(color: Colors.white),
                                 ),
-                                SizedBox(height: 4),
+                                const SizedBox(height: 4),
                                 Text(
                                   timeago.format(comment.timestamp),
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     color: Colors.grey,
                                     fontSize: 12,
                                   ),
@@ -295,16 +383,16 @@ class _SocialFeedPageState extends State<SocialFeedPage> {
                   ),
                 ),
                 Padding(
-                  padding: EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(8),
                   child: Row(
                     children: [
                       Expanded(
                         child: TextField(
                           controller: _commentController,
-                          style: TextStyle(color: Colors.white),
+                          style: const TextStyle(color: Colors.white),
                           decoration: InputDecoration(
                             hintText: 'Add a comment...',
-                            hintStyle: TextStyle(color: Colors.grey),
+                            hintStyle: const TextStyle(color: Colors.grey),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(20),
                             ),
@@ -314,9 +402,9 @@ class _SocialFeedPageState extends State<SocialFeedPage> {
                         ),
                       ),
                       IconButton(
-                        icon: Icon(
+                        icon: const Icon(
                           Icons.send,
-                          color: Colors.green, // Changed from white to green
+                          color: Colors.green,
                         ),
                         onPressed: isSubmitting
                             ? null
@@ -327,15 +415,14 @@ class _SocialFeedPageState extends State<SocialFeedPage> {
 
                                 try {
                                   await _socialFeedService.addComment(
-                                    post.id,
+                                    postId,
                                     _commentController.text,
                                   );
                                   _commentController.clear();
-                                  // Refresh the comments list
                                   setState(() {});
                                 } catch (e) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
+                                    const SnackBar(
                                       content: Text(
                                         'Failed to add comment. Please try again.',
                                       ),
@@ -358,10 +445,22 @@ class _SocialFeedPageState extends State<SocialFeedPage> {
     );
   }
 
-  Widget _buildPostCard(Post post) {
+  Widget _buildPostCard(dynamic post) {
+    // Extract common properties
+    final id = post is Post ? post.id : (post as PickPost).id;
+    final username = post is Post ? post.username : (post as PickPost).username;
+    final content = post is Post ? post.content : (post as PickPost).content;
+    final timestamp = post is Post ? post.timestamp : (post as PickPost).timestamp;
+    final likes = post is Post ? post.likes : (post as PickPost).likes;
+    final comments = post is Post ? post.comments : (post as PickPost).comments;
+    final reposts = post is Post ? post.reposts : (post as PickPost).reposts;
+    final isLiked = post is Post ? post.isLiked : (post as PickPost).isLiked;
+    final isReposted = post is Post ? post.isReposted : (post as PickPost).isReposted;
+    final avatarUrl = post is Post ? post.avatarUrl : (post as PickPost).avatarUrl;
+
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
-      color: Colors.grey[700], // Changed from grey[900] to grey[700]
+      color: Colors.grey[700],
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Column(
@@ -375,12 +474,12 @@ class _SocialFeedPageState extends State<SocialFeedPage> {
                 CircleAvatar(
                   radius: 20,
                   backgroundColor: Colors.blue,
-                  backgroundImage: post.avatarUrl != null
-                      ? NetworkImage(post.avatarUrl!)
+                  backgroundImage: avatarUrl != null
+                      ? NetworkImage(avatarUrl!)
                       : null,
-                  child: post.avatarUrl == null
+                  child: avatarUrl == null
                       ? Text(
-                          post.username[0].toUpperCase(),
+                          username[0].toUpperCase(),
                           style: const TextStyle(color: Colors.white),
                         )
                       : null,
@@ -391,29 +490,29 @@ class _SocialFeedPageState extends State<SocialFeedPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        post.username,
+                        username,
                         style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       Text(
-                        timeago.format(post.timestamp),
+                        timeago.format(timestamp),
                         style: TextStyle(color: Colors.grey[400], fontSize: 12),
                       ),
                     ],
                   ),
                 ),
-                if (post.username != _authService.currentUser?.email)
+                if (username != _authService.currentUser?.email)
                   TextButton(
                     onPressed: () async {
                       try {
                         final isFollowing =
-                            await _authService.isFollowing(post.id);
+                            await _authService.isFollowing(id);
                         if (isFollowing) {
-                          await _authService.unfollowUser(post.id);
+                          await _authService.unfollowUser(id);
                         } else {
-                          await _authService.followUser(post.id);
+                          await _authService.followUser(id);
                         }
                         setState(() {});
                       } catch (e) {
@@ -424,7 +523,7 @@ class _SocialFeedPageState extends State<SocialFeedPage> {
                       }
                     },
                     style: ButtonStyle(
-                      backgroundColor: MaterialStateProperty.all(Colors.green), // Changed from blue to green
+                      backgroundColor: MaterialStateProperty.all(Colors.green),
                       padding: MaterialStateProperty.all(
                         const EdgeInsets.symmetric(horizontal: 12),
                       ),
@@ -439,30 +538,37 @@ class _SocialFeedPageState extends State<SocialFeedPage> {
             const SizedBox(height: 8),
             // Content
             Text(
-              post.content,
+              content,
               style: const TextStyle(color: Colors.white),
             ),
+            
+            // Show picks if this is a PickPost
+            if (post is PickPost && post.hasPicks) ...[
+              const SizedBox(height: 12),
+              ...post.picks.map((pick) => _buildPickCard(pick)).toList(),
+            ],
+            
             const SizedBox(height: 8),
             // Actions
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 _buildActionButton(
-                  icon: post.isLiked ? Icons.favorite : Icons.favorite_border,
-                  label: post.likes.toString(),
+                  icon: isLiked ? Icons.favorite : Icons.favorite_border,
+                  label: likes.toString(),
                   onTap: () => _toggleLike(post),
-                  color: post.isLiked ? Colors.red : Colors.grey,
+                  color: isLiked ? Colors.red : Colors.grey,
                 ),
                 _buildActionButton(
                   icon: Icons.comment_outlined,
-                  label: post.comments.length.toString(),
+                  label: comments.length.toString(),
                   onTap: () => _showComments(post),
                 ),
                 _buildActionButton(
                   icon: Icons.repeat,
-                  label: post.reposts.toString(),
+                  label: reposts.toString(),
                   onTap: () => _toggleRepost(post),
-                  color: post.isReposted ? Colors.green : Colors.grey,
+                  color: isReposted ? Colors.green : Colors.grey,
                 ),
               ],
             ),
@@ -498,7 +604,7 @@ class _SocialFeedPageState extends State<SocialFeedPage> {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Card(
-        color: Colors.grey[700], // Changed from grey[900] to grey[700]
+        color: Colors.grey[700],
         child: Padding(
           padding: const EdgeInsets.all(12),
           child: Column(
@@ -528,25 +634,52 @@ class _SocialFeedPageState extends State<SocialFeedPage> {
                 ],
               ),
               const SizedBox(height: 8),
-              Align(
-                alignment: Alignment.centerRight,
-                child: ElevatedButton(
-                  onPressed: _isSubmitting ? null : _createPost,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green, // Added green background
-                    foregroundColor: Colors.white, // Added white text
-                  ),
-                  child: _isSubmitting
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white, // Added white color for loading
+              // Fixed the button layout with proper constraints
+              Row(
+                children: [
+                  const Spacer(), // Push buttons to the right
+                  // Picks button with Flexible wrapper
+                  Flexible(
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const CreatePickPage(),
                           ),
-                        )
-                      : const Text('Post'),
-                ),
+                        );
+                      },
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Colors.green),
+                        foregroundColor: Colors.green,
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                      ),
+                      icon: const Icon(Icons.sports_basketball, size: 18),
+                      label: const Text('Pick'),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  // Regular post button with Flexible wrapper
+                  Flexible(
+                    child: ElevatedButton(
+                      onPressed: _isSubmitting ? null : _createPost,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
+                      ),
+                      child: _isSubmitting
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Text('Post'),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -558,12 +691,12 @@ class _SocialFeedPageState extends State<SocialFeedPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[800], // Changed from black to gray
+      backgroundColor: Colors.grey[800],
       appBar: AppBar(
-        backgroundColor: Colors.grey[800], // Changed from black to gray
+        backgroundColor: Colors.grey[800],
         title: Image.asset(
           'assets/9d514000-7637-4e02-bc87-df46fcb2fe36_removalai_preview.png',
-          height: 40, // Adjust height as needed
+          height: 40,
           fit: BoxFit.contain,
         ),
         centerTitle: true,
@@ -578,7 +711,7 @@ class _SocialFeedPageState extends State<SocialFeedPage> {
                         style: const TextStyle(color: Colors.red)),
                   )
                 : RefreshIndicator(
-                    color: Colors.green, // Added green color for refresh indicator
+                    color: Colors.green,
                     onRefresh: _loadPosts,
                     child: ListView.builder(
                       controller: _scrollController,
@@ -589,7 +722,7 @@ class _SocialFeedPageState extends State<SocialFeedPage> {
                           return const Center(
                             child: Padding(
                               padding: EdgeInsets.all(16),
-                              child: CircularProgressIndicator(color: Colors.green), // Added green color
+                              child: CircularProgressIndicator(color: Colors.green),
                             ),
                           );
                         }

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:convert';
-import 'package:wagerloop1/utils/team_logo_utils.dart'; // Update this import to match your app name
+import '../utils/team_logo_utils.dart';
 
 class ScoresPage extends StatefulWidget {
   @override
@@ -69,7 +69,7 @@ class _ScoresPageState extends State<ScoresPage> {
   }
 
   Widget buildTeamInfo(String teamName, bool isHome) {
-    final logoPath = TeamLogoUtils.getLogoPath(teamName, selectedSport);
+    final logoPath = TeamLogoUtils.getTeamLogo(teamName);
 
     return Expanded(
       child: Row(
@@ -80,16 +80,16 @@ class _ScoresPageState extends State<ScoresPage> {
             Expanded(
               child: Text(
                 teamName,
-                style: TextStyle(
-                  color: Colors.white, // Changed from grey to white
+                style: const TextStyle(
+                  color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
                 textAlign: TextAlign.end,
               ),
             ),
-          if (logoPath.isNotEmpty)
+          if (logoPath != null && logoPath.isNotEmpty)
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 8),
               child: logoPath.endsWith('.svg')
                   ? SvgPicture.asset(
                       logoPath,
@@ -107,8 +107,8 @@ class _ScoresPageState extends State<ScoresPage> {
             Expanded(
               child: Text(
                 teamName,
-                style: TextStyle(
-                  color: Colors.white, // Changed from grey to white
+                style: const TextStyle(
+                  color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
               ),
