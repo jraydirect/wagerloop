@@ -197,6 +197,23 @@ class _UserProfilePageState extends State<UserProfilePage> {
         final postData = item['post'];
         if (postData == null) continue;
         final postType = postData['post_type'] ?? 'text';
+        // Fetch counts for this post
+        final postId = postData['id'];
+        final likesCountResp = await _authService.supabase
+            .from('likes')
+            .select('id')
+            .eq('post_id', postId);
+        final repostsCountResp = await _authService.supabase
+            .from('reposts')
+            .select('id')
+            .eq('post_id', postId);
+        final commentsCountResp = await _authService.supabase
+            .from('comments')
+            .select('id')
+            .eq('post_id', postId);
+        final likesCount = likesCountResp.length;
+        final repostsCount = repostsCountResp.length;
+        final commentsCount = commentsCountResp.length;
         if (postType == 'pick' && postData['picks_data'] != null) {
           List<Pick> picks = [];
           try {
@@ -211,9 +228,9 @@ class _UserProfilePageState extends State<UserProfilePage> {
             username: postData['username'] ?? 'Anonymous',
             content: postData['content'],
             timestamp: DateTime.parse(postData['created_at']).toLocal(),
-            likes: 0,
+            likes: likesCount,
             comments: const [],
-            reposts: 0,
+            reposts: repostsCount,
             isLiked: true,
             isReposted: false,
             avatarUrl: postData['avatar_url'],
@@ -226,9 +243,9 @@ class _UserProfilePageState extends State<UserProfilePage> {
             username: postData['username'] ?? 'Anonymous',
             content: postData['content'],
             timestamp: DateTime.parse(postData['created_at']).toLocal(),
-            likes: 0,
+            likes: likesCount,
             comments: const [],
-            reposts: 0,
+            reposts: repostsCount,
             isLiked: true,
             isReposted: false,
             avatarUrl: postData['avatar_url'],

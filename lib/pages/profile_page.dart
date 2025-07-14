@@ -5,6 +5,7 @@ import '../services/follow_notifier.dart';
 import '../services/image_upload_service.dart';
 import '../models/post.dart';
 import '../models/pick_post.dart';
+import '../models/comment.dart';
 import '../widgets/profile_avatar.dart';
 import '../widgets/picks_display_widget.dart';
 import 'package:timeago/timeago.dart' as timeago;
@@ -1059,6 +1060,24 @@ class _ProfilePageState extends State<ProfilePage> {
           final postData = item['post'];
           if (postData == null) continue;
           final postType = postData['post_type'] ?? 'text';
+          // Fetch counts for this post
+          final postId = postData['id'];
+          final likesCountResp = await _authService.supabase
+              .from('likes')
+              .select('id')
+              .eq('post_id', postId);
+          final repostsCountResp = await _authService.supabase
+              .from('reposts')
+              .select('id')
+              .eq('post_id', postId);
+          final commentsCountResp = await _authService.supabase
+              .from('comments')
+              .select('id')
+              .eq('post_id', postId);
+          final likesCount = likesCountResp.length;
+          final repostsCount = repostsCountResp.length;
+          final commentsCount = commentsCountResp.length;
+          
           if (postType == 'pick' && postData['picks_data'] != null) {
             List<Pick> picks = [];
             try {
@@ -1073,9 +1092,14 @@ class _ProfilePageState extends State<ProfilePage> {
               username: postData['username'] ?? 'Anonymous',
               content: postData['content'],
               timestamp: DateTime.parse(postData['created_at']).toLocal(),
-              likes: 0,
-              comments: const [],
-              reposts: 0,
+              likes: likesCount,
+              comments: List.generate(commentsCount, (index) => Comment(
+                id: 'placeholder_$index',
+                username: 'placeholder',
+                content: 'placeholder',
+                timestamp: DateTime.now(),
+              )),
+              reposts: repostsCount,
               isLiked: true,
               isReposted: false,
               avatarUrl: postData['avatar_url'],
@@ -1088,9 +1112,14 @@ class _ProfilePageState extends State<ProfilePage> {
               username: postData['username'] ?? 'Anonymous',
               content: postData['content'],
               timestamp: DateTime.parse(postData['created_at']).toLocal(),
-              likes: 0,
-              comments: const [],
-              reposts: 0,
+              likes: likesCount,
+              comments: List.generate(commentsCount, (index) => Comment(
+                id: 'placeholder_$index',
+                username: 'placeholder',
+                content: 'placeholder',
+                timestamp: DateTime.now(),
+              )),
+              reposts: repostsCount,
               isLiked: true,
               isReposted: false,
               avatarUrl: postData['avatar_url'],
