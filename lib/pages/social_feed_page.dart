@@ -3,6 +3,7 @@ import '../models/post.dart';
 import '../models/pick_post.dart';
 import '../models/comment.dart';
 import '../services/supabase_config.dart';
+import '../widgets/profile_avatar.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import '../services/auth_service.dart';
 import '../widgets/dice_loading_widget.dart';
@@ -600,17 +601,11 @@ class _SocialFeedPageState extends State<SocialFeedPage> {
           itemBuilder: (context, index) {
             final interaction = interactions[index];
             return ListTile(
-              leading: CircleAvatar(
+              leading: ProfileAvatar(
+                avatarUrl: interaction['avatar_url'],
+                username: interaction['username'] ?? 'Anonymous',
+                radius: 20,
                 backgroundColor: Colors.blue,
-                backgroundImage: interaction['avatar_url'] != null
-                    ? NetworkImage(interaction['avatar_url']!)
-                    : null,
-                child: interaction['avatar_url'] == null
-                    ? Text(
-                        (interaction['username'] ?? '?')[0].toUpperCase(),
-                        style: const TextStyle(color: Colors.white),
-                      )
-                    : null,
               ),
               title: Text(
                 interaction['username'] ?? 'Anonymous',
@@ -728,13 +723,12 @@ class _SocialFeedPageState extends State<SocialFeedPage> {
                         itemBuilder: (context, index) {
                           final comment = comments[index];
                           return ListTile(
-                            leading: CircleAvatar(
-                              backgroundColor: Colors.blue,
-                              child: Text(
-                                comment.username[0].toUpperCase(),
-                                style: const TextStyle(color: Colors.white),
-                              ),
-                            ),
+                          leading: ProfileAvatar(
+                          avatarUrl: null, // Comments don't have avatar URLs in current implementation
+                          username: comment.username,
+                          radius: 20,
+                          backgroundColor: Colors.blue,
+                          ),
                             title: Text(
                               comment.username,
                               style: const TextStyle(
@@ -890,18 +884,11 @@ class _SocialFeedPageState extends State<SocialFeedPage> {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  CircleAvatar(
+                  ProfileAvatar(
+                    avatarUrl: avatarUrl,
+                    username: username,
                     radius: 20,
                     backgroundColor: Colors.blue,
-                    backgroundImage: avatarUrl != null
-                        ? NetworkImage(avatarUrl!)
-                        : null,
-                    child: avatarUrl == null
-                        ? Text(
-                            username[0].toUpperCase(),
-                            style: const TextStyle(color: Colors.white),
-                          )
-                        : null,
                   ),
                   const SizedBox(width: 8),
                   Expanded(
@@ -1099,18 +1086,11 @@ class _SocialFeedPageState extends State<SocialFeedPage> {
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                CircleAvatar(
+                ProfileAvatar(
+                  avatarUrl: avatarUrl,
+                  username: username,
                   radius: 20,
                   backgroundColor: Colors.blue,
-                  backgroundImage: avatarUrl != null
-                      ? NetworkImage(avatarUrl!)
-                      : null,
-                  child: avatarUrl == null
-                      ? Text(
-                          username[0].toUpperCase(),
-                          style: const TextStyle(color: Colors.white),
-                        )
-                      : null,
                 ),
                 const SizedBox(width: 8),
                 Expanded(
@@ -1286,10 +1266,17 @@ class _SocialFeedPageState extends State<SocialFeedPage> {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const CircleAvatar(
-                    radius: 20,
-                    backgroundColor: Colors.blue,
-                    child: Icon(Icons.person, color: Colors.white),
+                  FutureBuilder<Map<String, dynamic>?>(
+                    future: _authService.getCurrentUserProfile(),
+                    builder: (context, snapshot) {
+                      final profile = snapshot.data;
+                      return ProfileAvatar(
+                        avatarUrl: profile?['avatar_url'],
+                        username: profile?['username'] ?? 'You',
+                        radius: 20,
+                        backgroundColor: Colors.green,
+                      );
+                    },
                   ),
                   const SizedBox(width: 8),
                   Expanded(

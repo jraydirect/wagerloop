@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import '../services/follow_notifier.dart';
+import '../widgets/profile_avatar.dart';
 
 class FollowersListPage extends StatefulWidget {
   final String userId;
@@ -133,18 +134,11 @@ class _FollowersListPageState extends State<FollowersListPage> {
                             final isFollowing = snapshot.data ?? false;
 
                             return ListTile(
-                              leading: CircleAvatar(
+                              leading: ProfileAvatar(
+                                avatarUrl: user['avatar_url'],
+                                username: user['username'] ?? 'Anonymous',
+                                radius: 20,
                                 backgroundColor: Colors.blue,
-                                backgroundImage: user['avatar_url'] != null
-                                    ? NetworkImage(user['avatar_url'])
-                                    : null,
-                                child: user['avatar_url'] == null
-                                    ? Text(
-                                        user['username'][0].toUpperCase(),
-                                        style: const TextStyle(
-                                            color: Colors.white),
-                                      )
-                                    : null,
                               ),
                               title: Text(
                                 user['username'],

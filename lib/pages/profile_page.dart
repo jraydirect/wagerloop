@@ -4,6 +4,7 @@ import '../services/supabase_config.dart';
 import '../services/follow_notifier.dart';
 import '../services/image_upload_service.dart';
 import '../models/post.dart';
+import '../widgets/profile_avatar.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -192,11 +193,17 @@ class _ProfilePageState extends State<ProfilePage> {
       // Update profile with new image URL
       await _authService.updateProfile(avatarUrl: imageUrl);
       
+      // Add a small delay to ensure database is updated
+      await Future.delayed(const Duration(milliseconds: 500));
+      
       // Reload profile to show new image
       await _loadUserProfile();
-      print('Profile after reload: \n');
-      print(_userData);
-      print('Avatar URL after reload: ' + (_userData?['avatar_url']?.toString() ?? 'null'));
+      
+      print('=== UPLOAD COMPLETE DEBUG ===');
+      print('Final uploaded image URL: $imageUrl');
+      print('Profile after reload: $_userData');
+      print('Avatar URL after reload: ${_userData?['avatar_url']}');
+      print('========================');
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -457,6 +464,13 @@ class _ProfilePageState extends State<ProfilePage> {
     try {
       final profile = await _authService.getCurrentUserProfile();
       final user = _authService.currentUser;
+
+      print('=== PROFILE DEBUG ===');
+      print('Profile data: $profile');
+      print('Avatar URL: ${profile?['avatar_url']}');
+      print('Username: ${profile?['username']}');
+      print('User email: ${user?.email}');
+      print('==================');
 
       if (profile != null && user != null) {
         setState(() {
@@ -925,21 +939,11 @@ class _ProfilePageState extends State<ProfilePage> {
                         onTap: _showImagePickerDialog,
                         child: Stack(
                           children: [
-                            CircleAvatar(
+                            ProfileAvatar(
+                              avatarUrl: _userData?['avatar_url'],
+                              username: _userData?['username'] ?? 'Anonymous',
                               radius: 50,
                               backgroundColor: Colors.green,
-                              backgroundImage: _userData?['avatar_url'] != null
-                                  ? NetworkImage(_userData!['avatar_url'])
-                                  : null,
-                              child: _userData?['avatar_url'] == null
-                                  ? Text(
-                                      _userData?['username']?[0].toUpperCase() ?? 'A',
-                                      style: const TextStyle(
-                                        fontSize: 32,
-                                        color: Colors.white,
-                                      ),
-                                    )
-                                  : null,
                             ),
                             if (_isUploadingImage)
                               Positioned.fill(
