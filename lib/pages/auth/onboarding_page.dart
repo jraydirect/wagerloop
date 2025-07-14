@@ -369,7 +369,15 @@ class _OnboardingPageState extends State<OnboardingPage> {
                         final isSelected = _selectedTeams.contains(team);
                         return FilterChip(
                           selected: isSelected,
-                          label: Text(team),
+                          label: Text(
+                            team,
+                            style: TextStyle(
+                              color: isSelected ? Colors.black : Colors.green,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          selectedColor: Colors.green,
+                          backgroundColor: Colors.grey[700],
                           onSelected: (selected) {
                             setState(() {
                               if (selected) {
