@@ -413,6 +413,7 @@ class _CreatePickPageState extends State<CreatePickPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Header with parlay info
           Row(
             children: [
               Icon(
@@ -425,80 +426,136 @@ class _CreatePickPageState extends State<CreatePickPage> {
                 _isParlay ? '${_selectedPicks.length}-Leg Parlay' : 'Single Pick',
                 style: TextStyle(
                   color: _isParlay ? Colors.purple : Colors.green,
-                  fontSize: 16,
+                  fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               const Spacer(),
-              Text(
-                '${_selectedPicks.length} pick${_selectedPicks.length == 1 ? '' : 's'}',
-                style: TextStyle(
-                  color: Colors.grey[400],
-                  fontSize: 14,
+              if (_isParlay)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.yellow.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.yellow.withOpacity(0.5)),
+                  ),
+                  child: Text(
+                    getParlayOdds() ?? '+0',
+                    style: const TextStyle(
+                      color: Colors.yellow,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
-              ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
+          
+          // Picks list with improved formatting
           Column(
             children: _selectedPicks.asMap().entries.map((entry) {
               final index = entry.key;
               final pick = entry.value;
               return Container(
-                margin: const EdgeInsets.only(bottom: 8),
-                padding: const EdgeInsets.all(12),
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.grey[700],
-                  borderRadius: BorderRadius.circular(8),
+                  color: Colors.grey[800],
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: _isParlay ? Colors.purple.withOpacity(0.3) : Colors.green.withOpacity(0.3),
+                  ),
                 ),
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '${pick.game.awayTeam} @ ${pick.game.homeTeam}',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Row(
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              // Game matchup
                               Text(
-                                pick.displayText,
-                                style: TextStyle(
-                                  color: _isParlay ? Colors.purple : Colors.green,
+                                '${pick.game.awayTeam} @ ${pick.game.homeTeam}',
+                                style: const TextStyle(
+                                  color: Colors.white,
                                   fontWeight: FontWeight.bold,
+                                  fontSize: 16,
                                 ),
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(height: 4),
+                              // Game time and sport
                               Text(
-                                pick.odds,
+                                '${pick.game.formattedGameTime} • ${pick.game.sport}',
                                 style: TextStyle(
-                                  color: Colors.yellow,
-                                  fontWeight: FontWeight.bold,
+                                  color: Colors.grey[400],
+                                  fontSize: 12,
                                 ),
                               ),
                             ],
                           ),
+                        ),
+                        IconButton(
+                          onPressed: () => _removePick(index),
+                          icon: const Icon(Icons.close, color: Colors.red, size: 20),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    // Pick details with better layout
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: (_isParlay ? Colors.purple : Colors.green).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: (_isParlay ? Colors.purple : Colors.green).withOpacity(0.3),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              _getPickDisplayText(pick),
+                              style: TextStyle(
+                                color: _isParlay ? Colors.purple : Colors.green,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.yellow.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              pick.odds,
+                              style: const TextStyle(
+                                color: Colors.yellow,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
                         ],
                       ),
-                    ),
-                    IconButton(
-                      onPressed: () => _removePick(index),
-                      icon: const Icon(Icons.close, color: Colors.red, size: 20),
                     ),
                   ],
                 ),
               );
             }).toList(),
           ),
+          
+          // Comment text field
           if (_selectedPicks.isNotEmpty) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             TextField(
               controller: _contentController,
               style: const TextStyle(color: Colors.white),
@@ -507,43 +564,65 @@ class _CreatePickPageState extends State<CreatePickPage> {
                 hintText: _isParlay ? 'Add a comment about your parlay...' : 'Add a comment about your pick...',
                 hintStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
                 filled: true,
-                fillColor: Colors.grey[600],
+                fillColor: Colors.grey[700],
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
                 ),
+                contentPadding: const EdgeInsets.all(16),
               ),
             ),
           ],
-          if (_isParlay)
+          
+          // Parlay odds summary (larger display)
+          if (_isParlay) ...[
+            const SizedBox(height: 16),
             Container(
-              padding: const EdgeInsets.all(8),
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.purple.withOpacity(0.3),
-                borderRadius: BorderRadius.circular(8),
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.purple.withOpacity(0.3),
+                    Colors.purple.withOpacity(0.1),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.purple.withOpacity(0.5)),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+              child: Column(
                 children: [
                   const Text(
-                    'Parlay Odds: ',
+                    'Parlay Odds',
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 18,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    getParlayOdds() ?? '+0',
+                    style: const TextStyle(
+                      color: Colors.yellow,
+                      fontSize: 24,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+                  const SizedBox(height: 4),
                   Text(
-                    getParlayOdds() ?? '',
-                    style: const TextStyle(
-                      color: Colors.yellow,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
+                    '${_selectedPicks.length} legs',
+                    style: TextStyle(
+                      color: Colors.grey[400],
+                      fontSize: 12,
                     ),
                   ),
                 ],
               ),
             ),
+          ],
         ],
       ),
     );
@@ -865,27 +944,35 @@ class _CreatePickPageState extends State<CreatePickPage> {
     }
   }
 
-  String _getPickDisplayText() {
-    if (_currentGame == null || _selectedPickType == null || _selectedPickSide == null) {
+  String _getPickDisplayText([Pick? pick]) {
+    final game = pick?.game ?? _currentGame;
+    final pickType = pick?.pickType ?? _selectedPickType;
+    final pickSide = pick?.pickSide ?? _selectedPickSide;
+    
+    if (game == null || pickType == null || pickSide == null) {
       return '';
     }
 
-    switch (_selectedPickType!) {
+    switch (pickType) {
       case PickType.moneyline:
-        String team = _selectedPickSide == PickSide.home ? _currentGame!.homeTeam : 
-                     _selectedPickSide == PickSide.away ? _currentGame!.awayTeam : 'Draw';
+        String team = pickSide == PickSide.home ? game.homeTeam : 
+                     pickSide == PickSide.away ? game.awayTeam : 'Draw';
         return '$team Moneyline';
       
       case PickType.spread:
-        String team = _selectedPickSide == PickSide.home ? _currentGame!.homeTeam : _currentGame!.awayTeam;
+        String team = pickSide == PickSide.home ? game.homeTeam : game.awayTeam;
         return '$team Spread';
       
       case PickType.total:
-        String side = _selectedPickSide == PickSide.over ? 'Over' : 'Under';
+        String side = pickSide == PickSide.over ? 'Over' : 'Under';
         return '$side Total';
       
       case PickType.playerProp:
-        String side = _selectedPickSide == PickSide.over ? 'Over' : 'Under';
+        if (pick?.playerName != null && pick?.propType != null && pick?.propValue != null) {
+          String side = pickSide == PickSide.over ? 'Over' : 'Under';
+          return '${pick!.playerName} $side ${pick.propValue} ${pick.propType}';
+        }
+        String side = pickSide == PickSide.over ? 'Over' : 'Under';
         return 'Player Prop $side';
     }
   }
