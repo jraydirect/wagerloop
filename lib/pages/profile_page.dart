@@ -176,9 +176,11 @@ class _ProfilePageState extends State<ProfilePage> {
       String? imageUrl;
       try {
         imageUrl = await ImageUploadService.uploadProfileImage(bytes, userId);
+        print('Image uploaded, got URL: ' + (imageUrl ?? 'null'));
       } catch (e) {
         print('Primary upload failed, trying fallback method: $e');
         imageUrl = await ImageUploadService.uploadProfileImageFallback(bytes, userId);
+        print('Fallback image uploaded, got URL: ' + (imageUrl ?? 'null'));
       }
       
       if (imageUrl == null || imageUrl.isEmpty) {
@@ -192,6 +194,9 @@ class _ProfilePageState extends State<ProfilePage> {
       
       // Reload profile to show new image
       await _loadUserProfile();
+      print('Profile after reload: \n');
+      print(_userData);
+      print('Avatar URL after reload: ' + (_userData?['avatar_url']?.toString() ?? 'null'));
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
