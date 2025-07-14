@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import '../services/supabase_config.dart';
+import '../services/follow_notifier.dart';
 import '../models/post.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'followers_list_page.dart';
@@ -24,6 +25,11 @@ class _ProfilePageState extends State<ProfilePage> {
   final _fullNameController = TextEditingController();
   final _bioController = TextEditingController();
   final _emailController = TextEditingController();
+
+  // Follower counts
+  int _followersCount = 0;
+  int _followingCount = 0;
+  final FollowNotifier _followNotifier = FollowNotifier();
 
   // Teams data
   List<Post> _userPosts = [];
@@ -78,6 +84,49 @@ class _ProfilePageState extends State<ProfilePage> {
     super.initState();
     _loadUserProfile();
     _loadUserPosts();
+    _loadFollowerCounts();
+    
+    // Listen for follow events to update counts instantly
+    _followNotifier.addListener(_onFollowChanged);
+  }
+
+  void _onFollowChanged() {
+    // Reload follower counts when someone is followed/unfollowed
+    _loadFollowerCounts();
+  }
+
+  @override
+  void didUpdateWidget(ProfilePage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Refresh counts when widget updates
+    _loadFollowerCounts();
+  }
+
+  Future<void> _loadFollowerCounts() async {
+    try {
+      final userId = _authService.currentUser?.id;
+      if (userId == null) return;
+
+      // Load followers and following counts
+      final followers = await _authService.getFollowers(userId);
+      final following = await _authService.getFollowing(userId);
+
+      setState(() {
+        _followersCount = followers.length;
+        _followingCount = following.length;
+      });
+    } catch (e) {
+      print('Error loading follower counts: $e');
+      // Keep counts as 0 if there's an error
+    }
+  }
+
+  Future<void> _refreshProfile() async {
+    await Future.wait([
+      _loadUserProfile(),
+      _loadUserPosts(),
+      _loadFollowerCounts(),
+    ]);
   }
 
   Future<void> _loadUserProfile() async {
@@ -538,8 +587,11 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Form(
+      body: RefreshIndicator(
+        onRefresh: _refreshProfile,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Form(
           key: _formKey,
           child: Padding(
             padding: const EdgeInsets.all(16),
@@ -618,7 +670,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           child: Column(
                             children: [
                               Text(
-                                (_userData?['followers_count'] ?? 0).toString(),
+                                _followersCount.toString(),
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 20,
@@ -650,7 +702,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           child: Column(
                             children: [
                               Text(
-                                (_userData?['following_count'] ?? 0).toString(),
+                                _followingCount.toString(),
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 20,
@@ -764,11 +816,13 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         ),
       ),
+      ),
     );
   }
 
   @override
   void dispose() {
+    _followNotifier.removeListener(_onFollowChanged);
     _usernameController.dispose();
     _fullNameController.dispose();
     _bioController.dispose();

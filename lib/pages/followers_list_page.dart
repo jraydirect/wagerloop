@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import '../services/follow_notifier.dart';
 
 class FollowersListPage extends StatefulWidget {
   final String userId;
@@ -17,6 +18,7 @@ class FollowersListPage extends StatefulWidget {
 
 class _FollowersListPageState extends State<FollowersListPage> {
   final _authService = AuthService();
+  final FollowNotifier _followNotifier = FollowNotifier();
   List<Map<String, dynamic>> _users = [];
   bool _isLoading = true;
   String? _error;
@@ -62,6 +64,9 @@ class _FollowersListPageState extends State<FollowersListPage> {
       } else {
         await _authService.followUser(userId);
       }
+
+      // Notify profile page to update counts instantly
+      _followNotifier.notifyFollowChanged();
 
       // Refresh the list
       await _loadUsers();

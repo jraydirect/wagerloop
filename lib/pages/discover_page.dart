@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import '../services/follow_notifier.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 class DiscoverPage extends StatefulWidget {
@@ -12,6 +13,7 @@ class DiscoverPage extends StatefulWidget {
 class _DiscoverPageState extends State<DiscoverPage> {
   final _authService = AuthService();
   final _searchController = TextEditingController();
+  final FollowNotifier _followNotifier = FollowNotifier();
   List<Map<String, dynamic>> _users = [];
   bool _isLoading = false;
   String? _error;
@@ -28,12 +30,23 @@ class _DiscoverPageState extends State<DiscoverPage> {
 
   Future<void> _searchUsers(String query) async {
     if (query.isEmpty) {
-      setState(() => _users = []);
+      setState(() {
+        _users = [];
+        _error = null;
+      });
       return;
     }
 
     try {
-      setState(() => _isLoading = true);
+      setState(() {
+        _isLoading = true;
+        _error = null;
+      });
+
+      final currentUserId = _authService.currentUser?.id;
+      if (currentUserId == null) {
+        throw 'User not authenticated';
+      }
 
       final response = await _authService.supabase
           .from('profiles')
@@ -42,12 +55,11 @@ class _DiscoverPageState extends State<DiscoverPage> {
             username,
             full_name,
             avatar_url,
-            bio,
-            followers_count,
-            following_count
+            bio
           ''')
-          .ilike('username', '%$query%')
-          .order('followers_count', ascending: false)
+          .neq('id', currentUserId) // Exclude current user
+          .or('username.ilike.%$query%,full_name.ilike.%$query%') // Search username OR full_name
+          .order('username', ascending: true)
           .limit(20);
 
       if (mounted) {
@@ -57,10 +69,12 @@ class _DiscoverPageState extends State<DiscoverPage> {
         });
       }
     } catch (e) {
+      print('Search error: $e');
       if (mounted) {
         setState(() {
-          _error = 'Error searching users';
+          _error = 'Error searching users: ${e.toString()}';
           _isLoading = false;
+          _users = [];
         });
       }
     }
@@ -70,32 +84,69 @@ class _DiscoverPageState extends State<DiscoverPage> {
     try {
       setState(() => _isLoadingSuggestions = true);
 
-      // Get current user's favorite teams
-      final currentProfile = await _authService.getCurrentUserProfile();
-      final favoriteTeams =
-          currentProfile?['favorite_teams'] as List<dynamic>? ?? [];
+      final currentUserId = _authService.currentUser?.id;
+      if (currentUserId == null) {
+        print('No current user ID');
+        setState(() => _isLoadingSuggestions = false);
+        return;
+      }
 
-      // Find users who follow the same teams
-      final response = await _authService.supabase
-          .from('profiles')
-          .select('''
-            id,
-            username,
-            full_name,
-            avatar_url,
-            bio,
-            followers_count,
-            following_count,
-            favorite_teams
-          ''')
-          .neq('id', _authService.currentUser?.id)
-          .overlaps('favorite_teams', favoriteTeams)
-          .order('followers_count', ascending: false)
-          .limit(10);
+      // Get current user's profile
+      final currentProfile = await _authService.getCurrentUserProfile();
+      final favoriteTeams = currentProfile?['favorite_teams'] as List<dynamic>? ?? [];
+
+      List<Map<String, dynamic>> users = [];
+
+      if (favoriteTeams.isNotEmpty) {
+        // Try to find users with similar favorite teams
+        try {
+          final response = await _authService.supabase
+              .from('profiles')
+              .select('''
+                id,
+                username,
+                full_name,
+                avatar_url,
+                bio,
+                favorite_teams
+              ''')
+              .neq('id', currentUserId)
+              .not('favorite_teams', 'is', null)
+              .order('username', ascending: true)
+              .limit(20);
+
+          // Filter users who have at least one common team
+          final allUsers = List<Map<String, dynamic>>.from(response);
+          users = allUsers.where((user) {
+            final userTeams = user['favorite_teams'] as List<dynamic>? ?? [];
+            return favoriteTeams.any((team) => userTeams.contains(team));
+          }).take(10).toList();
+        } catch (e) {
+          print('Error with team-based suggestions: $e');
+        }
+      }
+
+      // If no team-based suggestions, get general suggestions
+      if (users.isEmpty) {
+        final response = await _authService.supabase
+            .from('profiles')
+            .select('''
+              id,
+              username,
+              full_name,
+              avatar_url,
+              bio
+            ''')
+            .neq('id', currentUserId)
+            .order('username', ascending: true)
+            .limit(10);
+
+        users = List<Map<String, dynamic>>.from(response);
+      }
 
       if (mounted) {
         setState(() {
-          _suggestedUsers = List<Map<String, dynamic>>.from(response);
+          _suggestedUsers = users;
           _isLoadingSuggestions = false;
         });
       }
@@ -116,7 +167,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
           children: [
             CircleAvatar(
               radius: 30,
-              backgroundColor: Colors.blue,
+              backgroundColor: Colors.green,
               backgroundImage: user['avatar_url'] != null
                   ? NetworkImage(user['avatar_url'])
                   : null,
@@ -160,20 +211,9 @@ class _DiscoverPageState extends State<DiscoverPage> {
                     ),
                   ],
                   const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Text(
-                        '${user['followers_count'] ?? 0} followers',
-                        style:
-                            const TextStyle(color: Colors.grey, fontSize: 12),
-                      ),
-                      const SizedBox(width: 16),
-                      Text(
-                        '${user['following_count'] ?? 0} following',
-                        style:
-                            const TextStyle(color: Colors.grey, fontSize: 12),
-                      ),
-                    ],
+                  Text(
+                    'User since ${DateTime.now().year}',
+                    style: const TextStyle(color: Colors.grey, fontSize: 12),
                   ),
                 ],
               ),
@@ -191,6 +231,10 @@ class _DiscoverPageState extends State<DiscoverPage> {
                       } else {
                         await _authService.followUser(user['id']);
                       }
+                      
+                      // Notify profile page to update counts instantly
+                      _followNotifier.notifyFollowChanged();
+                      
                       setState(() {}); // Refresh UI
                     } catch (e) {
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -198,13 +242,15 @@ class _DiscoverPageState extends State<DiscoverPage> {
                           content: Text(
                             'Failed to ${isFollowing ? 'unfollow' : 'follow'} user',
                           ),
+                          backgroundColor: Colors.red,
                         ),
                       );
                     }
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor:
-                        isFollowing ? Colors.grey[800] : Colors.blue,
+                        isFollowing ? Colors.grey[600] : Colors.green,
+                    foregroundColor: Colors.white,
                     minimumSize: const Size(100, 36),
                   ),
                   child: Text(isFollowing ? 'Unfollow' : 'Follow'),
