@@ -1,7 +1,12 @@
+// Import Supabase Flutter SDK for database operations - provides access to Supabase database and real-time features
 import 'package:supabase_flutter/supabase_flutter.dart';
+// Import Post model for social posts - provides data structure for regular social posts
 import '../models/post.dart';
+// Import PickPost model for betting posts - provides data structure for betting pick posts
 import '../models/pick_post.dart';
+// Import Comment model for post comments - provides data structure for post comments
 import '../models/comment.dart';
+// Import Dart convert library for JSON operations - provides JSON encoding and decoding
 import 'dart:convert';
 
 /// Manages social media functionality for WagerLoop.
@@ -13,8 +18,10 @@ import 'dart:convert';
 /// Integrates with Supabase for real-time social feed updates and
 /// user interaction tracking.
 class SocialFeedService {
+  // Supabase client instance for database operations - provides access to database and real-time features
   final SupabaseClient _supabase;
 
+  // Constructor that takes Supabase client - initializes service with database connection
   SocialFeedService(this._supabase);
 
   /// Fetches posts for the social feed with user personalization.
@@ -34,10 +41,12 @@ class SocialFeedService {
   ///   - Exception: If user is not authenticated or database query fails
   Future<List<dynamic>> fetchPosts({int limit = 20, int offset = 0}) async {
     try {
+      // Get current authenticated user - retrieves the currently logged in user
       final user = _supabase.auth.currentUser;
+      // Throw error if user is not authenticated - prevents unauthorized access
       if (user == null) throw 'User not authenticated';
 
-      // Simplified approach: Get all recent posts first, then prioritize followed users
+      // Simplified approach: Get all recent posts first, then prioritize followed users - fetches posts with user profiles
       final response = await _supabase
           .from('posts')
           .select('''
@@ -50,13 +59,15 @@ class SocialFeedService {
           .limit(limit)
           .range(offset, offset + limit - 1);
 
+      // Map raw post data to Post/PickPost objects - converts database response to typed objects
       final posts = await _mapPosts(response);
       
-      // Fetch like and repost status for current user
+      // Fetch like and repost status for current user - determines user's interaction with each post
       for (final post in posts) {
+        // Get post ID regardless of post type - extracts unique post identifier
         final postId = post is Post ? post.id : (post as PickPost).id;
         try {
-          // Check if user liked this post
+          // Check if user liked this post - queries likes table for user's like status
           final likeExists = await _supabase
               .from('likes')
               .select()
@@ -64,13 +75,15 @@ class SocialFeedService {
               .eq('user_id', user.id)
               .maybeSingle();
           
+          // Set like status for Post objects - updates Post object with like status
           if (post is Post) {
             post.isLiked = likeExists != null;
           } else if (post is PickPost) {
+            // Set like status for PickPost objects - updates PickPost object with like status
             post.isLiked = likeExists != null;
           }
 
-          // Check if user reposted this post
+          // Check if user reposted this post - queries reposts table for user's repost status
           final repostExists = await _supabase
               .from('reposts')
               .select()
@@ -78,42 +91,53 @@ class SocialFeedService {
               .eq('user_id', user.id)
               .maybeSingle();
           
+          // Set repost status for Post objects - updates Post object with repost status
           if (post is Post) {
             post.isReposted = repostExists != null;
           } else if (post is PickPost) {
+            // Set repost status for PickPost objects - updates PickPost object with repost status
             post.isReposted = repostExists != null;
           }
 
-          // Get actual counts
+          // Get actual like count - queries likes table for total like count
           final likesCount = await _supabase
               .from('likes')
               .select('id', const FetchOptions(count: CountOption.exact))
               .eq('post_id', postId);
           
+          // Set like count for Post objects - updates Post object with like count
           if (post is Post) {
             post.likes = likesCount.count ?? 0;
           } else if (post is PickPost) {
+            // Set like count for PickPost objects - updates PickPost object with like count
             post.likes = likesCount.count ?? 0;
           }
 
+          // Get actual repost count - queries reposts table for total repost count
           final repostsCount = await _supabase
               .from('reposts')
               .select('id', const FetchOptions(count: CountOption.exact))
               .eq('post_id', postId);
           
+          // Set repost count for Post objects - updates Post object with repost count
           if (post is Post) {
             post.reposts = repostsCount.count ?? 0;
           } else if (post is PickPost) {
+            // Set repost count for PickPost objects - updates PickPost object with repost count
             post.reposts = repostsCount.count ?? 0;
           }
         } catch (e) {
+          // Print error if checking like/repost status fails - logs interaction status errors
           print('Error checking like/repost status: $e');
         }
       }
 
+      // Return the processed posts - provides posts with complete interaction data
       return posts;
     } catch (e) {
+      // Print error if fetching posts fails - logs post fetching errors
       print('Error fetching posts: $e');
+      // Re-throw the error - allows calling code to handle the error
       rethrow;
     }
   }
@@ -133,19 +157,26 @@ class SocialFeedService {
   /// Throws:
   ///   - Exception: If post data is malformed or missing required fields
   Future<List<dynamic>> _mapPosts(List<dynamic> postData) async {
+    // Map each post data to appropriate object type - converts database records to typed objects
     return postData.map((post) {
+      // Get post type from data - determines if post is regular text or betting pick
       final postType = post['post_type'] ?? 'text';
       
+      // Handle pick posts with embedded sports picks - processes betting pick posts
       if (postType == 'pick' && post['picks_data'] != null) {
-        // Parse picks data
+        // Parse picks data from JSON - converts JSON string to Pick objects
         List<Pick> picks = [];
         try {
+          // Decode JSON picks data - converts JSON string to Dart objects
           final picksJson = jsonDecode(post['picks_data']);
+          // Convert JSON to Pick objects - creates typed Pick objects from JSON
           picks = (picksJson as List).map((pickJson) => Pick.fromJson(pickJson)).toList();
         } catch (e) {
+          // Print error if parsing picks data fails - logs JSON parsing errors
           print('Error parsing picks data: $e');
         }
         
+        // Return PickPost object - creates PickPost with embedded sports picks
         return PickPost(
           id: post['id'],
           userId: post['profile_id'] ?? post['user_id'] ?? '',
@@ -161,6 +192,7 @@ class SocialFeedService {
           picks: picks,
         );
       } else {
+        // Return regular Post object - creates regular text post
         return Post(
           id: post['id'],
           userId: post['profile_id'] ?? post['user_id'] ?? '',
@@ -193,6 +225,7 @@ class SocialFeedService {
   ///   - Exception: If database query fails or user not found
   Future<List<dynamic>> fetchUserPosts(String userId) async {
     try {
+      // Query posts for specific user with counts - fetches posts with interaction counts
       final response = await _supabase.from('posts').select('''
         *,
         profile:profiles!posts_profile_id_fkey (
@@ -204,20 +237,27 @@ class SocialFeedService {
         reposts(count)
       ''').eq('profile_id', userId).order('created_at', ascending: false);
 
+      // Map response to Post/PickPost objects - converts database response to typed objects
       return (response as List<dynamic>)
           .map((post) {
+            // Get post type from data - determines if post is regular text or betting pick
             final postType = post['post_type'] ?? 'text';
             
+            // Handle pick posts with embedded sports picks - processes betting pick posts
             if (postType == 'pick' && post['picks_data'] != null) {
-              // Parse picks data
+              // Parse picks data from JSON - converts JSON string to Pick objects
               List<Pick> picks = [];
               try {
+                // Decode JSON picks data - converts JSON string to Dart objects
                 final picksJson = jsonDecode(post['picks_data']);
+                // Convert JSON to Pick objects - creates typed Pick objects from JSON
                 picks = (picksJson as List).map((pickJson) => Pick.fromJson(pickJson)).toList();
               } catch (e) {
+                // Print error if parsing picks data fails - logs JSON parsing errors
                 print('Error parsing picks data: $e');
               }
               
+              // Return PickPost object with counts - creates PickPost with interaction counts
               return PickPost(
                 id: post['id'],
                 userId: post['profile_id'] ?? post['user_id'] ?? '',
@@ -235,6 +275,7 @@ class SocialFeedService {
                 picks: picks,
               );
             } else {
+              // Return regular Post object with counts - creates Post with interaction counts
               return Post(
                 id: post['id'],
                 userId: post['profile_id'] ?? post['user_id'] ?? '',
@@ -254,7 +295,9 @@ class SocialFeedService {
           })
           .toList();
     } catch (e) {
+      // Print error if fetching user posts fails - logs user post fetching errors
       print('Error fetching user posts: $e');
+      // Re-throw the error - allows calling code to handle the error
       rethrow;
     }
   }
@@ -275,17 +318,19 @@ class SocialFeedService {
   ///   - Exception: If user is not authenticated or post creation fails
   Future<Post> createPost(String content) async {
     try {
+      // Get current authenticated user - retrieves the currently logged in user
       final user = _supabase.auth.currentUser;
+      // Throw error if user is not authenticated - prevents unauthorized post creation
       if (user == null) throw 'User not authenticated';
 
-      // Get the user's profile
+      // Get the user's profile information - retrieves user profile data
       final profileResponse = await _supabase
           .from('profiles')
           .select('username, avatar_url')
           .eq('id', user.id)
           .single();
 
-      // Create post with current timestamp in UTC
+      // Create post with current timestamp in UTC - inserts new post into database
       final response = await _supabase.from('posts').insert({
         'user_id': user.id,
         'profile_id': user.id,
@@ -301,7 +346,7 @@ class SocialFeedService {
       )
     ''').single();
 
-      // Create and return a Post object with local timestamp
+      // Create and return a Post object with local timestamp - creates typed Post object
       return Post(
         id: response['id'],
         userId: user.id,
@@ -314,7 +359,9 @@ class SocialFeedService {
         avatarUrl: profileResponse['avatar_url'],
       );
     } catch (e) {
+      // Print error if creating post fails - logs post creation errors
       print('Error creating post: $e');
+      // Re-throw the error - allows calling code to handle the error
       rethrow;
     }
   }
@@ -335,17 +382,19 @@ class SocialFeedService {
   ///   - Exception: If user is not authenticated or pick post creation fails
   Future<PickPost> createPickPost(PickPost pickPost) async {
     try {
+      // Get current authenticated user - retrieves the currently logged in user
       final user = _supabase.auth.currentUser;
+      // Throw error if user is not authenticated - prevents unauthorized pick post creation
       if (user == null) throw 'User not authenticated';
 
-      // Get the user's profile
+      // Get the user's profile information - retrieves user profile data
       final profileResponse = await _supabase
           .from('profiles')
           .select('username, avatar_url')
           .eq('id', user.id)
           .single();
 
-      // Create post with picks data
+      // Create post with picks data encoded as JSON - inserts new pick post into database
       final response = await _supabase.from('posts').insert({
         'user_id': user.id,
         'profile_id': user.id,
@@ -362,7 +411,7 @@ class SocialFeedService {
       )
     ''').single();
 
-      // Create and return a PickPost object with local timestamp
+      // Create and return a PickPost object with local timestamp - creates typed PickPost object
       return PickPost(
         id: response['id'],
         userId: user.id,
@@ -376,7 +425,9 @@ class SocialFeedService {
         picks: pickPost.picks,
       );
     } catch (e) {
+      // Print error if creating pick post fails - logs pick post creation errors
       print('Error creating pick post: $e');
+      // Re-throw the error - allows calling code to handle the error
       rethrow;
     }
   }
@@ -397,16 +448,19 @@ class SocialFeedService {
   ///   - Exception: If user is not authenticated or comment creation fails
   Future<Comment> addComment(String postId, String content) async {
     try {
+      // Get current authenticated user - retrieves the currently logged in user
       final user = _supabase.auth.currentUser;
+      // Throw error if user is not authenticated - prevents unauthorized comment creation
       if (user == null) throw 'User not authenticated';
 
-      // Get the user's profile first
+      // Get the user's profile first - retrieves user profile data
       final profileResponse = await _supabase
           .from('profiles')
           .select('username, avatar_url')
           .eq('id', user.id)
           .single();
 
+      // Insert comment into database - creates new comment record
       final response = await _supabase
           .from('comments')
           .insert({
@@ -419,6 +473,7 @@ class SocialFeedService {
           .select()
           .single();
 
+      // Return Comment object - creates typed Comment object
       return Comment(
         id: response['id'],
         username: profileResponse['username'] ?? 'Anonymous',
@@ -428,7 +483,9 @@ class SocialFeedService {
         avatarUrl: profileResponse['avatar_url'],
       );
     } catch (e) {
+      // Print error if adding comment fails - logs comment creation errors
       print('Error adding comment: $e');
+      // Re-throw the error - allows calling code to handle the error
       rethrow;
     }
   }
@@ -448,6 +505,7 @@ class SocialFeedService {
   ///   - Exception: If database query fails
   Future<List<Comment>> fetchComments(String postId) async {
     try {
+      // Query comments with user profile information - fetches comments with user data
       final response = await _supabase.from('comments').select('''
             *,
             profile:profiles!inner (
@@ -456,6 +514,7 @@ class SocialFeedService {
             )
           ''').eq('post_id', postId).order('created_at', ascending: true);
 
+      // Map response to Comment objects - converts database response to typed objects
       return (response as List<dynamic>)
           .map((comment) => Comment(
                 id: comment['id'],
@@ -467,7 +526,9 @@ class SocialFeedService {
               ))
           .toList();
     } catch (e) {
+      // Print error if fetching comments fails - logs comment fetching errors
       print('Error fetching comments: $e');
+      // Re-throw the error - allows calling code to handle the error
       rethrow;
     }
   }
@@ -484,9 +545,12 @@ class SocialFeedService {
   ///   - Exception: If user is not authenticated or like toggle fails
   Future<void> toggleLike(String postId) async {
     try {
+      // Get current authenticated user - retrieves the currently logged in user
       final user = _supabase.auth.currentUser;
+      // Throw error if user is not authenticated - prevents unauthorized like operations
       if (user == null) throw 'User not authenticated';
 
+      // Check if user already liked the post - queries likes table for existing like
       final exists = await _supabase
           .from('likes')
           .select()
@@ -494,6 +558,7 @@ class SocialFeedService {
           .eq('user_id', user.id)
           .maybeSingle();
 
+      // If not liked, add like - creates new like record
       if (exists == null) {
         await _supabase.from('likes').insert({
           'post_id': postId,
@@ -501,6 +566,7 @@ class SocialFeedService {
           'created_at': DateTime.now().toIso8601String(),
         });
       } else {
+        // If already liked, remove like - deletes existing like record
         await _supabase
             .from('likes')
             .delete()
@@ -508,7 +574,9 @@ class SocialFeedService {
             .eq('user_id', user.id);
       }
     } catch (e) {
+      // Print error if toggling like fails - logs like toggle errors
       print('Error toggling like: $e');
+      // Re-throw the error - allows calling code to handle the error
       rethrow;
     }
   }
@@ -525,9 +593,12 @@ class SocialFeedService {
   ///   - Exception: If user is not authenticated or repost toggle fails
   Future<void> toggleRepost(String postId) async {
     try {
+      // Get current authenticated user - retrieves the currently logged in user
       final user = _supabase.auth.currentUser;
+      // Throw error if user is not authenticated - prevents unauthorized repost operations
       if (user == null) throw 'User not authenticated';
 
+      // Check if user already reposted the post - queries reposts table for existing repost
       final exists = await _supabase
           .from('reposts')
           .select()
@@ -535,6 +606,7 @@ class SocialFeedService {
           .eq('user_id', user.id)
           .maybeSingle();
 
+      // If not reposted, add repost - creates new repost record
       if (exists == null) {
         await _supabase.from('reposts').insert({
           'post_id': postId,
@@ -542,6 +614,7 @@ class SocialFeedService {
           'created_at': DateTime.now().toIso8601String(),
         });
       } else {
+        // If already reposted, remove repost - deletes existing repost record
         await _supabase
             .from('reposts')
             .delete()
@@ -549,7 +622,9 @@ class SocialFeedService {
             .eq('user_id', user.id);
       }
     } catch (e) {
+      // Print error if toggling repost fails - logs repost toggle errors
       print('Error toggling repost: $e');
+      // Re-throw the error - allows calling code to handle the error
       rethrow;
     }
   }
@@ -566,22 +641,26 @@ class SocialFeedService {
   ///   - Exception: If user is not authenticated, not the post owner, or deletion fails
   Future<void> deletePost(String postId) async {
     try {
+      // Get current authenticated user - retrieves the currently logged in user
       final user = _supabase.auth.currentUser;
+      // Throw error if user is not authenticated - prevents unauthorized post deletion
       if (user == null) throw 'User not authenticated';
 
-      // First delete all related data
+      // First delete all related data (likes, comments, reposts) - removes all associated interactions
       await _supabase.from('likes').delete().eq('post_id', postId);
       await _supabase.from('comments').delete().eq('post_id', postId);
       await _supabase.from('reposts').delete().eq('post_id', postId);
       
-      // Then delete the post (only if user owns it)
+      // Then delete the post (only if user owns it) - removes the main post record
       await _supabase
           .from('posts')
           .delete()
           .eq('id', postId)
           .eq('user_id', user.id); // Ensure only owner can delete
     } catch (e) {
+      // Print error if deleting post fails - logs post deletion errors
       print('Error deleting post: $e');
+      // Re-throw the error - allows calling code to handle the error
       rethrow;
     }
   }
