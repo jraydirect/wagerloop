@@ -84,9 +84,9 @@ class _FollowersListPageState extends State<FollowersListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Colors.grey[800],
       appBar: AppBar(
-        backgroundColor: Colors.black,
+        backgroundColor: Colors.grey[800],
         title: Text(
           widget.isFollowers ? 'Followers' : 'Following',
           style: const TextStyle(color: Colors.white),
@@ -97,7 +97,7 @@ class _FollowersListPageState extends State<FollowersListPage> {
         ),
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator(color: Colors.green))
           : _error != null
               ? Center(
                   child: Column(

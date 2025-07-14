@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import '../services/supabase_config.dart';
 import '../services/follow_notifier.dart';
+import '../services/image_upload_service.dart';
 import '../models/post.dart';
 import 'package:timeago/timeago.dart' as timeago;
+import 'package:image_picker/image_picker.dart';
 import 'followers_list_page.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -30,6 +32,10 @@ class _ProfilePageState extends State<ProfilePage> {
   int _followersCount = 0;
   int _followingCount = 0;
   final FollowNotifier _followNotifier = FollowNotifier();
+
+  // Image picker
+  final ImagePicker _imagePicker = ImagePicker();
+  bool _isUploadingImage = false;
 
   // Teams data
   List<Post> _userPosts = [];
@@ -127,6 +133,154 @@ class _ProfilePageState extends State<ProfilePage> {
       _loadUserPosts(),
       _loadFollowerCounts(),
     ]);
+  }
+
+  Future<void> _pickAndUploadImage() async {
+    try {
+      final XFile? image = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 512,
+        maxHeight: 512,
+        imageQuality: 80,
+      );
+
+      if (image == null) return;
+
+      setState(() => _isUploadingImage = true);
+
+      final bytes = await image.readAsBytes();
+      final userId = _authService.currentUser?.id;
+      
+      if (userId == null) {
+        throw 'User not authenticated';
+      }
+
+      // Delete old image if exists
+      final oldAvatarUrl = _userData?['avatar_url'];
+      if (oldAvatarUrl != null && oldAvatarUrl.isNotEmpty) {
+        await ImageUploadService.deleteProfileImage(oldAvatarUrl);
+      }
+
+      // Upload new image
+      final imageUrl = await ImageUploadService.uploadProfileImage(bytes, userId);
+      
+      if (imageUrl == null) {
+        throw 'Failed to upload image';
+      }
+
+      // Update profile with new image URL
+      await _authService.updateProfile(avatarUrl: imageUrl);
+      
+      // Reload profile to show new image
+      await _loadUserProfile();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Profile picture updated successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error updating profile picture: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      setState(() => _isUploadingImage = false);
+    }
+  }
+
+  void _showImagePickerDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey[700],
+        title: const Text(
+          'Update Profile Picture',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_library, color: Colors.green),
+              title: const Text(
+                'Choose from Gallery',
+                style: TextStyle(color: Colors.white),
+              ),
+              onTap: () {
+                Navigator.of(context).pop();
+                _pickAndUploadImage();
+              },
+            ),
+            if (_userData?['avatar_url'] != null)
+              ListTile(
+                leading: const Icon(Icons.delete, color: Colors.red),
+                title: const Text(
+                  'Remove Picture',
+                  style: TextStyle(color: Colors.white),
+                ),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _removeProfilePicture();
+                },
+              ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: Colors.grey),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _removeProfilePicture() async {
+    try {
+      setState(() => _isUploadingImage = true);
+
+      final oldAvatarUrl = _userData?['avatar_url'];
+      if (oldAvatarUrl != null && oldAvatarUrl.isNotEmpty) {
+        await ImageUploadService.deleteProfileImage(oldAvatarUrl);
+      }
+
+      // Update profile to remove avatar URL
+      await _authService.updateProfile(avatarUrl: null);
+      
+      // Reload profile
+      await _loadUserProfile();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Profile picture removed'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error removing profile picture: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      setState(() => _isUploadingImage = false);
+    }
   }
 
   Future<void> _loadUserProfile() async {
@@ -602,21 +756,65 @@ class _ProfilePageState extends State<ProfilePage> {
                 Center(
                   child: Column(
                     children: [
-                      CircleAvatar(
-                        radius: 50,
-                        backgroundColor: Colors.green, // Changed from blue to green
-                        child: Text(
-                          _userData?['username']?[0].toUpperCase() ?? 'A',
-                          style: TextStyle(
-                            fontSize: 32,
-                            color: Colors.white,
-                          ),
+                      GestureDetector(
+                        onTap: _showImagePickerDialog,
+                        child: Stack(
+                          children: [
+                            CircleAvatar(
+                              radius: 50,
+                              backgroundColor: Colors.green,
+                              backgroundImage: _userData?['avatar_url'] != null
+                                  ? NetworkImage(_userData!['avatar_url'])
+                                  : null,
+                              child: _userData?['avatar_url'] == null
+                                  ? Text(
+                                      _userData?['username']?[0].toUpperCase() ?? 'A',
+                                      style: const TextStyle(
+                                        fontSize: 32,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : null,
+                            ),
+                            if (_isUploadingImage)
+                              Positioned.fill(
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.black54,
+                                    borderRadius: BorderRadius.circular(50),
+                                  ),
+                                  child: const Center(
+                                    child: CircularProgressIndicator(
+                                      color: Colors.green,
+                                      strokeWidth: 2,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            Positioned(
+                              bottom: 0,
+                              right: 0,
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  color: Colors.green,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: Colors.grey[800]!, width: 2),
+                                ),
+                                child: const Icon(
+                                  Icons.camera_alt,
+                                  color: Colors.white,
+                                  size: 16,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      SizedBox(height: 16),
+                      const SizedBox(height: 16),
                       Text(
                         _userData?['username'] ?? '',
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 24,
                           fontWeight: FontWeight.bold,

@@ -161,6 +161,11 @@ class _DiscoverPageState extends State<DiscoverPage> {
   Widget _buildUserCard(Map<String, dynamic> user) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      color: Colors.grey[700],
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: Colors.grey[600]!, width: 1),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Row(
@@ -266,9 +271,9 @@ class _DiscoverPageState extends State<DiscoverPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 0, 0, 0),
+      backgroundColor: Colors.grey[800],
       appBar: AppBar(
-        backgroundColor: Colors.black,
+        backgroundColor: Colors.grey[800],
         title: const Text('Discover People',
             style: TextStyle(color: Colors.white)),
       ),
@@ -285,7 +290,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
                 hintStyle: const TextStyle(color: Colors.grey),
                 prefixIcon: const Icon(Icons.search, color: Colors.grey),
                 filled: true,
-                fillColor: Colors.grey[900],
+                fillColor: Colors.grey[700],
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
@@ -303,7 +308,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
           Expanded(
             child: _searchController.text.isEmpty
                 ? _isLoadingSuggestions
-                    ? const Center(child: CircularProgressIndicator())
+                    ? const Center(child: CircularProgressIndicator(color: Colors.green))
                     : ListView(
                         children: [
                           const Padding(
@@ -321,7 +326,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
                         ],
                       )
                 : _isLoading
-                    ? const Center(child: CircularProgressIndicator())
+                    ? const Center(child: CircularProgressIndicator(color: Colors.green))
                     : _error != null
                         ? Center(
                             child: Text(_error!,
