@@ -275,6 +275,212 @@ class _SocialFeedPageState extends State<SocialFeedPage> {
     }
   }
 
+  void _showDeleteConfirmation(dynamic post) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey[800],
+        title: const Text(
+          'Delete Post',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: const Text(
+          'Are you sure you want to delete this post? This action cannot be undone.',
+          style: TextStyle(color: Colors.white),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        final postId = post is Post ? post.id : (post as PickPost).id;
+        await _socialFeedService.deletePost(postId);
+        
+        setState(() {
+          _posts.removeWhere((p) {
+            final id = p is Post ? p.id : (p as PickPost).id;
+            return id == postId;
+          });
+        });
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Post deleted successfully')),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to delete post. Please try again.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  void _showInteractions(dynamic post) async {
+    final postId = post is Post ? post.id : (post as PickPost).id;
+    
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.grey[700],
+      isScrollControlled: true,
+      builder: (context) => SizedBox(
+        height: MediaQuery.of(context).size.height * 0.75,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Post Interactions',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close, color: Colors.white),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: DefaultTabController(
+                length: 2,
+                child: Column(
+                  children: [
+                    const TabBar(
+                      labelColor: Colors.green,
+                      unselectedLabelColor: Colors.grey,
+                      indicatorColor: Colors.green,
+                      tabs: [
+                        Tab(text: 'Likes'),
+                        Tab(text: 'Reposts'),
+                      ],
+                    ),
+                    Expanded(
+                      child: TabBarView(
+                        children: [
+                          _buildInteractionsList(postId, 'likes'),
+                          _buildInteractionsList(postId, 'reposts'),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInteractionsList(String postId, String type) {
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: _getInteractions(postId, type),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator(color: Colors.green));
+        }
+
+        if (snapshot.hasError) {
+          return const Center(
+            child: Text(
+              'Failed to load interactions',
+              style: TextStyle(color: Colors.red),
+            ),
+          );
+        }
+
+        final interactions = snapshot.data ?? [];
+
+        if (interactions.isEmpty) {
+          return Center(
+            child: Text(
+              'No ${type} yet',
+              style: const TextStyle(color: Colors.grey),
+            ),
+          );
+        }
+
+        return ListView.builder(
+          itemCount: interactions.length,
+          itemBuilder: (context, index) {
+            final interaction = interactions[index];
+            return ListTile(
+              leading: CircleAvatar(
+                backgroundColor: Colors.blue,
+                backgroundImage: interaction['avatar_url'] != null
+                    ? NetworkImage(interaction['avatar_url']!)
+                    : null,
+                child: interaction['avatar_url'] == null
+                    ? Text(
+                        (interaction['username'] ?? '?')[0].toUpperCase(),
+                        style: const TextStyle(color: Colors.white),
+                      )
+                    : null,
+              ),
+              title: Text(
+                interaction['username'] ?? 'Anonymous',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              subtitle: Text(
+                timeago.format(DateTime.parse(interaction['created_at'])),
+                style: const TextStyle(
+                  color: Colors.grey,
+                  fontSize: 12,
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> _getInteractions(String postId, String type) async {
+    try {
+      final response = await SupabaseConfig.supabase
+          .from(type)
+          .select('''
+            *,
+            profile:profiles!${type}_user_id_fkey (
+              username,
+              avatar_url
+            )
+          ''')
+          .eq('post_id', postId)
+          .order('created_at', ascending: false);
+
+      return (response as List).map((item) => {
+        'username': item['profile']['username'],
+        'avatar_url': item['profile']['avatar_url'],
+        'created_at': item['created_at'],
+      }).toList();
+    } catch (e) {
+      print('Error getting $type: $e');
+      return [];
+    }
+  }
+
   void _showComments(dynamic post) async {
     final postId = post is Post ? post.id : (post as PickPost).id;
     bool isSubmitting = false;
@@ -448,6 +654,7 @@ class _SocialFeedPageState extends State<SocialFeedPage> {
   Widget _buildPostCard(dynamic post) {
     // Extract common properties
     final id = post is Post ? post.id : (post as PickPost).id;
+    final userId = post is Post ? post.userId : (post as PickPost).userId;
     final username = post is Post ? post.username : (post as PickPost).username;
     final content = post is Post ? post.content : (post as PickPost).content;
     final timestamp = post is Post ? post.timestamp : (post as PickPost).timestamp;
@@ -457,6 +664,10 @@ class _SocialFeedPageState extends State<SocialFeedPage> {
     final isLiked = post is Post ? post.isLiked : (post as PickPost).isLiked;
     final isReposted = post is Post ? post.isReposted : (post as PickPost).isReposted;
     final avatarUrl = post is Post ? post.avatarUrl : (post as PickPost).avatarUrl;
+    
+    // Check if this post belongs to the current user
+    final currentUserId = _authService.currentUser?.id;
+    final isOwnPost = currentUserId != null && userId == currentUserId;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
@@ -503,35 +714,80 @@ class _SocialFeedPageState extends State<SocialFeedPage> {
                     ],
                   ),
                 ),
-                if (username != _authService.currentUser?.email)
-                  TextButton(
-                    onPressed: () async {
-                      try {
-                        final isFollowing =
-                            await _authService.isFollowing(id);
-                        if (isFollowing) {
-                          await _authService.unfollowUser(id);
-                        } else {
-                          await _authService.followUser(id);
-                        }
-                        setState(() {});
-                      } catch (e) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                              content: Text('Failed to update follow status')),
-                        );
+                if (isOwnPost)
+                  PopupMenuButton<String>(
+                    onSelected: (String choice) async {
+                      switch (choice) {
+                        case 'delete':
+                          _showDeleteConfirmation(post);
+                          break;
+                        case 'interactions':
+                          _showInteractions(post);
+                          break;
                       }
                     },
-                    style: ButtonStyle(
-                      backgroundColor: MaterialStateProperty.all(Colors.green),
-                      padding: MaterialStateProperty.all(
-                        const EdgeInsets.symmetric(horizontal: 12),
+                    itemBuilder: (BuildContext context) => [
+                      const PopupMenuItem<String>(
+                        value: 'delete',
+                        child: Row(
+                          children: [
+                            Icon(Icons.delete, color: Colors.red),
+                            SizedBox(width: 8),
+                            Text('Delete Post'),
+                          ],
+                        ),
                       ),
+                      const PopupMenuItem<String>(
+                        value: 'interactions',
+                        child: Row(
+                          children: [
+                            Icon(Icons.analytics, color: Colors.blue),
+                            SizedBox(width: 8),
+                            Text('View Interactions'),
+                          ],
+                        ),
+                      ),
+                    ],
+                    icon: const Icon(
+                      Icons.more_vert,
+                      color: Colors.grey,
                     ),
-                    child: const Text(
-                      'Follow',
-                      style: TextStyle(color: Colors.white),
-                    ),
+                  )
+                else
+                  FutureBuilder<bool>(
+                    future: _authService.isFollowing(userId),
+                    builder: (context, snapshot) {
+                      final isFollowing = snapshot.data ?? false;
+                      return TextButton(
+                        onPressed: () async {
+                          try {
+                            if (isFollowing) {
+                              await _authService.unfollowUser(userId);
+                            } else {
+                              await _authService.followUser(userId);
+                            }
+                            setState(() {});
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text('Failed to update follow status')),
+                            );
+                          }
+                        },
+                        style: ButtonStyle(
+                          backgroundColor: MaterialStateProperty.all(
+                            isFollowing ? Colors.grey : Colors.green,
+                          ),
+                          padding: MaterialStateProperty.all(
+                            const EdgeInsets.symmetric(horizontal: 12),
+                          ),
+                        ),
+                        child: Text(
+                          isFollowing ? 'Following' : 'Follow',
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                      );
+                    },
                   ),
               ],
             ),

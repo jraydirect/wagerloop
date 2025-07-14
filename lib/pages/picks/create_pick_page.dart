@@ -181,6 +181,7 @@ class _CreatePickPageState extends State<CreatePickPage> {
       // Create the pick post
       final pickPost = PickPost(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
+        userId: currentUser.id,
         username: username,
         content: _contentController.text.trim().isEmpty 
             ? 'My pick: ${pick.displayText}' 

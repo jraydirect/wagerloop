@@ -3,6 +3,7 @@ import 'comment.dart';
 
 class Post {
   final String id;
+  final String userId; // Add userId field
   final String username;
   final String content;
   DateTime timestamp; // Changed to non-final to allow conversion
@@ -15,6 +16,7 @@ class Post {
 
   Post({
     required this.id,
+    required this.userId,
     required this.username,
     required this.content,
     required this.timestamp,
@@ -34,6 +36,7 @@ class Post {
   // Create a copy of the post with modified properties
   Post copyWith({
     String? id,
+    String? userId,
     String? username,
     String? content,
     DateTime? timestamp,
@@ -46,6 +49,7 @@ class Post {
   }) {
     return Post(
       id: id ?? this.id,
+      userId: userId ?? this.userId,
       username: username ?? this.username,
       content: content ?? this.content,
       timestamp: timestamp ?? this.timestamp,
@@ -62,6 +66,7 @@ class Post {
   Map<String, dynamic> toMap() {
     return {
       'id': id,
+      'userId': userId,
       'username': username,
       'content': content,
       'timestamp': timestamp.toUtc().toIso8601String(), // Store as UTC
@@ -78,6 +83,7 @@ class Post {
   factory Post.fromMap(Map<String, dynamic> map) {
     final post = Post(
       id: map['id'],
+      userId: map['userId'] ?? map['user_id'] ?? '',
       username: map['username'],
       content: map['content'],
       timestamp:

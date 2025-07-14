@@ -113,6 +113,7 @@ class SocialFeedService {
         
         return PickPost(
           id: post['id'],
+          userId: post['profile_id'] ?? post['user_id'] ?? '',
           username: post['profile']['username'] ?? 'Anonymous',
           content: post['content'],
           timestamp: DateTime.parse(post['created_at']).toLocal(),
@@ -127,6 +128,7 @@ class SocialFeedService {
       } else {
         return Post(
           id: post['id'],
+          userId: post['profile_id'] ?? post['user_id'] ?? '',
           username: post['profile']['username'] ?? 'Anonymous',
           content: post['content'],
           timestamp: DateTime.parse(post['created_at']).toLocal(),
@@ -157,6 +159,7 @@ class SocialFeedService {
       return (response as List<dynamic>)
           .map((post) => Post(
                 id: post['id'],
+                userId: post['profile_id'] ?? post['user_id'] ?? '',
                 username: post['profile']['username'] ?? 'Anonymous',
                 content: post['content'],
                 timestamp: DateTime.parse(post['created_at'])
@@ -208,6 +211,7 @@ class SocialFeedService {
       // Create and return a Post object with local timestamp
       return Post(
         id: response['id'],
+        userId: user.id,
         username: profileResponse['username'] ?? 'Anonymous',
         content: response['content'],
         timestamp: DateTime.parse(response['created_at']).toLocal(),
@@ -254,6 +258,7 @@ class SocialFeedService {
       // Create and return a PickPost object with local timestamp
       return PickPost(
         id: response['id'],
+        userId: user.id,
         username: profileResponse['username'] ?? 'Anonymous',
         content: response['content'],
         timestamp: DateTime.parse(response['created_at']).toLocal(),
