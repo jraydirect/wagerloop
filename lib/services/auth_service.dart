@@ -157,7 +157,83 @@ class AuthService {
   /// Throws:
   ///   - AuthException: If Google OAuth flow fails or is cancelled
   ///   - PlatformException: If Google services are unavailable
-  Future<AuthResponse> signInWithGoogle() async {
+     /// Authenticates user with email and password.
+   /// 
+   /// Provides secure login for WagerLoop users to access their betting
+   /// history, social posts, and account settings.
+   /// 
+   /// Parameters:
+   ///   - email: User's registered email address
+   ///   - password: User's account password
+   /// 
+   /// Returns:
+   ///   AuthResponse containing user session and profile data
+   /// 
+   /// Throws:
+   ///   - AuthException: If credentials are invalid or user doesn't exist
+   ///   - NetworkException: If connection to auth service fails
+   Future<AuthResponse> signInWithEmail({
+     required String email,
+     required String password,
+   }) async {
+     try {
+       print('Attempting email sign in for: $email');
+       
+       final response = await supabase.auth.signInWithPassword(
+         email: email,
+         password: password,
+       );
+       
+       print('Sign in response: ${response.user?.id}');
+       
+       // Ensure profile exists for the user
+       if (response.user != null) {
+         await Future.delayed(const Duration(milliseconds: 500));
+         
+         try {
+           final existingProfile = await supabase
+               .from('profiles')
+               .select()
+               .eq('id', response.user!.id)
+               .maybeSingle();
+           
+           if (existingProfile == null) {
+             print('Creating profile for existing user');
+             await supabase.from('profiles').insert({
+               'id': response.user!.id,
+               'username': response.user!.email?.split('@')[0] ?? 'user',
+               'email': response.user!.email,
+               'has_completed_onboarding': false,
+               'created_at': DateTime.now().toIso8601String(),
+               'updated_at': DateTime.now().toIso8601String(),
+             });
+           }
+         } catch (profileError) {
+           print('Profile check/creation error: $profileError');
+           // Don't throw here - let the user proceed
+         }
+       }
+       
+       return response;
+     } catch (e) {
+       print('Sign in error: $e');
+       rethrow;
+     }
+   }
+ 
+   /// Authenticates user with Google OAuth.
+   /// 
+   /// Provides seamless Google sign-in for WagerLoop users, handling
+   /// both web and mobile OAuth flows. Creates user profile automatically
+   /// if signing in for the first time.
+   /// 
+   /// Returns:
+   ///   AuthResponse with user session for accessing betting features
+   /// 
+   /// Throws:
+   ///   - AuthException: If Google OAuth flow fails or is cancelled
+   ///   - PlatformException: If Google services are unavailable
+   Future<AuthResponse> signInWithGoogle() async {
     try {
       print('Initializing Google Sign In');
 

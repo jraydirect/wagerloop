@@ -25,7 +25,7 @@ class SportsOddsService {
   //String? _apiKey = '9413990d83982c8eb7e2f7af3deb42ab';
 
   // Cache for odds data to avoid frequent API calls
-  final Map<String, Map<String, dynamic>> _oddsCache = {};
+  final Map<String, List<dynamic>> _oddsCache = {};
   DateTime? _lastFetchTime;
   final Duration _cacheValidity = const Duration(hours: 3);
 
@@ -145,7 +145,14 @@ class SportsOddsService {
           _lastFetchTime != null && 
           now.difference(_lastFetchTime!) < _cacheValidity) {
         print('Using cached odds data for game: $gameId');
-        return _parseOddsForGame(_oddsCache[cacheKey]!, gameId, sportsbooks);
+        final gamesList = _oddsCache[cacheKey]!;
+        final gameData = gamesList.firstWhere(
+          (game) => game['id'] == gameId,
+          orElse: () => null,
+        );
+        if (gameData != null) {
+          return _parseOddsForGame(gameData, gameId, sportsbooks);
+        }
       }
 
       // API endpoint parameters
@@ -175,7 +182,18 @@ class SportsOddsService {
         _oddsCache[cacheKey] = data;
         _lastFetchTime = now;
         
-        return _parseOddsForGame(data, gameId, sportsbooks);
+        // Find the specific game from the list
+        final gameData = data.firstWhere(
+          (game) => game['id'] == gameId,
+          orElse: () => null,
+        );
+        
+        if (gameData != null) {
+          return _parseOddsForGame(gameData, gameId, sportsbooks);
+        } else {
+          print('Game with ID $gameId not found in API response');
+          return {};
+        }
       } else {
         print('Error fetching odds: ${response.statusCode}');
         return {};
@@ -229,18 +247,19 @@ class SportsOddsService {
       if (response.statusCode == 200) {
         final List<dynamic> oddsData = json.decode(response.body);
         
+        // Cache the entire list of games for this sport
+        _oddsCache[sportApiCode] = oddsData;
+        _lastFetchTime = DateTime.now();
+        
         for (var gameData in oddsData) {
           final gameId = gameData['id'] as String? ?? '';
           final odds = _parseOddsForGame(gameData, gameId, null);
-          
-          _oddsCache['${sportApiCode}_$gameId'] = gameData;
           
           if (odds.isNotEmpty) {
             result[gameId] = odds;
           }
         }
         
-        _lastFetchTime = DateTime.now();
         return result;
       } else {
         print('The Odds API request failed: Status: ${response.statusCode}');

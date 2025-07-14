@@ -23,8 +23,8 @@ class _LoginPageState extends State<LoginPage> {
     setState(() => _isLoading = true);
     try {
       final response = await _authService.signInWithEmail(
-        _emailController.text,
-        _passwordController.text,
+        email: _emailController.text,
+        password: _passwordController.text,
       );
 
       if (!mounted) return;

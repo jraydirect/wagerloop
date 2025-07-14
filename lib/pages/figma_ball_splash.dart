@@ -436,8 +436,8 @@ class _LoginFormWidgetState extends State<LoginFormWidget> {
     
     try {
       final response = await _authService.signInWithEmail(
-        _emailController.text.trim(),
-        _passwordController.text,
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
       );
       
       if (response.user != null && mounted) {

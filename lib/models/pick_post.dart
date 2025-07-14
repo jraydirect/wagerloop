@@ -250,7 +250,7 @@ class PickPost {
       content: json['content'],
       timestamp: DateTime.parse(json['timestamp']),
       likes: json['likes'] ?? 0,
-      comments: (json['comments'] as List?)?.map((c) => Comment.fromJson(c)).toList() ?? [],
+      comments: (json['comments'] as List?)?.map((c) => Comment.fromJson(c)).toList().cast<Comment>() ?? [],
       reposts: json['reposts'] ?? 0,
       isLiked: json['is_liked'] ?? false,
       isReposted: json['is_reposted'] ?? false,

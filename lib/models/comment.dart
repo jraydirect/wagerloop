@@ -47,6 +47,11 @@ class Comment {
     };
   }
 
+  // Convert comment to JSON (same as toMap for compatibility)
+  Map<String, dynamic> toJson() {
+    return toMap();
+  }
+
   // Create a comment from a map
   factory Comment.fromMap(Map<String, dynamic> map) {
     return Comment(
@@ -57,5 +62,10 @@ class Comment {
       likes: map['likes'] ?? 0,
       avatarUrl: map['avatarUrl'],
     );
+  }
+
+  // Create a comment from JSON (same as fromMap for compatibility)
+  factory Comment.fromJson(Map<String, dynamic> json) {
+    return Comment.fromMap(json);
   }
 }
