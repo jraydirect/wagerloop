@@ -5,6 +5,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:convert';
 import '../utils/team_logo_utils.dart';
 
+enum GameTimeFilter { today, tomorrow, upcoming }
+
 class ScoresPage extends StatefulWidget {
   @override
   _ScoresPageState createState() => _ScoresPageState();
@@ -12,24 +14,25 @@ class ScoresPage extends StatefulWidget {
 
 class _ScoresPageState extends State<ScoresPage> {
   List<dynamic> scores = [];
-  String selectedSport = 'americanfootball_nfl';
+  String selectedSport = 'football/nfl';
   bool isLoading = true;
   String? error;
+  GameTimeFilter selectedTimeFilter = GameTimeFilter.today;
 
   final Map<String, String> sportsMap = {
-    'americanfootball_nfl': 'NFL',
-    'basketball_nba': 'NBA',
-    'baseball_mlb': 'MLB',
-    'icehockey_nhl': 'NHL',
+    'football/nfl': 'NFL',
+    'basketball/nba': 'NBA',
+    'baseball/mlb': 'MLB',
+    'hockey/nhl': 'NHL',
   };
 
   // Helper method to get league logo path
   String getLeagueLogoPath(String sportKey) {
     final Map<String, String> leagueLogos = {
-      'americanfootball_nfl': 'assets/leagueLogos/nfl.png',
-      'basketball_nba': 'assets/leagueLogos/nba.png',
-      'baseball_mlb': 'assets/leagueLogos/mlb.png',
-      'icehockey_nhl': 'assets/leagueLogos/nhl.png',
+      'football/nfl': 'assets/leagueLogos/nfl.png',
+      'basketball/nba': 'assets/leagueLogos/nba.png',
+      'baseball/mlb': 'assets/leagueLogos/mlb.png',
+      'hockey/nhl': 'assets/leagueLogos/nhl.png',
     };
     return leagueLogos[sportKey] ?? '';
   }
@@ -46,13 +49,37 @@ class _ScoresPageState extends State<ScoresPage> {
       error = null;
     });
 
+    switch (selectedTimeFilter) {
+      case GameTimeFilter.today:
+        await fetchTodayGames();
+        break;
+      case GameTimeFilter.tomorrow:
+        await fetchTomorrowGames();
+        break;
+      case GameTimeFilter.upcoming:
+        await fetchUpcomingGames();
+        break;
+    }
+  }
+
+  Future<void> fetchTodayGames() async {
     try {
+      final today = DateTime.now();
+      final yesterday = today.subtract(const Duration(days: 1));
+      
+      // Format dates for ESPN API (YYYYMMDD)
+      final todayFormatted = today.toIso8601String().split('T')[0].replaceAll('-', '');
+      final yesterdayFormatted = yesterday.toIso8601String().split('T')[0].replaceAll('-', '');
+      
       final response = await http.get(Uri.parse(
-          'https://api.the-odds-api.com/v4/sports/$selectedSport/scores?apiKey=37a6ab2abd9938d21be970bb794eb6a3&daysFrom=2'));
+          'https://site.api.espn.com/apis/site/v2/sports/$selectedSport/scoreboard?dates=$yesterdayFormatted-$todayFormatted'));
 
       if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final events = data['events'] ?? [];
+        print('ESPN API Today Response: Found ${events.length} events');
         setState(() {
-          scores = json.decode(response.body);
+          scores = events;
           isLoading = false;
         });
       } else {
@@ -69,7 +96,99 @@ class _ScoresPageState extends State<ScoresPage> {
     }
   }
 
-  Widget buildTeamInfo(String teamName, bool isHome) {
+  Future<void> fetchTomorrowGames() async {
+    try {
+      final tomorrow = DateTime.now().add(const Duration(days: 1));
+      
+      // Format date for ESPN API (YYYYMMDD)
+      final tomorrowFormatted = tomorrow.toIso8601String().split('T')[0].replaceAll('-', '');
+
+      final response = await http.get(Uri.parse(
+          'https://site.api.espn.com/apis/site/v2/sports/$selectedSport/scoreboard?dates=$tomorrowFormatted'));
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final events = data['events'] ?? [];
+        print('ESPN API Tomorrow Response: Found ${events.length} events');
+        setState(() {
+          scores = events;
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          error = 'Failed to load tomorrow\'s games';
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        error = 'Error connecting to the server';
+        isLoading = false;
+      });
+    }
+  }
+
+  Future<void> fetchUpcomingGames() async {
+    try {
+      final today = DateTime.now();
+      final futureDate = today.add(const Duration(days: 7)); // Next 7 days
+      
+      // Format dates for ESPN API (YYYYMMDD)
+      final todayFormatted = today.toIso8601String().split('T')[0].replaceAll('-', '');
+      final futureFormatted = futureDate.toIso8601String().split('T')[0].replaceAll('-', '');
+
+      final response = await http.get(Uri.parse(
+          'https://site.api.espn.com/apis/site/v2/sports/$selectedSport/scoreboard?dates=$todayFormatted-$futureFormatted'));
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final events = data['events'] ?? [];
+        
+        // Filter out completed games and only show upcoming
+        final upcomingGames = events.where((game) {
+          final status = game['status'];
+          if (status == null || status['type'] == null) return true;
+          return status['type']['state'] == 'pre'; // Only pre-game status
+        }).toList();
+        
+        print('ESPN API Upcoming Response: Found ${upcomingGames.length} upcoming games');
+        setState(() {
+          scores = upcomingGames;
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          error = 'Failed to load upcoming games';
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        error = 'Error connecting to the server';
+        isLoading = false;
+      });
+    }
+  }
+
+  Widget _buildTeamInfoFromCompetition(dynamic game, bool isHome) {
+    final competitions = game['competitions'];
+    if (competitions == null || !(competitions is List) || competitions.isEmpty) {
+      return const Expanded(child: SizedBox());
+    }
+
+    final competition = competitions[0];
+    final competitors = competition['competitors'];
+    if (competitors == null || !(competitors is List) || competitors.length < 2) {
+      return const Expanded(child: SizedBox());
+    }
+
+    // Find the appropriate team (home or away)
+    final team = competitors.firstWhere(
+      (comp) => comp['homeAway'] == (isHome ? 'home' : 'away'),
+      orElse: () => competitors[isHome ? 0 : 1],
+    );
+
+    final teamName = team['team']['displayName'] ?? team['team']['name'] ?? '';
     final logoPath = TeamLogoUtils.getTeamLogo(teamName);
 
     return Expanded(
@@ -120,17 +239,76 @@ class _ScoresPageState extends State<ScoresPage> {
   }
 
   String formatGameStatus(dynamic game) {
-    if (game['completed']) {
+    final status = game['status'];
+    if (status == null) return '';
+    
+    final type = status['type'];
+    if (type == null) return '';
+    
+    // Check if game is completed
+    if (type['completed'] == true) {
       return 'Final';
-    } else if (game['commence_time'] != null) {
-      final gameTime = DateTime.parse(game['commence_time']).toLocal();
-      // Format in 12-hour format
+    } else if (type['state'] == 'in') {
+      // Game is in progress
+      final displayClock = status['displayClock'];
+      final period = status['period'];
+      if (displayClock != null && period != null) {
+        return '$displayClock Q$period';
+      }
+      return 'Live';
+    } else {
+      // Game is scheduled
+      final gameTime = DateTime.parse(game['date']).toLocal();
       final hour = gameTime.hour > 12 ? gameTime.hour - 12 : (gameTime.hour == 0 ? 12 : gameTime.hour);
       final minute = gameTime.minute.toString().padLeft(2, '0');
       final period = gameTime.hour >= 12 ? 'PM' : 'AM';
       return '${gameTime.month}/${gameTime.day} $hour:$minute $period';
     }
-    return '';
+  }
+
+  bool _isGameCompleted(dynamic game) {
+    final status = game['status'];
+    if (status == null || status['type'] == null) return false;
+    return status['type']['completed'] == true;
+  }
+
+  String _getEmptyStateMessage() {
+    switch (selectedTimeFilter) {
+      case GameTimeFilter.today:
+        return 'No scores available';
+      case GameTimeFilter.tomorrow:
+        return 'No games scheduled for tomorrow';
+      case GameTimeFilter.upcoming:
+        return 'No upcoming games found';
+    }
+  }
+
+  Widget _buildTimeFilterButton(String label, GameTimeFilter filter) {
+    final isSelected = selectedTimeFilter == filter;
+    return Expanded(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4),
+        child: CupertinoButton(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          borderRadius: BorderRadius.circular(20),
+          color: isSelected ? const Color(0xFF4CAF50) : const Color(0xFF616161),
+          onPressed: () {
+            setState(() {
+              selectedTimeFilter = filter;
+            });
+            fetchScores();
+          },
+          child: Text(
+            label,
+            style: TextStyle(
+              color: isSelected ? Colors.white : const Color(0xFF4CAF50),
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   String formatScore(dynamic game) {
@@ -139,15 +317,38 @@ class _ScoresPageState extends State<ScoresPage> {
       return '-';
     }
 
-    // Check for scores field
-    final scores = game['scores'];
-    if (scores == null || !(scores is List) || scores.length < 2) {
-      return '-';
+    final competitions = game['competitions'];
+    if (competitions == null || !(competitions is List) || competitions.isEmpty) {
+      return (selectedTimeFilter == GameTimeFilter.tomorrow || selectedTimeFilter == GameTimeFilter.upcoming) ? 'vs' : '-';
     }
 
-    // Safely access the scores
-    final homeScore = scores[0]['score']?.toString() ?? '0';
-    final awayScore = scores[1]['score']?.toString() ?? '0';
+    final competition = competitions[0];
+    final competitors = competition['competitors'];
+    if (competitors == null || !(competitors is List) || competitors.length < 2) {
+      return (selectedTimeFilter == GameTimeFilter.tomorrow || selectedTimeFilter == GameTimeFilter.upcoming) ? 'vs' : '-';
+    }
+
+    // Find home and away teams
+    final homeTeam = competitors.firstWhere(
+      (comp) => comp['homeAway'] == 'home',
+      orElse: () => competitors[0],
+    );
+    final awayTeam = competitors.firstWhere(
+      (comp) => comp['homeAway'] == 'away',
+      orElse: () => competitors[1],
+    );
+
+    final homeScore = homeTeam['score']?.toString() ?? '0';
+    final awayScore = awayTeam['score']?.toString() ?? '0';
+
+    // Check if game has started
+    final status = game['status'];
+    if (status != null && status['type'] != null) {
+      final gameState = status['type']['state'];
+      if (gameState == 'pre') {
+        return 'vs';
+      }
+    }
 
     return '$homeScore - $awayScore';
   }
@@ -168,6 +369,18 @@ class _ScoresPageState extends State<ScoresPage> {
       child: SafeArea(
         child: Column(
           children: [
+            // Time Filter Buttons
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildTimeFilterButton('Today', GameTimeFilter.today),
+                  _buildTimeFilterButton('Tomorrow', GameTimeFilter.tomorrow),
+                  _buildTimeFilterButton('Upcoming', GameTimeFilter.upcoming),
+                ],
+              ),
+            ),
             // Sports Filter
             Container(
               height: 60,
@@ -190,8 +403,8 @@ class _ScoresPageState extends State<ScoresPage> {
                       onPressed: () {
                         setState(() {
                           selectedSport = entry.key;
-                          fetchScores();
                         });
+                        fetchScores();
                       },
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -275,7 +488,7 @@ class _ScoresPageState extends State<ScoresPage> {
                                           ),
                                           const SizedBox(height: 16),
                                           Text(
-                                            'No scores available',
+                                            _getEmptyStateMessage(),
                                             style: TextStyle(
                                               color: Colors.grey[400],
                                               fontSize: 18,
@@ -343,7 +556,7 @@ class _ScoresPageState extends State<ScoresPage> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: game['completed'] 
+                    color: _isGameCompleted(game) 
                         ? const Color(0xFF4CAF50) // Green for completed games
                         : const Color(0xFF616161), // Gray for upcoming games
                     borderRadius: BorderRadius.circular(12),
@@ -357,7 +570,7 @@ class _ScoresPageState extends State<ScoresPage> {
                     ),
                   ),
                 ),
-                if (game['completed'])
+                if (_isGameCompleted(game))
                   Icon(
                     CupertinoIcons.checkmark_circle_fill,
                     color: const Color(0xFF4CAF50),
@@ -376,7 +589,7 @@ class _ScoresPageState extends State<ScoresPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                buildTeamInfo(game['home_team'] ?? '', true),
+                _buildTeamInfoFromCompetition(game, true),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
@@ -396,7 +609,7 @@ class _ScoresPageState extends State<ScoresPage> {
                     ),
                   ),
                 ),
-                buildTeamInfo(game['away_team'] ?? '', false),
+                _buildTeamInfoFromCompetition(game, false),
               ],
             ),
           ],
