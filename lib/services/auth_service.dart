@@ -9,12 +9,12 @@ class AuthService {
 
   AuthService() {
     _googleSignIn = GoogleSignIn(
-      clientId: kIsWeb
-          ? '912814055492-4c1g0mprsnl03k9vvmsjd4qr7pg5qvd2.apps.googleusercontent.com'
+      clientId: !kIsWeb
+          ? '454829996179-4g3cv5eiadbmf3tom9m5r1ae3n919j5r.apps.googleusercontent.com'
+          : '912814055492-4g3cv5eiadbmf3tom9m5r1ae3n919j5r.apps.googleusercontent.com',
+      serverClientId: !kIsWeb
+          ? '912814055492-3jvoqo0na9mjhjl0e3t89t2g5q6mk8rs.apps.googleusercontent.com'
           : null,
-      serverClientId: kIsWeb
-          ? null
-          : '912814055492-4c1g0mprsnl03k9vvmsjd4qr7pg5qvd2.apps.googleusercontent.com',
       scopes: ['email', 'profile'],
     );
   }
