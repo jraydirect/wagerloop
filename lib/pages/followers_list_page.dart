@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import '../services/follow_notifier.dart';
 import '../widgets/profile_avatar.dart';
+import 'user_profile_page.dart';
 
 class FollowersListPage extends StatefulWidget {
   final String userId;
@@ -139,6 +140,14 @@ class _FollowersListPageState extends State<FollowersListPage> {
                                 username: user['username'] ?? 'Anonymous',
                                 radius: 20,
                                 backgroundColor: Colors.blue,
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => UserProfilePage(userId: user['id']),
+                                    ),
+                                  );
+                                },
                               ),
                               title: Text(
                                 user['username'],

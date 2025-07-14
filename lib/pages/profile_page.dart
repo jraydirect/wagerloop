@@ -4,7 +4,9 @@ import '../services/supabase_config.dart';
 import '../services/follow_notifier.dart';
 import '../services/image_upload_service.dart';
 import '../models/post.dart';
+import '../models/pick_post.dart';
 import '../widgets/profile_avatar.dart';
+import '../widgets/picks_display_widget.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -40,7 +42,7 @@ class _ProfilePageState extends State<ProfilePage> {
   bool _isUploadingImage = false;
 
   // Teams data
-  List<Post> _userPosts = [];
+  List<dynamic> _userPosts = []; // Can contain both Post and PickPost objects
   bool _isLoadingPosts = false;
 
   // Available teams for selection
@@ -627,6 +629,43 @@ class _ProfilePageState extends State<ProfilePage> {
       final user = _authService.currentUser;
       if (user != null) {
         final posts = await _socialFeedService.fetchUserPosts(user.id);
+        
+        // Update like and repost status for current user
+        for (final post in posts) {
+          final postId = post is Post ? post.id : (post as PickPost).id;
+          try {
+            // Check if user liked this post
+            final likeExists = await _authService.supabase
+                .from('likes')
+                .select()
+                .eq('post_id', postId)
+                .eq('user_id', user.id)
+                .maybeSingle();
+            
+            if (post is Post) {
+              post.isLiked = likeExists != null;
+            } else if (post is PickPost) {
+              post.isLiked = likeExists != null;
+            }
+
+            // Check if user reposted this post
+            final repostExists = await _authService.supabase
+                .from('reposts')
+                .select()
+                .eq('post_id', postId)
+                .eq('user_id', user.id)
+                .maybeSingle();
+            
+            if (post is Post) {
+              post.isReposted = repostExists != null;
+            } else if (post is PickPost) {
+              post.isReposted = repostExists != null;
+            }
+          } catch (e) {
+            print('Error fetching post stats for $postId: $e');
+          }
+        }
+        
         setState(() => _userPosts = posts);
       }
     } catch (e) {
@@ -634,6 +673,94 @@ class _ProfilePageState extends State<ProfilePage> {
     } finally {
       setState(() => _isLoadingPosts = false);
     }
+  }
+
+  Future<void> _toggleLike(dynamic post) async {
+    // Optimistically update UI
+    setState(() {
+      if (post is Post) {
+        post.isLiked = !post.isLiked;
+        post.likes += post.isLiked ? 1 : -1;
+      } else if (post is PickPost) {
+        post.isLiked = !post.isLiked;
+        post.likes += post.isLiked ? 1 : -1;
+      }
+    });
+
+    try {
+      final postId = post is Post ? post.id : (post as PickPost).id;
+      await _socialFeedService.toggleLike(postId);
+    } catch (e) {
+      // Revert on error
+      setState(() {
+        if (post is Post) {
+          post.isLiked = !post.isLiked;
+          post.likes += post.isLiked ? 1 : -1;
+        } else if (post is PickPost) {
+          post.isLiked = !post.isLiked;
+          post.likes += post.isLiked ? 1 : -1;
+        }
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to update like. Please try again.')),
+      );
+      print('Error toggling like: $e');
+    }
+  }
+
+  Future<void> _toggleRepost(dynamic post) async {
+    // Optimistically update UI
+    setState(() {
+      if (post is Post) {
+        post.isReposted = !post.isReposted;
+        post.reposts += post.isReposted ? 1 : -1;
+      } else if (post is PickPost) {
+        post.isReposted = !post.isReposted;
+        post.reposts += post.isReposted ? 1 : -1;
+      }
+    });
+
+    try {
+      final postId = post is Post ? post.id : (post as PickPost).id;
+      await _socialFeedService.toggleRepost(postId);
+    } catch (e) {
+      // Revert on error
+      setState(() {
+        if (post is Post) {
+          post.isReposted = !post.isReposted;
+          post.reposts += post.isReposted ? 1 : -1;
+        } else if (post is PickPost) {
+          post.isReposted = !post.isReposted;
+          post.reposts += post.isReposted ? 1 : -1;
+        }
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to update repost. Please try again.')),
+      );
+      print('Error toggling repost: $e');
+    }
+  }
+
+  Widget _buildActionButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+    Color color = Colors.grey,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 20, color: color),
+            const SizedBox(width: 4),
+            Text(label, style: TextStyle(color: color)),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _updateProfile() async {
@@ -815,6 +942,17 @@ class _ProfilePageState extends State<ProfilePage> {
       itemCount: _userPosts.length,
       itemBuilder: (context, index) {
         final post = _userPosts[index];
+        
+        // Extract common properties
+        final content = post is Post ? post.content : (post as PickPost).content;
+        final timestamp = post is Post ? post.timestamp : (post as PickPost).timestamp;
+        final likes = post is Post ? post.likes : (post as PickPost).likes;
+        final comments = post is Post ? post.comments : (post as PickPost).comments;
+        final reposts = post is Post ? post.reposts : (post as PickPost).reposts;
+        final isLiked = post is Post ? post.isLiked : (post as PickPost).isLiked;
+        final isReposted = post is Post ? post.isReposted : (post as PickPost).isReposted;
+        final postId = post is Post ? post.id : (post as PickPost).id;
+        
         return Card(
           color: Colors.grey[700], // Changed from grey[900] to grey[700]
           margin: const EdgeInsets.only(bottom: 8),
@@ -828,7 +966,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   children: [
                     Expanded(
                       child: Text(
-                        post.content,
+                        content,
                         style: const TextStyle(color: Colors.white),
                       ),
                     ),
@@ -838,38 +976,56 @@ class _ProfilePageState extends State<ProfilePage> {
                         color: Colors.red,
                         size: 20,
                       ),
-                      onPressed: () => _deletePost(post.id),
+                      onPressed: () => _deletePost(postId),
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
                     ),
                   ],
                 ),
+                
+                // Show picks if this is a PickPost
+                if (post is PickPost && post.hasPicks) ...[
+                  const SizedBox(height: 12),
+                  PicksDisplayWidget(
+                    picks: post.picks,
+                    showParlayBadge: true,
+                    compact: true, // Use compact version for profile page
+                  ),
+                ],
+                
                 const SizedBox(height: 8),
                 Row(
                   children: [
                     Text(
-                      timeago.format(post.timestamp, locale: 'en'),
+                      timeago.format(timestamp, locale: 'en'),
                       style: TextStyle(color: Colors.grey[400], fontSize: 12),
                     ),
                     const Spacer(),
-                    Row(
-                      children: [
-                        Icon(Icons.favorite, color: Colors.grey[400], size: 16),
-                        const SizedBox(width: 4),
-                        Text(
-                          post.likes.toString(),
-                          style:
-                              TextStyle(color: Colors.grey[400], fontSize: 12),
-                        ),
-                        const SizedBox(width: 16),
-                        Icon(Icons.comment, color: Colors.grey[400], size: 16),
-                        const SizedBox(width: 4),
-                        Text(
-                          post.comments.length.toString(),
-                          style:
-                              TextStyle(color: Colors.grey[400], fontSize: 12),
-                        ),
-                      ],
+                  ],
+                ),
+                const SizedBox(height: 8),
+                // Actions
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _buildActionButton(
+                      icon: isLiked ? Icons.favorite : Icons.favorite_border,
+                      label: likes.toString(),
+                      onTap: () => _toggleLike(post),
+                      color: isLiked ? Colors.red : Colors.grey,
+                    ),
+                    _buildActionButton(
+                      icon: Icons.comment_outlined,
+                      label: comments.length.toString(),
+                      onTap: () {
+                        // TODO: Implement comment functionality
+                      },
+                    ),
+                    _buildActionButton(
+                      icon: Icons.repeat,
+                      label: reposts.toString(),
+                      onTap: () => _toggleRepost(post),
+                      color: isReposted ? Colors.green : Colors.grey,
                     ),
                   ],
                 ),

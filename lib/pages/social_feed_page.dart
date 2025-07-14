@@ -4,6 +4,7 @@ import '../models/pick_post.dart';
 import '../models/comment.dart';
 import '../services/supabase_config.dart';
 import '../widgets/profile_avatar.dart';
+import '../widgets/picks_display_widget.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import '../services/auth_service.dart';
 import '../widgets/dice_loading_widget.dart';
@@ -13,6 +14,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/realtime_profile_service.dart';
+import 'user_profile_page.dart';
 
 class SocialFeedPage extends StatefulWidget {
   const SocialFeedPage({Key? key}) : super(key: key);
@@ -209,74 +211,7 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
     }
   }
 
-  Widget _buildPickCard(Pick pick) {
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(top: 8),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.green.withOpacity(0.1),
-        border: Border.all(color: Colors.green.withOpacity(0.3)),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.sports_basketball, color: Colors.green, size: 16),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  '${pick.game.awayTeam} @ ${pick.game.homeTeam}',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  ),
-                ),
-              ),
-              Text(
-                pick.game.sport.toUpperCase(),
-                style: TextStyle(
-                  color: Colors.grey[400],
-                  fontSize: 12,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            pick.displayText,
-            style: const TextStyle(
-              color: Colors.green,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          if (pick.reasoning != null && pick.reasoning!.isNotEmpty) ...[
-            const SizedBox(height: 4),
-            Text(
-              pick.reasoning!,
-              style: TextStyle(
-                color: Colors.grey[300],
-                fontSize: 12,
-                fontStyle: FontStyle.italic,
-              ),
-            ),
-          ],
-          const SizedBox(height: 4),
-          Text(
-            pick.game.formattedGameTime,
-            style: TextStyle(
-              color: Colors.grey[400],
-              fontSize: 12,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+
 
   void _onScroll() {
     if (_scrollController.position.pixels ==
@@ -608,6 +543,10 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
                 username: interaction['username'] ?? 'Anonymous',
                 radius: 20,
                 backgroundColor: Colors.blue,
+                onTap: () {
+                  // Note: We don't have user ID in interactions, so we can't navigate to profile
+                  // This would need to be updated if we want to include user IDs in interactions
+                },
               ),
               title: Text(
                 interaction['username'] ?? 'Anonymous',
@@ -730,6 +669,10 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
                           username: comment.username,
                           radius: 20,
                           backgroundColor: Colors.blue,
+                          onTap: () {
+                            // Note: We don't have user ID in comments, so we can't navigate to profile
+                            // This would need to be updated if we want to include user IDs in comments
+                          },
                           ),
                             title: Text(
                               comment.username,
@@ -891,6 +834,14 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
                     username: username,
                     radius: 20,
                     backgroundColor: Colors.blue,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => UserProfilePage(userId: userId),
+                        ),
+                      );
+                    },
                   ),
                   const SizedBox(width: 8),
                   Expanded(
@@ -1093,6 +1044,14 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
                   username: username,
                   radius: 20,
                   backgroundColor: Colors.blue,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => UserProfilePage(userId: userId),
+                      ),
+                    );
+                  },
                 ),
                 const SizedBox(width: 8),
                 Expanded(
@@ -1200,7 +1159,11 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
             // Show picks if this is a PickPost
             if (post is PickPost && post.hasPicks) ...[
               const SizedBox(height: 12),
-              ...post.picks.map((pick) => _buildPickCard(pick)).toList(),
+              PicksDisplayWidget(
+                picks: post.picks,
+                showParlayBadge: false, // Already shown in header
+                compact: false,
+              ),
             ],
             
             const SizedBox(height: 8),
@@ -1277,6 +1240,7 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
                         username: profile?['username'] ?? 'You',
                         radius: 20,
                         backgroundColor: Colors.green,
+                        // No onTap for current user's avatar in create post section
                       );
                     },
                   ),

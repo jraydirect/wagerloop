@@ -143,7 +143,7 @@ class SocialFeedService {
     }).toList();
   }
 
-  Future<List<Post>> fetchUserPosts(String userId) async {
+  Future<List<dynamic>> fetchUserPosts(String userId) async {
     try {
       final response = await _supabase.from('posts').select('''
         *,
@@ -157,13 +157,25 @@ class SocialFeedService {
       ''').eq('profile_id', userId).order('created_at', ascending: false);
 
       return (response as List<dynamic>)
-          .map((post) => Post(
+          .map((post) {
+            final postType = post['post_type'] ?? 'text';
+            
+            if (postType == 'pick' && post['picks_data'] != null) {
+              // Parse picks data
+              List<Pick> picks = [];
+              try {
+                final picksJson = jsonDecode(post['picks_data']);
+                picks = (picksJson as List).map((pickJson) => Pick.fromJson(pickJson)).toList();
+              } catch (e) {
+                print('Error parsing picks data: $e');
+              }
+              
+              return PickPost(
                 id: post['id'],
                 userId: post['profile_id'] ?? post['user_id'] ?? '',
                 username: post['profile']['username'] ?? 'Anonymous',
                 content: post['content'],
-                timestamp: DateTime.parse(post['created_at'])
-                    .toLocal(), // Convert to local time
+                timestamp: DateTime.parse(post['created_at']).toLocal(),
                 likes: (post['likes'] as List).isNotEmpty
                     ? (post['likes'][0]['count'] ?? 0)
                     : 0,
@@ -172,7 +184,26 @@ class SocialFeedService {
                     ? (post['reposts'][0]['count'] ?? 0)
                     : 0,
                 avatarUrl: post['profile']['avatar_url'],
-              ))
+                picks: picks,
+              );
+            } else {
+              return Post(
+                id: post['id'],
+                userId: post['profile_id'] ?? post['user_id'] ?? '',
+                username: post['profile']['username'] ?? 'Anonymous',
+                content: post['content'],
+                timestamp: DateTime.parse(post['created_at']).toLocal(),
+                likes: (post['likes'] as List).isNotEmpty
+                    ? (post['likes'][0]['count'] ?? 0)
+                    : 0,
+                comments: const [],
+                reposts: (post['reposts'] as List).isNotEmpty
+                    ? (post['reposts'][0]['count'] ?? 0)
+                    : 0,
+                avatarUrl: post['profile']['avatar_url'],
+              );
+            }
+          })
           .toList();
     } catch (e) {
       print('Error fetching user posts: $e');

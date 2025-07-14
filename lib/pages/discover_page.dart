@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import '../services/follow_notifier.dart';
 import 'package:timeago/timeago.dart' as timeago;
+import 'user_profile_page.dart';
 
 class DiscoverPage extends StatefulWidget {
   const DiscoverPage({Key? key}) : super(key: key);
@@ -166,103 +167,114 @@ class _DiscoverPageState extends State<DiscoverPage> {
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(color: Colors.grey[600]!, width: 1),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            CircleAvatar(
-              radius: 30,
-              backgroundColor: Colors.green,
-              backgroundImage: user['avatar_url'] != null
-                  ? NetworkImage(user['avatar_url'])
-                  : null,
-              child: user['avatar_url'] == null
-                  ? Text(
-                      user['username'][0].toUpperCase(),
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => UserProfilePage(userId: user['id']),
+            ),
+          );
+        },
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: 30,
+                backgroundColor: Colors.green,
+                backgroundImage: user['avatar_url'] != null
+                    ? NetworkImage(user['avatar_url'])
+                    : null,
+                child: user['avatar_url'] == null
+                    ? Text(
+                        user['username'][0].toUpperCase(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                        ),
+                      )
+                    : null,
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      user['username'],
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
                       ),
-                    )
-                  : null,
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    user['username'],
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
                     ),
-                  ),
-                  if (user['full_name'] != null) ...[
-                    const SizedBox(height: 4),
+                    if (user['full_name'] != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        user['full_name'],
+                        style: const TextStyle(color: Colors.grey),
+                      ),
+                    ],
+                    if (user['bio'] != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        user['bio'],
+                        style: const TextStyle(color: Colors.grey),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                    const SizedBox(height: 8),
                     Text(
-                      user['full_name'],
-                      style: const TextStyle(color: Colors.grey),
+                      'User since ${DateTime.now().year}',
+                      style: const TextStyle(color: Colors.grey, fontSize: 12),
                     ),
                   ],
-                  if (user['bio'] != null) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      user['bio'],
-                      style: const TextStyle(color: Colors.grey),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                  const SizedBox(height: 8),
-                  Text(
-                    'User since ${DateTime.now().year}',
-                    style: const TextStyle(color: Colors.grey, fontSize: 12),
-                  ),
-                ],
+                ),
               ),
-            ),
-            FutureBuilder<bool>(
-              future: _authService.isFollowing(user['id']),
-              builder: (context, snapshot) {
-                final isFollowing = snapshot.data ?? false;
+              FutureBuilder<bool>(
+                future: _authService.isFollowing(user['id']),
+                builder: (context, snapshot) {
+                  final isFollowing = snapshot.data ?? false;
 
-                return ElevatedButton(
-                  onPressed: () async {
-                    try {
-                      if (isFollowing) {
-                        await _authService.unfollowUser(user['id']);
-                      } else {
-                        await _authService.followUser(user['id']);
-                      }
-                      
-                      // Notify profile page to update counts instantly
-                      _followNotifier.notifyFollowChanged();
-                      
-                      setState(() {}); // Refresh UI
-                    } catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            'Failed to ${isFollowing ? 'unfollow' : 'follow'} user',
+                  return ElevatedButton(
+                    onPressed: () async {
+                      try {
+                        if (isFollowing) {
+                          await _authService.unfollowUser(user['id']);
+                        } else {
+                          await _authService.followUser(user['id']);
+                        }
+                        
+                        // Notify profile page to update counts instantly
+                        _followNotifier.notifyFollowChanged();
+                        
+                        setState(() {}); // Refresh UI
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Failed to ${isFollowing ? 'unfollow' : 'follow'} user',
+                            ),
+                            backgroundColor: Colors.red,
                           ),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        isFollowing ? Colors.grey[600] : Colors.green,
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size(100, 36),
-                  ),
-                  child: Text(isFollowing ? 'Unfollow' : 'Follow'),
-                );
-              },
-            ),
-          ],
+                        );
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor:
+                          isFollowing ? Colors.grey[600] : Colors.green,
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size(100, 36),
+                    ),
+                    child: Text(isFollowing ? 'Unfollow' : 'Follow'),
+                  );
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
