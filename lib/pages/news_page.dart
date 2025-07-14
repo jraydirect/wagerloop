@@ -1,9 +1,10 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart'; // Still good for Colors, etc.
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:xml/xml.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'dart:ui';
 
 class NewsPage extends StatefulWidget {
   @override
@@ -103,10 +104,10 @@ class _NewsPageState extends State<NewsPage> {
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
-      backgroundColor: const Color(0xFF424242), // Same gray background as Colors.grey[800]
+      backgroundColor: const Color(0xFF424242),
       navigationBar: CupertinoNavigationBar(
-        backgroundColor: const Color(0xFF424242), // Same gray background
-        border: null, // Remove default border
+        backgroundColor: const Color(0xFF424242),
+        border: null,
         middle: Image.asset(
           'assets/9d514000-7637-4e02-bc87-df46fcb2fe36_removalai_preview.png',
           height: 40,
@@ -116,73 +117,148 @@ class _NewsPageState extends State<NewsPage> {
       child: SafeArea(
         child: Column(
           children: [
-            // League Filter
+            // League Filter - Enhanced with blur effect
             Container(
-              height: 60,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: leagues.length,
-                itemBuilder: (context, index) {
-                  final league = leagues[index];
-                  final isSelected = league == selectedLeague;
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: const Color(0xFF525252).withOpacity(0.6),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: const Color(0xFF4CAF50).withOpacity(0.1),
+                  width: 1,
+                ),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                  child: Container(
+                    height: 60,
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: leagues.length,
+                      itemBuilder: (context, index) {
+                        final league = leagues[index];
+                        final isSelected = league == selectedLeague;
 
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: CupertinoButton(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      borderRadius: BorderRadius.circular(20),
-                      color: isSelected
-                          ? const Color(0xFF4CAF50) // Same green as Colors.green
-                          : const Color(0xFF616161), // Same as Colors.grey[700]
-                      onPressed: () {
-                        setState(() {
-                          selectedLeague = league;
-                          fetchNews();
-                        });
-                      },
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Image.asset(
-                            getLeagueLogoPath(league),
-                            height: 20,
-                            width: 20,
-                            fit: BoxFit.contain,
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: CupertinoButton(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            borderRadius: BorderRadius.circular(20),
+                            color: isSelected
+                                ? const Color(0xFF4CAF50)
+                                : Colors.transparent,
+                            onPressed: () {
+                              setState(() {
+                                selectedLeague = league;
+                                fetchNews();
+                              });
+                            },
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Image.asset(
+                                  getLeagueLogoPath(league),
+                                  height: 20,
+                                  width: 20,
+                                  fit: BoxFit.contain,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  league,
+                                  style: TextStyle(
+                                    color: isSelected 
+                                        ? Colors.white 
+                                        : const Color(0xFF4CAF50),
+                                    fontWeight: isSelected 
+                                        ? FontWeight.w600 
+                                        : FontWeight.w500,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                          const SizedBox(width: 8),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            // News List with enhanced styling
+            Expanded(
+              child: isLoading
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const CupertinoActivityIndicator(
+                            color: Color(0xFF4CAF50),
+                            radius: 20,
+                          ),
+                          const SizedBox(height: 16),
                           Text(
-                            league,
-                            style: TextStyle(
-                              color: isSelected ? Colors.white : const Color(0xFF4CAF50),
-                              fontWeight: FontWeight.w500,
+                            'Loading $selectedLeague news...',
+                            style: const TextStyle(
+                              color: Color(0xFFBDBDBD),
                               fontSize: 16,
+                              fontWeight: FontWeight.w400,
                             ),
                           ),
                         ],
                       ),
-                    ),
-                  );
-                },
-              ),
-            ),
-
-            // News List
-            Expanded(
-              child: isLoading
-                  ? const Center(
-                      child: CupertinoActivityIndicator(
-                        color: Color(0xFF4CAF50), // Same green
-                        radius: 15,
-                      ),
                     )
                   : error.isNotEmpty
                       ? Center(
-                          child: Text(
-                            error,
-                            style: const TextStyle(
-                              color: CupertinoColors.destructiveRed,
-                              fontSize: 16,
+                          child: Container(
+                            margin: const EdgeInsets.all(20),
+                            padding: const EdgeInsets.all(24),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF525252),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: CupertinoColors.destructiveRed.withOpacity(0.3),
+                                width: 1,
+                              ),
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  CupertinoIcons.exclamationmark_triangle,
+                                  size: 48,
+                                  color: CupertinoColors.destructiveRed,
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'Unable to load news',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  error,
+                                  style: const TextStyle(
+                                    color: Color(0xFFBDBDBD),
+                                    fontSize: 14,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 16),
+                                CupertinoButton(
+                                  color: const Color(0xFF4CAF50),
+                                  borderRadius: BorderRadius.circular(12),
+                                  onPressed: fetchNews,
+                                  child: const Text('Try Again'),
+                                ),
+                              ],
                             ),
                           ),
                         )
@@ -195,17 +271,37 @@ class _NewsPageState extends State<NewsPage> {
                             newsArticles.isEmpty
                                 ? SliverFillRemaining(
                                     child: Center(
-                                      child: Text(
-                                        'No news found for $selectedLeague',
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 16,
-                                        ),
+                                      child: Column(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            CupertinoIcons.news,
+                                            size: 64,
+                                            color: const Color(0xFF4CAF50).withOpacity(0.5),
+                                          ),
+                                          const SizedBox(height: 16),
+                                          Text(
+                                            'No news found',
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            'No $selectedLeague news available right now',
+                                            style: const TextStyle(
+                                              color: Color(0xFFBDBDBD),
+                                              fontSize: 16,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
                                   )
                                 : SliverPadding(
-                                    padding: const EdgeInsets.all(16),
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                                     sliver: SliverList(
                                       delegate: SliverChildBuilderDelegate(
                                         (context, index) {
@@ -229,79 +325,166 @@ class _NewsPageState extends State<NewsPage> {
   }
 
   Widget _buildNewsCard(Map<String, dynamic> article) {
+    // Clean title to remove any HTML formatting
+    String cleanTitle = (article['title'] as String?)
+            ?.replaceAll(RegExp(r'<[^>]*>'), '') // Remove HTML tags
+            .replaceAll(RegExp(r'&[^;]+;'), '') // Remove HTML entities
+            .trim() ??
+        'No title';
+        
     return CupertinoButton(
       padding: EdgeInsets.zero,
       onPressed: () => _showArticleDetails(context, article),
       child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 4),
         decoration: BoxDecoration(
-          color: const Color(0xFF616161), // Same as Colors.grey[700]
-          borderRadius: BorderRadius.circular(12),
+          color: const Color(0xFF525252),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: const Color(0xFF4CAF50).withOpacity(0.1),
+            width: 1,
+          ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.2),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+              color: Colors.black.withOpacity(0.15),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start, // Ensure main column content is left-aligned
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Article Image
+              // Article Image with enhanced styling
               if (article['imageUrl'] != null)
-                ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-                  child: Image.network(
-                    article['imageUrl']!,
-                    height: 200,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        height: 200,
-                        color: const Color(0xFF757575), // Same as Colors.grey[600]
-                        child: const Icon(
-                          CupertinoIcons.sportscourt,
-                          size: 50,
-                          color: Color(0xFF9E9E9E), // Same as Colors.grey[400]
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              // Article Content (Title and CBS Sports)
-              Padding(
-                padding: const EdgeInsets.all(16), // Consistent padding
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start, // Ensure nested column content is left-aligned
-                  mainAxisSize: MainAxisSize.min, // Allow column to shrink wrap its content vertically
+                Stack(
                   children: [
-                    // Title - No maxLines or overflow.ellipsis here!
+                    ClipRRect(
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                      child: Image.network(
+                        article['imageUrl']!,
+                        height: 200,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            height: 200,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  const Color(0xFF757575),
+                                  const Color(0xFF616161),
+                                ],
+                              ),
+                            ),
+                            child: const Icon(
+                              CupertinoIcons.sportscourt,
+                              size: 60,
+                              color: Color(0xFF9E9E9E),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    // Subtle gradient overlay for better text readability
+                    Container(
+                      height: 200,
+                      decoration: BoxDecoration(
+                        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.transparent,
+                            Colors.black.withOpacity(0.1),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              // Article Content with enhanced styling
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Title with improved typography and proper constraints
                     Text(
-                      article['title'] ?? 'No title',
+                      cleanTitle,
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        height: 1.2,
+                        fontWeight: FontWeight.w600,
+                        height: 1.3,
+                        letterSpacing: -0.2,
+                        decoration: TextDecoration.none,
                       ),
-                      textAlign: TextAlign.start, // Explicitly set to start
+                      textAlign: TextAlign.start,
                       softWrap: true,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 10), // Space between title and "CBS Sports"
-                    // Add "CBS Sports" in the bottom right corner
-                    // Use a Row with Spacer to push CBS Sports to the right
+                    const SizedBox(height: 12),
+                    // Enhanced footer with date and source
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Spacer(), // This pushes the following widget to the right
-                        Text(
-                          'CBS Sports',
-                          style: TextStyle(
-                            color: Color(0xFFBDBDBD), // A lighter grey for subtle branding
-                            fontSize: 12,
-                            fontStyle: FontStyle.italic,
+                        // Date with icon
+                        Flexible(
+                          flex: 2,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                CupertinoIcons.clock,
+                                size: 14,
+                                color: const Color(0xFF4CAF50),
+                              ),
+                              const SizedBox(width: 4),
+                              Flexible(
+                                child: Text(
+                                  _formatDate(article['pubDate'] ?? ''),
+                                  style: const TextStyle(
+                                    color: Color(0xFFBDBDBD),
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        // CBS Sports badge
+                        Flexible(
+                          flex: 1,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF4CAF50).withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: const Color(0xFF4CAF50).withOpacity(0.3),
+                                width: 0.5,
+                              ),
+                            ),
+                            child: Text(
+                              'CBS Sports',
+                              style: TextStyle(
+                                color: const Color(0xFF4CAF50),
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.center,
+                            ),
                           ),
                         ),
                       ],
@@ -442,142 +625,416 @@ class _ArticleDetailModalState extends State<ArticleDetailModal> {
   Widget build(BuildContext context) {
     final article = widget.article;
 
-    // A more aggressive regex to strip out all HTML tags and entities.
-    // This is crucial for cleaning the description.
+    // Clean HTML tags and entities from description
     String cleanDescription = (article['description'] as String?)
-            ?.replaceAll(RegExp(r'<[^>]*>|&[^;]+;'), '') // Strip HTML tags and entities
-            .replaceAll(RegExp(r'\s+'), ' ') // Replace multiple spaces with a single space
+            ?.replaceAll(RegExp(r'<[^>]*>'), '') // Remove HTML tags
+            .replaceAll(RegExp(r'&[^;]+;'), '') // Remove HTML entities
+            .replaceAll(RegExp(r'\s+'), ' ') // Replace multiple spaces with single space
             .trim() ??
-        ''; // Trim leading/trailing whitespace
+        '';
+    
+    // Also clean the title to remove any HTML formatting
+    String cleanTitle = (article['title'] as String?)
+            ?.replaceAll(RegExp(r'<[^>]*>'), '') // Remove HTML tags
+            .replaceAll(RegExp(r'&[^;]+;'), '') // Remove HTML entities
+            .trim() ??
+        'No title';
 
     return CupertinoPageScaffold(
-      backgroundColor: const Color(0xFF424242), // Match app background
+      backgroundColor: const Color(0xFF1C1C1E),
       navigationBar: CupertinoNavigationBar(
-        backgroundColor: const Color(0xFF424242), // Match app background
-        middle: const Text(
+        backgroundColor: const Color(0xFF1C1C1E),
+        middle: Text(
           'Article Details',
-          style: TextStyle(color: Colors.white), // Title for the modal screen
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+            fontSize: 17,
+          ),
         ),
-        leading: CupertinoNavigationBarBackButton(
-          color: const Color(0xFF4CAF50), // Green back button
-          onPressed: () => Navigator.of(context).pop(),
+        leading: Container(
+          margin: const EdgeInsets.only(left: 8),
+          child: CupertinoButton(
+            padding: EdgeInsets.zero,
+            onPressed: () => Navigator.of(context).pop(),
+            child: Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: const Color(0xFF4CAF50).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: const Icon(
+                CupertinoIcons.back,
+                color: Color(0xFF4CAF50),
+                size: 18,
+              ),
+            ),
+          ),
         ),
-        border: null, // Remove default border
+        border: null,
       ),
       child: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start, // Ensure column content is left-aligned
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Article Image
+              // Enhanced Hero Image Section
               if (article['imageUrl'] != null)
-                Image.network(
-                  article['imageUrl']!,
-                  height: 250,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      height: 250,
-                      color: const Color(0xFF757575),
-                      child: const Icon(
-                        CupertinoIcons.sportscourt,
-                        size: 70,
-                        color: Color(0xFF9E9E9E),
-                      ),
-                    );
-                  },
-                ),
-              Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start, // Ensure nested column content is left-aligned
-                  children: [
-                    // Title
-                    Text(
-                      article['title'] ?? 'No title',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        height: 1.2,
-                        decoration: TextDecoration.none, // Explicitly ensure no decoration
-                      ),
-                      textAlign: TextAlign.start, // Explicitly set to start
-                      softWrap: true,
-                    ),
-                    const SizedBox(height: 12),
-                    // Description (Full)
-                    if (cleanDescription.isNotEmpty) // Use the cleaned description
-                      Text(
-                        cleanDescription,
-                        style: const TextStyle(
-                          color: Color(0xFFE0E0E0),
-                          fontSize: 16,
-                          height: 1.5,
-                          decoration: TextDecoration.none, // Explicitly ensure no decoration
+                Container(
+                  height: 280,
+                  margin: const EdgeInsets.only(bottom: 4),
+                  child: Stack(
+                    children: [
+                      // Main Image
+                      ClipRRect(
+                        borderRadius: const BorderRadius.vertical(
+                          bottom: Radius.circular(20),
                         ),
-                        textAlign: TextAlign.start, // Explicitly set to start
-                        softWrap: true,
-                      ),
-                    const SizedBox(height: 20),
-                    // Footer with date and author
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            const Icon(
-                              CupertinoIcons.clock,
-                              size: 18,
-                              color: Color(0xFF4CAF50),
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              _formatDate(article['pubDate'] ?? ''),
-                              style: const TextStyle(
-                                color: Color(0xFFBDBDBD),
-                                fontSize: 14,
+                        child: Image.network(
+                          article['imageUrl']!,
+                          height: 280,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              height: 280,
+                              decoration: BoxDecoration(
+                                borderRadius: const BorderRadius.vertical(
+                                  bottom: Radius.circular(20),
+                                ),
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    const Color(0xFF2E2E2E),
+                                    const Color(0xFF1C1C1E),
+                                  ],
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                        if (article['creator'] != null)
-                          Flexible(
-                            child: Text(
-                              'by ${article['creator']}',
-                              style: const TextStyle(
+                              child: const Icon(
+                                CupertinoIcons.photo,
+                                size: 64,
                                 color: Color(0xFF4CAF50),
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
                               ),
-                              textAlign: TextAlign.end,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    // Button to open original article
-                    Center(
-                      child: CupertinoTheme(
-                        data: CupertinoTheme.of(context).copyWith(
-                          primaryColor: const Color(0xFF4CAF50), // Green for the button
-                        ),
-                        child: CupertinoButton.filled(
-                          onPressed: () {
-                            _openArticleExternal(article['link'], context);
+                            );
                           },
-                          child: const Text('Read Full Article on CBS Sports'),
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                          borderRadius: BorderRadius.circular(20),
                         ),
                       ),
+                      // Gradient Overlay
+                      Container(
+                        height: 280,
+                        decoration: BoxDecoration(
+                          borderRadius: const BorderRadius.vertical(
+                            bottom: Radius.circular(20),
+                          ),
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.transparent,
+                              Colors.transparent,
+                              Colors.black.withOpacity(0.6),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              // Premium Content Card
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF2C2C2E),
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(
+                    color: const Color(0xFF4CAF50).withOpacity(0.12),
+                    width: 1,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.3),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
                     ),
                   ],
                 ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(24),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                    child: Container(
+                      padding: const EdgeInsets.all(28),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF2C2C2E).withOpacity(0.8),
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Enhanced Title with better typography
+                          Text(
+                            cleanTitle,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 28,
+                              fontWeight: FontWeight.w800,
+                              height: 1.2,
+                              letterSpacing: -0.5,
+                              decoration: TextDecoration.none,
+                            ),
+                            textAlign: TextAlign.start,
+                            softWrap: true,
+                            maxLines: 4,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 24),
+                          // Enhanced Description with beautiful styling
+                          if (cleanDescription.isNotEmpty)
+                            Container(
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF1C1C1E),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: const Color(0xFF4CAF50).withOpacity(0.08),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Text(
+                                cleanDescription,
+                                style: const TextStyle(
+                                  color: Color(0xFFE5E5E7),
+                                  fontSize: 17,
+                                  height: 1.6,
+                                  letterSpacing: -0.2,
+                                  decoration: TextDecoration.none,
+                                ),
+                                textAlign: TextAlign.start,
+                                softWrap: true,
+                                maxLines: 8,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          const SizedBox(height: 28),
+                          // Premium Metadata Section
+                          Container(
+                            padding: const EdgeInsets.all(24),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF1C1C1E),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: const Color(0xFF4CAF50).withOpacity(0.15),
+                                width: 1,
+                              ),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Article Meta Header
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF4CAF50).withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: const Icon(
+                                        CupertinoIcons.info_circle,
+                                        size: 16,
+                                        color: Color(0xFF4CAF50),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      'Article Information',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        decoration: TextDecoration.none,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 20),
+                                // Publication Date
+                                Container(
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF2C2C2E),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFF4CAF50).withOpacity(0.15),
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
+                                        child: const Icon(
+                                          CupertinoIcons.calendar_today,
+                                          size: 16,
+                                          color: Color(0xFF4CAF50),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              'Published',
+                                              style: const TextStyle(
+                                                color: Color(0xFF8E8E93),
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w500,
+                                                decoration: TextDecoration.none,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              _formatDate(article['pubDate'] ?? ''),
+                                              style: const TextStyle(
+                                                color: Color(0xFFE5E5E7),
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.w600,
+                                                decoration: TextDecoration.none,
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                // Author Section
+                                if (article['creator'] != null)
+                                  Container(
+                                    margin: const EdgeInsets.only(top: 12),
+                                    padding: const EdgeInsets.all(16),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF2C2C2E),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.all(8),
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFF4CAF50).withOpacity(0.15),
+                                            borderRadius: BorderRadius.circular(10),
+                                          ),
+                                          child: const Icon(
+                                            CupertinoIcons.person_crop_circle_fill,
+                                            size: 16,
+                                            color: Color(0xFF4CAF50),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                'Author',
+                                                style: const TextStyle(
+                                                  color: Color(0xFF8E8E93),
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.w500,
+                                                  decoration: TextDecoration.none,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                article['creator'],
+                                                style: const TextStyle(
+                                                  color: Color(0xFF4CAF50),
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w600,
+                                                  decoration: TextDecoration.none,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 32),
+                          // Premium Action Button
+                          Container(
+                            width: double.infinity,
+                            height: 56,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  const Color(0xFF4CAF50),
+                                  const Color(0xFF45A049),
+                                ],
+                              ),
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFF4CAF50).withOpacity(0.3),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: CupertinoButton(
+                              padding: EdgeInsets.zero,
+                              borderRadius: BorderRadius.circular(16),
+                              onPressed: () {
+                                _openArticleExternal(article['link'], context);
+                              },
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(6),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.2),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: const Icon(
+                                      CupertinoIcons.arrow_up_right_square_fill,
+                                      size: 18,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  const Text(
+                                    'Read Full Article',
+                                    style: TextStyle(
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.white,
+                                      letterSpacing: -0.2,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
               ),
+              const SizedBox(height: 40),
             ],
           ),
         ),
