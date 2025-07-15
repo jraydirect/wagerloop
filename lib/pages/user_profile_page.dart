@@ -40,6 +40,10 @@ class _UserProfilePageState extends State<UserProfilePage> {
   List<dynamic> _userPosts = []; // Can contain both Post and PickPost objects
   bool _isLoadingPosts = false;
 
+  // Add state for commented posts
+  List<Map<String, dynamic>> _commentedPosts = [];
+  bool _isLoadingCommentedPosts = false;
+
   // Add state for liked posts
   List<dynamic> _likedPosts = [];
   bool _isLoadingLikedPosts = false;
@@ -51,6 +55,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
     _loadUserPosts();
     _loadFollowerCounts();
     _loadLikedPosts();
+    _loadCommentedPosts();
     // Listen for follow events to update counts instantly
     _followNotifier.addListener(_onFollowChanged);
   }
@@ -68,6 +73,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
       _loadUserProfile();
       _loadUserPosts();
       _loadFollowerCounts();
+      _loadLikedPosts();
+      _loadCommentedPosts();
     }
   }
 
@@ -92,6 +99,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
       _loadUserProfile(),
       _loadUserPosts(),
       _loadFollowerCounts(),
+      _loadLikedPosts(),
+      _loadCommentedPosts(),
     ]);
   }
 
@@ -257,6 +266,19 @@ class _UserProfilePageState extends State<UserProfilePage> {
       print('Error loading liked posts: $e');
     } finally {
       if (mounted) setState(() => _isLoadingLikedPosts = false);
+    }
+  }
+
+  // Fetch commented posts for the profile user
+  Future<void> _loadCommentedPosts() async {
+    setState(() => _isLoadingCommentedPosts = true);
+    try {
+      final commentedPostsData = await _socialFeedService.fetchUserComments(widget.userId);
+      if (mounted) setState(() => _commentedPosts = commentedPostsData);
+    } catch (e) {
+      print('Error loading commented posts: $e');
+    } finally {
+      if (mounted) setState(() => _isLoadingCommentedPosts = false);
     }
   }
 
@@ -484,6 +506,97 @@ class _UserProfilePageState extends State<UserProfilePage> {
                       color: isReposted ? Colors.green : Colors.grey,
                     ),
                   ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildCommentedPostsList() {
+    if (_isLoadingCommentedPosts) {
+      return const Center(child: CircularProgressIndicator(color: Colors.green));
+    }
+    if (_commentedPosts.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.all(16),
+        child: Text(
+          'No commented posts yet',
+          style: TextStyle(color: Colors.grey),
+        ),
+      );
+    }
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: _commentedPosts.length,
+      itemBuilder: (context, index) {
+        final commentData = _commentedPosts[index];
+        final postContent = commentData['post_content'] ?? '';
+        final commentContent = commentData['content'] ?? '';
+        final postAuthor = commentData['post_author'] ?? 'Anonymous';
+        final timestamp = DateTime.parse(commentData['created_at']).toLocal();
+        
+        return Card(
+          color: Colors.grey[700],
+          margin: const EdgeInsets.only(bottom: 8),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Show the original post content
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[600],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Post by $postAuthor:',
+                        style: const TextStyle(
+                          color: Colors.grey,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        postContent,
+                        style: const TextStyle(color: Colors.white70),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                // Show the user's comment
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Commented: ',
+                      style: TextStyle(
+                        color: Colors.green,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        commentContent,
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  timeago.format(timestamp, locale: 'en'),
+                  style: TextStyle(color: Colors.grey[400], fontSize: 12),
                 ),
               ],
             ),
@@ -844,6 +957,18 @@ class _UserProfilePageState extends State<UserProfilePage> {
                 ),
                 const SizedBox(height: 16),
                 _buildLikedPostsList(),
+
+                const SizedBox(height: 32),
+                Text(
+                  'Commented Posts',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _buildCommentedPostsList(),
               ],
             ),
           ),
