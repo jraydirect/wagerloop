@@ -22,7 +22,7 @@ class _NewsPageState extends State<NewsPage> {
     'NBA': 'https://www.cbssports.com/rss/headlines/nba/',
     'NFL': 'https://www.cbssports.com/rss/headlines/nfl/',
     'MLB': 'https://www.cbssports.com/rss/headlines/mlb/',
-    'NHL': 'https://www.cbssports.com/rss/headlines/nhl/',
+    'NHL': 'https://www.espn.com/espn/rss/nhl/news',
   };
 
   final List<String> leagues = ['NBA', 'NFL', 'MLB', 'NHL'];
@@ -56,6 +56,7 @@ class _NewsPageState extends State<NewsPage> {
         throw Exception('No RSS feed found for $selectedLeague');
       }
 
+      print('Fetching news for $selectedLeague from: $rssUrl'); // Debug log
       final response = await http.get(Uri.parse(rssUrl));
 
       if (response.statusCode == 200) {
