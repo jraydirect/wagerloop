@@ -1487,19 +1487,43 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
         centerTitle: true,
         actions: [
-          IconButton(
-            icon: Icon(
-              _isEditing ? Icons.check : Icons.edit,
-              color: Colors.green, // Changed from white to green
+          if (_isEditing) ...[
+            // Cancel button
+            IconButton(
+              icon: Icon(
+                Icons.close,
+                color: Colors.red,
+              ),
+              onPressed: () {
+                setState(() {
+                  _isEditing = false;
+                  // Reset form fields to original values
+                  _usernameController.text = _userData?['username'] ?? '';
+                  _fullNameController.text = _userData?['full_name'] ?? '';
+                  _bioController.text = _userData?['bio'] ?? '';
+                });
+              },
             ),
-            onPressed: () {
-              if (_isEditing) {
-                _updateProfile();
-              } else {
+            // Save button
+            IconButton(
+              icon: Icon(
+                Icons.check,
+                color: Colors.green,
+              ),
+              onPressed: _updateProfile,
+            ),
+          ] else ...[
+            // Edit button
+            IconButton(
+              icon: Icon(
+                Icons.edit,
+                color: Colors.green,
+              ),
+              onPressed: () {
                 setState(() => _isEditing = true);
-              }
-            },
-          ),
+              },
+            ),
+          ],
         ],
       ),
       body: RefreshIndicator(
@@ -1571,6 +1595,19 @@ class _ProfilePageState extends State<ProfilePage> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
+                      if (_userData?['bio'] != null && _userData!['bio'].isNotEmpty && !_isEditing) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          _userData?['bio'] ?? '',
+                          style: const TextStyle(
+                            color: Colors.grey,
+                            fontSize: 14,
+                          ),
+                          textAlign: TextAlign.center,
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -1671,70 +1708,74 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
                 const SizedBox(height: 16),
 
-                // Profile Fields
-                Text(
-                  'Account Information',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+                // Profile Fields - Only show when editing
+                if (_isEditing) ...[
+                  Text(
+                    'Account Information',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-                SizedBox(height: 16),
+                  SizedBox(height: 16),
 
-                TextFormField(
-                  controller: _usernameController,
-                  enabled: _isEditing,
-                  style: TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    labelText: 'Username',
-                    labelStyle: TextStyle(color: Colors.grey),
-                    prefixIcon: Icon(Icons.person, color: Colors.grey),
+                  TextFormField(
+                    controller: _usernameController,
+                    enabled: _isEditing,
+                    style: TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      labelText: 'Username',
+                      labelStyle: TextStyle(color: Colors.grey),
+                      prefixIcon: Icon(Icons.person, color: Colors.grey),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Username is required';
+                      }
+                      return null;
+                    },
                   ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Username is required';
-                    }
-                    return null;
-                  },
-                ),
-                SizedBox(height: 16),
+                  SizedBox(height: 16),
 
-                TextFormField(
-                  controller: _fullNameController,
-                  enabled: _isEditing,
-                  style: TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    labelText: 'Full Name',
-                    labelStyle: TextStyle(color: Colors.grey),
-                    prefixIcon: Icon(Icons.badge, color: Colors.grey),
+                  TextFormField(
+                    controller: _fullNameController,
+                    enabled: _isEditing,
+                    style: TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      labelText: 'Full Name',
+                      labelStyle: TextStyle(color: Colors.grey),
+                      prefixIcon: Icon(Icons.badge, color: Colors.grey),
+                    ),
                   ),
-                ),
-                SizedBox(height: 16),
+                  SizedBox(height: 16),
 
-                TextFormField(
-                  controller: _bioController,
-                  enabled: _isEditing,
-                  style: TextStyle(color: Colors.white),
-                  maxLines: 3,
-                  decoration: InputDecoration(
-                    labelText: 'Bio',
-                    labelStyle: TextStyle(color: Colors.grey),
-                    prefixIcon: Icon(Icons.info, color: Colors.grey),
+                  TextFormField(
+                    controller: _bioController,
+                    enabled: _isEditing,
+                    style: TextStyle(color: Colors.white),
+                    maxLines: 3,
+                    decoration: InputDecoration(
+                      labelText: 'Bio',
+                      labelStyle: TextStyle(color: Colors.grey),
+                      prefixIcon: Icon(Icons.info, color: Colors.grey),
+                    ),
                   ),
-                ),
-                SizedBox(height: 16),
+                  SizedBox(height: 16),
 
-                TextFormField(
-                  controller: _emailController,
-                  enabled: false,
-                  style: TextStyle(color: Colors.grey),
-                  decoration: InputDecoration(
-                    labelText: 'Email',
-                    labelStyle: TextStyle(color: Colors.grey),
-                    prefixIcon: Icon(Icons.email, color: Colors.grey),
+                  TextFormField(
+                    controller: _emailController,
+                    enabled: false,
+                    style: TextStyle(color: Colors.grey),
+                    decoration: InputDecoration(
+                      labelText: 'Email',
+                      labelStyle: TextStyle(color: Colors.grey),
+                      prefixIcon: Icon(Icons.email, color: Colors.grey),
+                    ),
                   ),
-                ),
+
+                  SizedBox(height: 32),
+                ],
 
                 SizedBox(height: 32),
                 _buildTeamsList(),
