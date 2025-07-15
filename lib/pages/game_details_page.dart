@@ -351,364 +351,6 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
                         color: const Color(0xFF2C2C2E),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-          color: isWinner 
-              ? const Color(0xFF4CAF50).withOpacity(0.3)
-              : const Color(0xFF4CAF50).withOpacity(0.1),
-          width: 1,
-        ),
-      ),
-      child: Column(
-        children: [
-          // Team Logo
-          if (logoPath != null && logoPath.isNotEmpty)
-            Container(
-              width: 64,
-              height: 64,
-              decoration: BoxDecoration(
-                color: const Color(0xFF2C2C2E),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: const Color(0xFF4CAF50).withOpacity(0.1),
-                  width: 1,
-                ),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: logoPath.endsWith('.svg')
-                      ? SvgPicture.asset(logoPath, fit: BoxFit.contain)
-                      : Image.asset(logoPath, fit: BoxFit.contain),
-                ),
-              ),
-            )
-          else
-            Container(
-              width: 64,
-              height: 64,
-              decoration: BoxDecoration(
-                color: const Color(0xFF2C2C2E),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: const Color(0xFF4CAF50).withOpacity(0.1),
-                  width: 1,
-                ),
-              ),
-              child: const Icon(
-                CupertinoIcons.sportscourt,
-                size: 32,
-                color: Color(0xFF4CAF50),
-              ),
-            ),
-          const SizedBox(height: 16),
-          // Team Name
-          Text(
-            teamName,
-            style: TextStyle(
-              color: isWinner ? const Color(0xFF4CAF50) : Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              decoration: TextDecoration.none,
-            ),
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-          // Score (if game is completed or in progress)
-          if (_isGameCompleted() || _isGameInProgress())
-            const SizedBox(height: 8),
-          if (_isGameCompleted() || _isGameInProgress())
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: isWinner 
-                    ? const Color(0xFF4CAF50).withOpacity(0.15)
-                    : const Color(0xFF2C2C2E),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: isWinner 
-                      ? const Color(0xFF4CAF50).withOpacity(0.3)
-                      : const Color(0xFF4CAF50).withOpacity(0.1),
-                  width: 1,
-                ),
-              ),
-              child: Text(
-                score,
-                style: TextStyle(
-                  color: isWinner ? const Color(0xFF4CAF50) : const Color(0xFFE5E5E7),
-                  fontSize: 20,
-                  fontWeight: FontWeight.w800,
-                  decoration: TextDecoration.none,
-                ),
-              ),
-            ),
-          // Winner indicator
-          if (isWinner)
-            const SizedBox(height: 8),
-          if (isWinner)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: const Color(0xFF4CAF50),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Text(
-                'WINNER',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  decoration: TextDecoration.none,
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPremiumGameScore() {
-    if (!_isGameCompleted() && !_isGameInProgress()) {
-      return const SizedBox();
-    }
-
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-      decoration: BoxDecoration(
-        color: const Color(0xFF2C2C2E),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: const Color(0xFF4CAF50).withOpacity(0.12),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Container(
-            padding: const EdgeInsets.all(28),
-            decoration: BoxDecoration(
-              color: const Color(0xFF2C2C2E).withOpacity(0.8),
-              borderRadius: BorderRadius.circular(24),
-            ),
-            child: Column(
-              children: [
-                // Score Header
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF4CAF50).withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        CupertinoIcons.sportscourt_fill,
-                        size: 20,
-                        color: Color(0xFF4CAF50),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      _isGameInProgress() ? 'LIVE SCORE' : 'FINAL SCORE',
-                      style: TextStyle(
-                        color: _isGameInProgress() ? const Color(0xFF4CAF50) : Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        decoration: TextDecoration.none,
-                      ),
-                    ),
-                    if (_isGameInProgress())
-                      const SizedBox(width: 8),
-                    if (_isGameInProgress())
-                      Container(
-                        width: 8,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF4CAF50),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                // Score Display
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF1C1C1E),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: const Color(0xFF4CAF50).withOpacity(0.1),
-                      width: 1,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _buildPremiumScoreDisplay(false), // Away team
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF2C2C2E),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: const Color(0xFF4CAF50).withOpacity(0.2),
-                            width: 1,
-                          ),
-                        ),
-                        child: const Text(
-                          '-',
-                          style: TextStyle(
-                            color: Color(0xFF4CAF50),
-                            fontSize: 24,
-                            fontWeight: FontWeight.w800,
-                            decoration: TextDecoration.none,
-                          ),
-                        ),
-                      ),
-                      _buildPremiumScoreDisplay(true), // Home team
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPremiumScoreDisplay(bool isHome) {
-    final score = _getTeamScore(isHome);
-    final teamName = _getESPNTeamName(widget.game, isHome);
-    final isWinner = _isGameCompleted() && int.tryParse(score) != null && 
-                     int.tryParse(_getTeamScore(!isHome)) != null &&
-                     int.parse(score) > int.parse(_getTeamScore(!isHome));
-    
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: isWinner 
-                ? const Color(0xFF4CAF50).withOpacity(0.15)
-                : const Color(0xFF2C2C2E),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: isWinner 
-                  ? const Color(0xFF4CAF50).withOpacity(0.3)
-                  : const Color(0xFF4CAF50).withOpacity(0.1),
-              width: 1,
-            ),
-          ),
-          child: Text(
-            score,
-            style: TextStyle(
-              color: isWinner ? const Color(0xFF4CAF50) : Colors.white,
-              fontSize: 36,
-              fontWeight: FontWeight.w900,
-              decoration: TextDecoration.none,
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        Text(
-          teamName,
-          style: TextStyle(
-            color: isWinner ? const Color(0xFF4CAF50) : const Color(0xFFE5E5E7),
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            decoration: TextDecoration.none,
-          ),
-          textAlign: TextAlign.center,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPremiumOddsSection() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-      decoration: BoxDecoration(
-        color: const Color(0xFF2C2C2E),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: const Color(0xFF4CAF50).withOpacity(0.12),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Container(
-            padding: const EdgeInsets.all(28),
-            decoration: BoxDecoration(
-              color: const Color(0xFF2C2C2E).withOpacity(0.8),
-              borderRadius: BorderRadius.circular(24),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Odds Header
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF4CAF50).withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        CupertinoIcons.chart_bar_alt_fill,
-                        size: 20,
-                        color: Color(0xFF4CAF50),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    const Text(
-                      'Betting Odds',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                        decoration: TextDecoration.none,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                // Odds Content
-                if (fanDuelOdds != null)
-                  _buildFanDuelOddsContent()
-                else
-                  _buildNoOddsAvailable(),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
                           color: CupertinoColors.destructiveRed.withOpacity(0.3),
                           width: 1,
                         ),
@@ -729,9 +371,9 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
                             ),
                           ),
                           const SizedBox(height: 20),
-                          Text(
+                          const Text(
                             'Unable to Load Game',
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: Colors.white,
                               fontSize: 18,
                               fontWeight: FontWeight.w600,
@@ -739,7 +381,7 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            error!,
+                            error ?? 'Unknown error',
                             style: const TextStyle(
                               color: Color(0xFF8E8E93),
                               fontSize: 14,
@@ -1050,7 +692,7 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
             overflow: TextOverflow.ellipsis,
           ),
           // Score (if game is completed or in progress)
-          if (_isGameCompleted() || _isGameInProgress()) ..[
+          if (_isGameCompleted() || _isGameInProgress()) ...[
             const SizedBox(height: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -1078,7 +720,7 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
             ),
           ],
           // Winner indicator
-          if (isWinner) ..[
+          if (isWinner) ...[
             const SizedBox(height: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -1162,8 +804,8 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
                         decoration: TextDecoration.none,
                       ),
                     ),
-                    if (_isGameInProgress()) ..[
-                    const SizedBox(width: 8),
+                    if (_isGameInProgress()) ...[
+                      const SizedBox(width: 8),
                       Container(
                         width: 8,
                         height: 8,
