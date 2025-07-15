@@ -26,6 +26,7 @@ class _ScoresPageState extends State<ScoresPage> {
     'basketball/nba-summer-las-vegas': 'NBA Summer',
     'baseball/mlb': 'MLB',
     'hockey/nhl': 'NHL',
+    'mma/ufc': 'UFC',
   };
 
   // Helper method to get league logo path
@@ -36,6 +37,7 @@ class _ScoresPageState extends State<ScoresPage> {
       'basketball/nba-summer-las-vegas': 'assets/leagueLogos/nba.png',
       'baseball/mlb': 'assets/leagueLogos/mlb.png',
       'hockey/nhl': 'assets/leagueLogos/nhl.png',
+      'mma/ufc': 'assets/leagueLogos/UFC_Logo.svg',
     };
     return leagueLogos[sportKey] ?? '';
   }
@@ -194,8 +196,9 @@ class _ScoresPageState extends State<ScoresPage> {
       orElse: () => competitors[isHome ? 0 : 1],
     );
 
-    final teamName = team['team']['displayName'] ?? team['team']['name'] ?? '';
-    final logoPath = TeamLogoUtils.getTeamLogo(teamName);
+    final teamInfo = team['team'] ?? team['athlete'] ?? {};
+    final teamName = teamInfo['displayName'] ?? teamInfo['name'] ?? teamInfo['shortName'] ?? '';
+    final logoPath = (team['team'] != null) ? TeamLogoUtils.getTeamLogo(teamName) : null; // Skip logo for non-team sports like UFC
 
     return Flexible(
       child: Row(
@@ -529,13 +532,35 @@ class _ScoresPageState extends State<ScoresPage> {
               padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
-                  Image.asset(
-                    getLeagueLogoPath(sport),
-                    height: 28,
-                    width: 28,
-                    fit: BoxFit.contain,
-                    color: hasGames ? null : Colors.grey,
-                  ),
+                  getLeagueLogoPath(sport).isNotEmpty
+                      ? (getLeagueLogoPath(sport).endsWith('.svg')
+                          ? SvgPicture.asset(
+                              getLeagueLogoPath(sport),
+                              height: 28,
+                              width: 28,
+                              fit: BoxFit.contain,
+                              colorFilter: hasGames ? null : const ColorFilter.mode(Colors.grey, BlendMode.srcIn),
+                            )
+                          : Image.asset(
+                              getLeagueLogoPath(sport),
+                              height: 28,
+                              width: 28,
+                              fit: BoxFit.contain,
+                              color: hasGames ? null : Colors.grey,
+                            ))
+                      : Container(
+                          height: 28,
+                          width: 28,
+                          decoration: BoxDecoration(
+                            color: Colors.grey.withOpacity(0.3),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: const Icon(
+                            CupertinoIcons.sportscourt,
+                            size: 16,
+                            color: Colors.grey,
+                          ),
+                        ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
@@ -548,44 +573,50 @@ class _ScoresPageState extends State<ScoresPage> {
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
                           ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
                         ),
                         if (hasGames)
                           Text(
-                            '${getFilteredGames(sport).length} games available',
+                            '${getFilteredGames(sport).length} ${sport.contains('ufc') ? 'fights' : 'games'} available',
                             style: TextStyle(
                               color: Colors.grey[400],
                               fontSize: 12,
                             ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
                           ),
                       ],
                     ),
                   ),
                   if (hasLiveGames(sport))
-                    Container(
-                      margin: const EdgeInsets.only(right: 8),
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFF5722),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            CupertinoIcons.antenna_radiowaves_left_right,
-                            color: Colors.white,
-                            size: 12,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${liveGames.length}',
-                            style: const TextStyle(
+                    Flexible(
+                      child: Container(
+                        margin: const EdgeInsets.only(right: 8),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFF5722),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              CupertinoIcons.antenna_radiowaves_left_right,
                               color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
+                              size: 12,
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 4),
+                            Text(
+                              '${liveGames.length}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   Icon(

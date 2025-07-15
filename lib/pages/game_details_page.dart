@@ -237,6 +237,7 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
       'basketball/nba': 'basketball_nba',
       'baseball/mlb': 'baseball_mlb',
       'hockey/nhl': 'icehockey_nhl',
+      'mma/ufc': 'mma_mixed_martial_arts',
     };
     return sportMapping[espnSport] ?? 'americanfootball_nfl';
   }
@@ -258,7 +259,8 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
       orElse: () => competitors[isHome ? 0 : 1],
     );
 
-    return team['team']['displayName'] ?? team['team']['name'] ?? '';
+    final teamInfo = team['team'] ?? team['athlete'] ?? {};
+    return teamInfo['displayName'] ?? teamInfo['name'] ?? teamInfo['shortName'] ?? '';
   }
 
   bool _teamsMatch(String oddsHome, String oddsAway, String espnHome, String espnAway) {
