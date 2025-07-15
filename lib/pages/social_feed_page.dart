@@ -730,13 +730,13 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
                           final comment = comments[index];
                           return ListTile(
                           leading: ProfileAvatar(
-                          avatarUrl: null, // Comments don't have avatar URLs in current implementation
+                          avatarUrl: comment.avatarUrl, // Now using the actual avatar URL from the comment
                           username: comment.username,
                           radius: 20,
                           backgroundColor: Colors.blue,
                           onTap: () {
-                            // Note: We don't have user ID in comments, so we can't navigate to profile
-                            // This would need to be updated if we want to include user IDs in comments
+                            // Profile navigation not available for comments yet
+                            // Would need user ID in comment data to enable profile navigation
                           },
                           ),
                             title: Text(
