@@ -136,6 +136,19 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
 
   Future<dynamic> _mapSinglePost(Map<String, dynamic> postData) async {
     final postType = postData['post_type'] ?? 'text';
+    final postId = postData['id'];
+    
+    // Get accurate comment count for this post
+    int commentsCount = 0;
+    try {
+      final commentsCountResponse = await SupabaseConfig.supabase
+          .from('comments')
+          .select('id', const FetchOptions(count: CountOption.exact))
+          .eq('post_id', postId);
+      commentsCount = commentsCountResponse.count ?? 0;
+    } catch (e) {
+      print('Error fetching comment count: $e');
+    }
     
     if (postType == 'pick' && postData['picks_data'] != null) {
       // Parse picks data
@@ -154,7 +167,12 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
         content: postData['content'],
         timestamp: DateTime.parse(postData['created_at']).toLocal(),
         likes: 0,
-        comments: const [],
+        comments: List.generate(commentsCount, (index) => Comment(
+          id: 'placeholder_$index',
+          username: 'placeholder',
+          content: 'placeholder',
+          timestamp: DateTime.now(),
+        )),
         reposts: 0,
         isLiked: false,
         isReposted: false,
@@ -169,7 +187,12 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
         content: postData['content'],
         timestamp: DateTime.parse(postData['created_at']).toLocal(),
         likes: 0,
-        comments: const [],
+        comments: List.generate(commentsCount, (index) => Comment(
+          id: 'placeholder_$index',
+          username: 'placeholder',
+          content: 'placeholder',
+          timestamp: DateTime.now(),
+        )),
         reposts: 0,
         isLiked: false,
         isReposted: false,
@@ -180,6 +203,7 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
 
   Future<dynamic> _mapSinglePostFromRealTimeData(Map<String, dynamic> postData) async {
     final postType = postData['post_type'] ?? 'text';
+    final postId = postData['id'];
     
     // Get profile data - we need to fetch this since it's not in the real-time data
     String username = 'Anonymous';
@@ -198,6 +222,18 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
       print('Error fetching profile for real-time post: $e');
     }
     
+    // Get accurate comment count for this post
+    int commentsCount = 0;
+    try {
+      final commentsCountResponse = await SupabaseConfig.supabase
+          .from('comments')
+          .select('id', const FetchOptions(count: CountOption.exact))
+          .eq('post_id', postId);
+      commentsCount = commentsCountResponse.count ?? 0;
+    } catch (e) {
+      print('Error fetching comment count for real-time post: $e');
+    }
+    
     if (postType == 'pick' && postData['picks_data'] != null) {
       // Parse picks data
       List<Pick> picks = [];
@@ -215,7 +251,12 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
         content: postData['content'],
         timestamp: DateTime.parse(postData['created_at']).toLocal(),
         likes: 0,
-        comments: const [],
+        comments: List.generate(commentsCount, (index) => Comment(
+          id: 'placeholder_$index',
+          username: 'placeholder',
+          content: 'placeholder',
+          timestamp: DateTime.now(),
+        )),
         reposts: 0,
         isLiked: false,
         isReposted: false,
@@ -230,7 +271,12 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
         content: postData['content'],
         timestamp: DateTime.parse(postData['created_at']).toLocal(),
         likes: 0,
-        comments: const [],
+        comments: List.generate(commentsCount, (index) => Comment(
+          id: 'placeholder_$index',
+          username: 'placeholder',
+          content: 'placeholder',
+          timestamp: DateTime.now(),
+        )),
         reposts: 0,
         isLiked: false,
         isReposted: false,
@@ -760,7 +806,11 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
                                     _commentController.text,
                                   );
                                   _commentController.clear();
+                                  // Refresh the main feed to update comment counts
                                   setState(() {});
+                                  // Also refresh the comments list in the modal
+                                  Navigator.pop(context);
+                                  _showComments(post);
                                 } catch (e) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(

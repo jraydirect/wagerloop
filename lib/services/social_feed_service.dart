@@ -133,8 +133,19 @@ class SocialFeedService {
   /// Throws:
   ///   - Exception: If post data is malformed or missing required fields
   Future<List<dynamic>> _mapPosts(List<dynamic> postData) async {
-    return postData.map((post) {
+    final posts = <dynamic>[];
+    
+    for (final post in postData) {
       final postType = post['post_type'] ?? 'text';
+      final postId = post['id'];
+      
+      // Get accurate comment count for this post
+      final commentsCount = await _supabase
+          .from('comments')
+          .select('id', const FetchOptions(count: CountOption.exact))
+          .eq('post_id', postId);
+      
+      final commentsCountValue = commentsCount.count ?? 0;
       
       if (postType == 'pick' && post['picks_data'] != null) {
         // Parse picks data
@@ -146,36 +157,48 @@ class SocialFeedService {
           print('Error parsing picks data: $e');
         }
         
-        return PickPost(
+        posts.add(PickPost(
           id: post['id'],
           userId: post['profile_id'] ?? post['user_id'] ?? '',
           username: post['profile']['username'] ?? 'Anonymous',
           content: post['content'],
           timestamp: DateTime.parse(post['created_at']).toLocal(),
           likes: 0, // Will be updated in fetchPosts
-          comments: const [],
+          comments: List.generate(commentsCountValue, (index) => Comment(
+            id: 'placeholder_$index',
+            username: 'placeholder',
+            content: 'placeholder',
+            timestamp: DateTime.now(),
+          )),
           reposts: 0, // Will be updated in fetchPosts
           isLiked: false, // Will be updated in fetchPosts
           isReposted: false, // Will be updated in fetchPosts
           avatarUrl: post['profile']['avatar_url'],
           picks: picks,
-        );
+        ));
       } else {
-        return Post(
+        posts.add(Post(
           id: post['id'],
           userId: post['profile_id'] ?? post['user_id'] ?? '',
           username: post['profile']['username'] ?? 'Anonymous',
           content: post['content'],
           timestamp: DateTime.parse(post['created_at']).toLocal(),
           likes: 0, // Will be updated in fetchPosts
-          comments: const [],
+          comments: List.generate(commentsCountValue, (index) => Comment(
+            id: 'placeholder_$index',
+            username: 'placeholder',
+            content: 'placeholder',
+            timestamp: DateTime.now(),
+          )),
           reposts: 0, // Will be updated in fetchPosts
           isLiked: false, // Will be updated in fetchPosts
           isReposted: false, // Will be updated in fetchPosts
           avatarUrl: post['profile']['avatar_url'],
-        );
+        ));
       }
-    }).toList();
+    }
+    
+    return posts;
   }
 
   /// Fetches all posts created by a specific user.
@@ -198,61 +221,83 @@ class SocialFeedService {
         profile:profiles!posts_profile_id_fkey (
           username,
           avatar_url
-        ),
-        likes(count),
-        comments(count),
-        reposts(count)
+        )
       ''').eq('profile_id', userId).order('created_at', ascending: false);
 
-      return (response as List<dynamic>)
-          .map((post) {
-            final postType = post['post_type'] ?? 'text';
-            
-            if (postType == 'pick' && post['picks_data'] != null) {
-              // Parse picks data
-              List<Pick> picks = [];
-              try {
-                final picksJson = jsonDecode(post['picks_data']);
-                picks = (picksJson as List).map((pickJson) => Pick.fromJson(pickJson)).toList();
-              } catch (e) {
-                print('Error parsing picks data: $e');
-              }
-              
-              return PickPost(
-                id: post['id'],
-                userId: post['profile_id'] ?? post['user_id'] ?? '',
-                username: post['profile']['username'] ?? 'Anonymous',
-                content: post['content'],
-                timestamp: DateTime.parse(post['created_at']).toLocal(),
-                likes: (post['likes'] as List).isNotEmpty
-                    ? (post['likes'][0]['count'] ?? 0)
-                    : 0,
-                comments: const [],
-                reposts: (post['reposts'] as List).isNotEmpty
-                    ? (post['reposts'][0]['count'] ?? 0)
-                    : 0,
-                avatarUrl: post['profile']['avatar_url'],
-                picks: picks,
-              );
-            } else {
-              return Post(
-                id: post['id'],
-                userId: post['profile_id'] ?? post['user_id'] ?? '',
-                username: post['profile']['username'] ?? 'Anonymous',
-                content: post['content'],
-                timestamp: DateTime.parse(post['created_at']).toLocal(),
-                likes: (post['likes'] as List).isNotEmpty
-                    ? (post['likes'][0]['count'] ?? 0)
-                    : 0,
-                comments: const [],
-                reposts: (post['reposts'] as List).isNotEmpty
-                    ? (post['reposts'][0]['count'] ?? 0)
-                    : 0,
-                avatarUrl: post['profile']['avatar_url'],
-              );
-            }
-          })
-          .toList();
+      final posts = <dynamic>[];
+      
+      for (final post in response as List<dynamic>) {
+        final postType = post['post_type'] ?? 'text';
+        final postId = post['id'];
+        
+        // Get accurate counts for each post
+        final likesCount = await _supabase
+            .from('likes')
+            .select('id', const FetchOptions(count: CountOption.exact))
+            .eq('post_id', postId);
+        
+        final commentsCount = await _supabase
+            .from('comments')
+            .select('id', const FetchOptions(count: CountOption.exact))
+            .eq('post_id', postId);
+        
+        final repostsCount = await _supabase
+            .from('reposts')
+            .select('id', const FetchOptions(count: CountOption.exact))
+            .eq('post_id', postId);
+        
+        final likesCountValue = likesCount.count ?? 0;
+        final commentsCountValue = commentsCount.count ?? 0;
+        final repostsCountValue = repostsCount.count ?? 0;
+        
+        if (postType == 'pick' && post['picks_data'] != null) {
+          // Parse picks data
+          List<Pick> picks = [];
+          try {
+            final picksJson = jsonDecode(post['picks_data']);
+            picks = (picksJson as List).map((pickJson) => Pick.fromJson(pickJson)).toList();
+          } catch (e) {
+            print('Error parsing picks data: $e');
+          }
+          
+          posts.add(PickPost(
+            id: post['id'],
+            userId: post['profile_id'] ?? post['user_id'] ?? '',
+            username: post['profile']['username'] ?? 'Anonymous',
+            content: post['content'],
+            timestamp: DateTime.parse(post['created_at']).toLocal(),
+            likes: likesCountValue,
+            comments: List.generate(commentsCountValue, (index) => Comment(
+              id: 'placeholder_$index',
+              username: 'placeholder',
+              content: 'placeholder',
+              timestamp: DateTime.now(),
+            )),
+            reposts: repostsCountValue,
+            avatarUrl: post['profile']['avatar_url'],
+            picks: picks,
+          ));
+        } else {
+          posts.add(Post(
+            id: post['id'],
+            userId: post['profile_id'] ?? post['user_id'] ?? '',
+            username: post['profile']['username'] ?? 'Anonymous',
+            content: post['content'],
+            timestamp: DateTime.parse(post['created_at']).toLocal(),
+            likes: likesCountValue,
+            comments: List.generate(commentsCountValue, (index) => Comment(
+              id: 'placeholder_$index',
+              username: 'placeholder',
+              content: 'placeholder',
+              timestamp: DateTime.now(),
+            )),
+            reposts: repostsCountValue,
+            avatarUrl: post['profile']['avatar_url'],
+          ));
+        }
+      }
+      
+      return posts;
     } catch (e) {
       print('Error fetching user posts: $e');
       rethrow;
@@ -550,6 +595,53 @@ class SocialFeedService {
       }
     } catch (e) {
       print('Error toggling repost: $e');
+      rethrow;
+    }
+  }
+
+  /// Fetches all comments made by a specific user.
+  /// 
+  /// Retrieves comments with associated post information for display
+  /// in user profiles. Shows the user's commenting activity across
+  /// all posts in the platform.
+  /// 
+  /// Parameters:
+  ///   - userId: ID of the user whose comments to retrieve
+  /// 
+  /// Returns:
+  ///   List<Map<String, dynamic>> containing comment and post information
+  /// 
+  /// Throws:
+  ///   - Exception: If database query fails
+  Future<List<Map<String, dynamic>>> fetchUserComments(String userId) async {
+    try {
+      final response = await _supabase.from('comments').select('''
+        *,
+        post:posts!inner (
+          id,
+          content,
+          post_type,
+          profile:profiles!posts_profile_id_fkey (
+            username,
+            avatar_url
+          )
+        )
+      ''').eq('user_id', userId).order('created_at', ascending: false);
+
+      return (response as List<dynamic>)
+          .map((comment) => {
+            'id': comment['id'],
+            'content': comment['content'],
+            'created_at': comment['created_at'],
+            'post_id': comment['post_id'],
+            'post_content': comment['post']['content'],
+            'post_type': comment['post']['post_type'],
+            'post_author': comment['post']['profile']['username'],
+            'post_author_avatar': comment['post']['profile']['avatar_url'],
+          })
+          .toList();
+    } catch (e) {
+      print('Error fetching user comments: $e');
       rethrow;
     }
   }

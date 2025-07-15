@@ -51,6 +51,10 @@ class _ProfilePageState extends State<ProfilePage> {
   List<dynamic> _likedPosts = [];
   bool _isLoadingLikedPosts = false;
 
+  // Add state for user comments
+  List<Map<String, dynamic>> _userComments = [];
+  bool _isLoadingComments = false;
+
   // Available teams for selection
   final Map<String, List<String>> _availableTeams = {
     'NFL': [
@@ -102,6 +106,7 @@ class _ProfilePageState extends State<ProfilePage> {
     _loadUserPosts();
     _loadFollowerCounts();
     _loadLikedPosts();
+    _loadUserComments();
     // Listen for follow events to update counts instantly
     _followNotifier.addListener(_onFollowChanged);
   }
@@ -142,6 +147,8 @@ class _ProfilePageState extends State<ProfilePage> {
       _loadUserProfile(),
       _loadUserPosts(),
       _loadFollowerCounts(),
+      _loadLikedPosts(),
+      _loadUserComments(),
     ]);
   }
 
@@ -1135,6 +1142,22 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
+  // Fetch user comments
+  Future<void> _loadUserComments() async {
+    setState(() => _isLoadingComments = true);
+    try {
+      final user = _authService.currentUser;
+      if (user != null) {
+        final comments = await _socialFeedService.fetchUserComments(user.id);
+        setState(() => _userComments = comments);
+      }
+    } catch (e) {
+      print('Error loading user comments: $e');
+    } finally {
+      setState(() => _isLoadingComments = false);
+    }
+  }
+
   Widget _buildLikedPostsList() {
     if (_isLoadingLikedPosts) {
       return const Center(child: CircularProgressIndicator(color: Colors.green));
@@ -1219,6 +1242,124 @@ class _ProfilePageState extends State<ProfilePage> {
                       color: isReposted ? Colors.green : Colors.grey,
                     ),
                   ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildCommentsList() {
+    if (_isLoadingComments) {
+      return const Center(child: CircularProgressIndicator(color: Colors.green));
+    }
+    if (_userComments.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.all(16),
+        child: Text(
+          'No comments yet',
+          style: TextStyle(color: Colors.grey),
+        ),
+      );
+    }
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: _userComments.length,
+      itemBuilder: (context, index) {
+        final comment = _userComments[index];
+        return Card(
+          color: Colors.grey[700],
+          margin: const EdgeInsets.only(bottom: 8),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Comment content
+                Text(
+                  comment['content'],
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                // Original post info
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[600],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          ProfileAvatar(
+                            avatarUrl: comment['post_author_avatar'],
+                            username: comment['post_author'] ?? 'Anonymous',
+                            radius: 12,
+                            backgroundColor: Colors.blue,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            comment['post_author'] ?? 'Anonymous',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                          const Spacer(),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: comment['post_type'] == 'pick' 
+                                  ? Colors.green.withOpacity(0.3)
+                                  : Colors.blue.withOpacity(0.3),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              comment['post_type'] == 'pick' ? 'PICK' : 'POST',
+                              style: TextStyle(
+                                color: comment['post_type'] == 'pick' 
+                                    ? Colors.green
+                                    : Colors.blue,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        comment['post_content'],
+                        style: TextStyle(
+                          color: Colors.grey[300],
+                          fontSize: 14,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                // Comment timestamp
+                Text(
+                  timeago.format(DateTime.parse(comment['created_at'])),
+                  style: TextStyle(
+                    color: Colors.grey[400],
+                    fontSize: 12,
+                  ),
                 ),
               ],
             ),
@@ -1532,6 +1673,18 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
                 SizedBox(height: 16),
                 _buildLikedPostsList(),
+
+                SizedBox(height: 32),
+                Text(
+                  'My Comments',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 16),
+                _buildCommentsList(),
 
                 SizedBox(height: 32),
                 ElevatedButton(
