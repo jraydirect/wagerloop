@@ -646,6 +646,33 @@ class SocialFeedService {
     }
   }
 
+  /// Deletes a comment from a post.
+  /// 
+  /// Allows users to remove their own comments from posts and pick posts.
+  /// Only the comment creator can delete their own comments.
+  /// 
+  /// Parameters:
+  ///   - commentId: ID of the comment to delete
+  /// 
+  /// Throws:
+  ///   - Exception: If user is not authenticated, not the comment owner, or deletion fails
+  Future<void> deleteComment(String commentId) async {
+    try {
+      final user = _supabase.auth.currentUser;
+      if (user == null) throw 'User not authenticated';
+
+      // Delete the comment (only if user owns it)
+      await _supabase
+          .from('comments')
+          .delete()
+          .eq('id', commentId)
+          .eq('user_id', user.id); // Ensure only owner can delete
+    } catch (e) {
+      print('Error deleting comment: $e');
+      rethrow;
+    }
+  }
+
   /// Deletes a post or pick post from the social feed.
   /// 
   /// Removes a post and all associated likes, comments, and reposts.

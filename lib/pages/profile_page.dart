@@ -54,6 +54,7 @@ class _ProfilePageState extends State<ProfilePage> {
   // Add state for user comments
   List<Map<String, dynamic>> _userComments = [];
   bool _isLoadingComments = false;
+  bool _isDeletingComment = false;
 
   // Available teams for selection
   final Map<String, List<String>> _availableTeams = {
@@ -1158,6 +1159,88 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
+  // Show delete comment confirmation dialog
+  Future<void> _showDeleteCommentDialog(String commentId, int commentIndex) async {
+    return showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.grey[800],
+          title: const Text(
+            'Delete Comment',
+            style: TextStyle(color: Colors.white),
+          ),
+          content: const Text(
+            'Are you sure you want to delete this comment? This action cannot be undone.',
+            style: TextStyle(color: Colors.white),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(color: Colors.grey),
+              ),
+            ),
+            TextButton(
+              onPressed: _isDeletingComment ? null : () async {
+                Navigator.of(context).pop();
+                await _deleteComment(commentId, commentIndex);
+              },
+              child: _isDeletingComment
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.red,
+                      ),
+                    )
+                  : const Text(
+                      'Delete',
+                      style: TextStyle(color: Colors.red),
+                    ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Delete comment
+  Future<void> _deleteComment(String commentId, int commentIndex) async {
+    setState(() => _isDeletingComment = true);
+    try {
+      await _socialFeedService.deleteComment(commentId);
+      
+      // Remove comment from local list
+      setState(() {
+        _userComments.removeAt(commentIndex);
+      });
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Comment deleted successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      print('Error deleting comment: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to delete comment: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      setState(() => _isDeletingComment = false);
+    }
+  }
+
   Widget _buildLikedPostsList() {
     if (_isLoadingLikedPosts) {
       return const Center(child: CircularProgressIndicator(color: Colors.green));
@@ -1278,13 +1361,29 @@ class _ProfilePageState extends State<ProfilePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Comment content
-                Text(
-                  comment['content'],
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                  ),
+                // Comment header with delete button
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        comment['content'],
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(
+                        Icons.delete_outline,
+                        color: Colors.red,
+                        size: 20,
+                      ),
+                      onPressed: () => _showDeleteCommentDialog(comment['id'], index),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 12),
                 // Original post info
