@@ -847,6 +847,10 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
       return Card(
         margin: const EdgeInsets.only(bottom: 8),
         color: Colors.grey[700], // Use green theme for all
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+          side: const BorderSide(color: Colors.green, width: 2),
+        ),
         child: Padding(
           padding: const EdgeInsets.all(12),
           child: Column(
@@ -939,6 +943,10 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       color: Colors.grey[700],
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: const BorderSide(color: Colors.green, width: 2),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Column(
@@ -1133,6 +1141,10 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
       padding: const EdgeInsets.all(16),
       child: Card(
         color: Colors.grey[700],
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+          side: const BorderSide(color: Colors.green, width: 2),
+        ),
         child: Padding(
           padding: const EdgeInsets.all(12),
           child: Column(
