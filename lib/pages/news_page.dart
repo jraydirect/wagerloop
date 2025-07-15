@@ -22,7 +22,7 @@ class _NewsPageState extends State<NewsPage> {
     'NBA': 'https://www.cbssports.com/rss/headlines/nba/',
     'NFL': 'https://www.cbssports.com/rss/headlines/nfl/',
     'MLB': 'https://www.cbssports.com/rss/headlines/mlb/',
-    'NHL': 'https://www.espn.com/espn/rss/nhl/news',
+    'NHL': 'https://www.cbssports.com/rss/headlines/nhl/',
   };
 
   final List<String> leagues = ['NBA', 'NFL', 'MLB', 'NHL'];
@@ -73,9 +73,42 @@ class _NewsPageState extends State<NewsPage> {
           final creator = item.findElements('dc:creator').isNotEmpty
               ? item.findElements('dc:creator').first.innerText
               : 'CBS Sports';
-          final imageUrl = item.findElements('enclosure').isNotEmpty
-              ? item.findElements('enclosure').first.getAttribute('url')
-              : null;
+          
+          // Enhanced image extraction for different RSS feed sources
+          String? imageUrl;
+          
+          // First, try standard enclosure method (works for CBS Sports)
+          if (item.findElements('enclosure').isNotEmpty) {
+            imageUrl = item.findElements('enclosure').first.getAttribute('url');
+          }
+          
+          // For ESPN feeds, try media:content and media:thumbnail
+          if (imageUrl == null && item.findElements('media:content').isNotEmpty) {
+            imageUrl = item.findElements('media:content').first.getAttribute('url');
+          }
+          
+          if (imageUrl == null && item.findElements('media:thumbnail').isNotEmpty) {
+            imageUrl = item.findElements('media:thumbnail').first.getAttribute('url');
+          }
+          
+          // Try content:encoded which sometimes contains images
+          if (imageUrl == null && item.findElements('content:encoded').isNotEmpty) {
+            final content = item.findElements('content:encoded').first.innerText;
+            final imgRegex = RegExp(r'<img[^>]+src="([^"]+)"');
+            final match = imgRegex.firstMatch(content);
+            if (match != null) {
+              imageUrl = match.group(1);
+            }
+          }
+          
+          // Extract images from description as fallback
+          if (imageUrl == null) {
+            final imgRegex = RegExp(r'<img[^>]+src="([^"]+)"');
+            final match = imgRegex.firstMatch(description);
+            if (match != null) {
+              imageUrl = match.group(1);
+            }
+          }
 
           articles.add({
             'title': title,
@@ -507,7 +540,7 @@ class _NewsPageState extends State<NewsPage> {
                                 ),
                               ),
                               child: Text(
-                                'CBS Sports',
+                                article['creator'] ?? 'Sports News',
                                 style: TextStyle(
                                   color: const Color(0xFF4CAF50),
                                   fontSize: 12,
