@@ -31,9 +31,6 @@ class ImageUploadService {
       final fileName = 'profile_${userId}_$timestamp.jpg';
       final filePath = 'profiles/$fileName';
 
-      print('Uploading image to: $filePath');
-      print('Image size: ${imageBytes.length} bytes');
-      
       // Try to upload the file with no-cache settings
       final response = await _supabase.storage
           .from(_bucketName)
@@ -46,8 +43,6 @@ class ImageUploadService {
             ),
           );
 
-      print('Upload response: $response');
-      
       // Get the public URL with cache-busting parameter
       final baseUrl = _supabase.storage
           .from(_bucketName)
@@ -55,8 +50,6 @@ class ImageUploadService {
       
       final cacheBustingUrl = '$baseUrl?v=$timestamp&cb=${DateTime.now().millisecondsSinceEpoch}';
 
-      print('Generated cache-busting URL: $cacheBustingUrl');
-      
       // Update profile in database with new URL
       await _supabase
           .from('profiles')
@@ -72,16 +65,10 @@ class ImageUploadService {
       // Clear any cached profile data
       _profileService.clearProfileCache(userId);
       
-      print('Profile image updated successfully with real-time notification');
-      
       // Test the URL immediately to catch 400 errors
       final isAccessible = await _testUrlImmediately(cacheBustingUrl);
       if (!isAccessible) {
-        print('Warning: URL returned 400 error, this usually means RLS policies need to be set up');
-        print('Please run the storage_setup_simple.sql script in your Supabase SQL Editor');
-        
         // Try the fallback method
-        print('Trying fallback upload method...');
         final fallbackUrl = await uploadProfileImageFallback(imageBytes, userId);
         if (fallbackUrl != null) {
           return fallbackUrl;
@@ -89,17 +76,13 @@ class ImageUploadService {
         
         // If fallback also fails, return the original URL anyway
         // The user can fix the RLS policies and the image should work
-        print('Returning original URL - user needs to fix RLS policies');
         return cacheBustingUrl;
       }
       
       return cacheBustingUrl;
     } on StorageException catch (e) {
-      print('Storage error: ${e.message}');
-      print('Storage error details: ${e.error}');
       throw 'Storage error: ${e.message}';
     } catch (e) {
-      print('Error uploading image: $e');
       throw 'Failed to upload image: $e';
     }
   }
@@ -121,7 +104,6 @@ class ImageUploadService {
       final oldAvatarUrl = profile['avatar_url'] as String;
       await deleteProfileImage(oldAvatarUrl);
     } catch (e) {
-      print('Error deleting old profile image: $e');
       // Don't throw here as this is cleanup
     }
   }
@@ -152,10 +134,8 @@ class ImageUploadService {
       // Force refresh the profile
       await _profileService.refreshProfile(userId);
       
-      print('Profile image removed with real-time notification');
       return true;
     } catch (e) {
-      print('Error removing profile image: $e');
       return false;
     }
   }
@@ -165,7 +145,6 @@ class ImageUploadService {
       // Check if user is authenticated
       final user = _supabase.auth.currentUser;
       if (user == null) {
-        print('User not authenticated for deletion');
         return false;
       }
 
@@ -189,19 +168,14 @@ class ImageUploadService {
         filePath = 'profiles/${pathSegments.last.split('?')[0]}'; // Remove query params
       }
       
-      print('Deleting file: $filePath');
-      
       await _supabase.storage
           .from(_bucketName)
           .remove([filePath]);
       
-      print('File deleted successfully');
       return true;
     } on StorageException catch (e) {
-      print('Storage error deleting file: ${e.message}');
       return false;
     } catch (e) {
-      print('Error deleting image: $e');
       return false;
     }
   }
@@ -211,7 +185,6 @@ class ImageUploadService {
     try {
       final user = _supabase.auth.currentUser;
       if (user == null) {
-        print('User not authenticated');
         return false;
       }
 
@@ -220,7 +193,6 @@ class ImageUploadService {
           .from(_bucketName)
           .list();
       
-      print('Storage access check passed');
       return true;
     } on StorageException catch (e) {
       print('Storage access error: ${e.message}');
@@ -235,7 +207,6 @@ class ImageUploadService {
       
       return false;
     } catch (e) {
-      print('Storage access check failed: $e');
       return false;
     }
   }
@@ -246,7 +217,6 @@ class ImageUploadService {
       await _supabase.storage.from(_bucketName).list();
       return true;
     } catch (e) {
-      print('Bucket verification failed: $e');
       return false;
     }
   }
@@ -259,7 +229,6 @@ class ImageUploadService {
           .download(url.split('/').last);
       return response.isNotEmpty;
     } catch (e) {
-      print('URL immediate test failed: $e');
       return false;
     }
   }
@@ -272,7 +241,6 @@ class ImageUploadService {
           .download(url.split('/').last);
       return response.isNotEmpty;
     } catch (e) {
-      print('URL accessibility check failed: $e');
       return false;
     }
   }
@@ -297,13 +265,11 @@ class ImageUploadService {
         return result;
       }
       result['isAuthenticated'] = true;
-      print('[OK] User authenticated: ${user.id}');
 
       // Check if we can access the bucket
       try {
         await _supabase.storage.from(_bucketName).list();
         result['canAccessBucket'] = true;
-        print('[OK] Can access bucket: $_bucketName');
       } on StorageException catch (e) {
         result['errors'].add('Cannot access bucket: ${e.message}');
         if (e.statusCode == '404') {
@@ -319,10 +285,8 @@ class ImageUploadService {
       try {
         await _supabase.storage.from(_bucketName).list(path: 'profiles');
         result['canListFiles'] = true;
-        print('[OK] Can list files in profiles folder');
       } catch (e) {
         result['errors'].add('Cannot list files in profiles folder: $e');
-        print('[ERROR] Cannot list files in profiles folder, but bucket exists');
       }
 
       // Try a test upload
@@ -342,7 +306,6 @@ class ImageUploadService {
         await _supabase.storage.from(_bucketName).remove([testFileName]);
         
         result['canUploadTest'] = true;
-        print('[OK] Test upload successful');
       } catch (e) {
         result['errors'].add('Test upload failed: $e');
         result['suggestions'].add('Check upload permissions and bucket policies');
@@ -372,8 +335,6 @@ class ImageUploadService {
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       final fileName = 'profile_${userId}_$timestamp.jpg';
 
-      print('Fallback: Uploading image to root: $fileName');
-      
       // Try to upload the file to bucket root
       final response = await _supabase.storage
           .from(_bucketName)
@@ -386,17 +347,13 @@ class ImageUploadService {
             ),
           );
 
-      print('Fallback upload response: $response');
-      
       // Get the public URL
       final publicUrl = _supabase.storage
           .from(_bucketName)
           .getPublicUrl(fileName);
 
-      print('Fallback public URL: $publicUrl');
       return publicUrl;
     } catch (e) {
-      print('Fallback upload also failed: $e');
       return null;
     }
   }
@@ -416,7 +373,6 @@ class ImageUploadService {
           .download(url.split('/').last.split('?')[0]); // Remove query params
       return response.isNotEmpty;
     } catch (e) {
-      print('Image accessibility test failed: $e');
       return false;
     }
   }

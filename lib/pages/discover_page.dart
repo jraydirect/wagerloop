@@ -70,7 +70,6 @@ class _DiscoverPageState extends State<DiscoverPage> {
         });
       }
     } catch (e) {
-      print('Search error: $e');
       if (mounted) {
         setState(() {
           _error = 'Error searching users: ${e.toString()}';
@@ -87,7 +86,6 @@ class _DiscoverPageState extends State<DiscoverPage> {
 
       final currentUserId = _authService.currentUser?.id;
       if (currentUserId == null) {
-        print('No current user ID');
         setState(() => _isLoadingSuggestions = false);
         return;
       }
@@ -123,7 +121,6 @@ class _DiscoverPageState extends State<DiscoverPage> {
             return favoriteTeams.any((team) => userTeams.contains(team));
           }).take(10).toList();
         } catch (e) {
-          print('Error with team-based suggestions: $e');
         }
       }
 
@@ -152,7 +149,6 @@ class _DiscoverPageState extends State<DiscoverPage> {
         });
       }
     } catch (e) {
-      print('Error loading suggested users: $e');
       if (mounted) {
         setState(() => _isLoadingSuggestions = false);
       }

@@ -23,6 +23,7 @@ class _ScoresPageState extends State<ScoresPage> {
   final Map<String, String> sportsMap = {
     'football/nfl': 'NFL',
     'basketball/nba': 'NBA',
+    'basketball/nba-summer-las-vegas': 'NBA Summer',
     'baseball/mlb': 'MLB',
     'hockey/nhl': 'NHL',
   };
@@ -32,6 +33,7 @@ class _ScoresPageState extends State<ScoresPage> {
     final Map<String, String> leagueLogos = {
       'football/nfl': 'assets/leagueLogos/nfl.png',
       'basketball/nba': 'assets/leagueLogos/nba.png',
+      'basketball/nba-summer-las-vegas': 'assets/leagueLogos/nba.png',
       'baseball/mlb': 'assets/leagueLogos/mlb.png',
       'hockey/nhl': 'assets/leagueLogos/nhl.png',
     };
@@ -80,14 +82,13 @@ class _ScoresPageState extends State<ScoresPage> {
       final today = DateTime.now();
       final yesterday = today.subtract(const Duration(days: 1));
       final tomorrow = today.add(const Duration(days: 1));
-      final futureDate = tomorrow.add(const Duration(days: 7));
       
       // Format dates for ESPN API (YYYYMMDD)
       final yesterdayFormatted = yesterday.toIso8601String().split('T')[0].replaceAll('-', '');
-      final futureFormatted = futureDate.toIso8601String().split('T')[0].replaceAll('-', '');
+      final tomorrowFormatted = tomorrow.toIso8601String().split('T')[0].replaceAll('-', '');
       
       final response = await http.get(Uri.parse(
-          'https://site.api.espn.com/apis/site/v2/sports/$sport/scoreboard?dates=$yesterdayFormatted-$futureFormatted'));
+          'https://site.api.espn.com/apis/site/v2/sports/$sport/scoreboard?dates=$yesterdayFormatted-$tomorrowFormatted'));
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -122,10 +123,24 @@ class _ScoresPageState extends State<ScoresPage> {
 
   List<dynamic> getUpcomingGames(String sport) {
     final games = allScores[sport] ?? [];
+    final now = DateTime.now();
+    final twelveHoursFromNow = now.add(const Duration(hours: 12));
+    
     return games.where((game) {
       final status = game['status'];
-      if (status == null || status['type'] == null) return true;
-      return status['type']['state'] == 'pre';
+      if (status == null || status['type'] == null) return false;
+      
+      // Only include games that are scheduled/pre-game
+      if (status['type']['state'] != 'pre') return false;
+      
+      // Check if game is within the next 12 hours
+      try {
+        final gameTime = DateTime.parse(game['date']).toLocal();
+        return gameTime.isAfter(now) && gameTime.isBefore(twelveHoursFromNow);
+      } catch (e) {
+        // If we can't parse the date, exclude the game
+        return false;
+      }
     }).toList();
   }
 
@@ -164,13 +179,13 @@ class _ScoresPageState extends State<ScoresPage> {
   Widget _buildTeamInfoFromCompetition(dynamic game, bool isHome) {
     final competitions = game['competitions'];
     if (competitions == null || !(competitions is List) || competitions.isEmpty) {
-      return const Expanded(child: SizedBox());
+      return const Flexible(child: SizedBox());
     }
 
     final competition = competitions[0];
     final competitors = competition['competitors'];
     if (competitors == null || !(competitors is List) || competitors.length < 2) {
-      return const Expanded(child: SizedBox());
+      return const Flexible(child: SizedBox());
     }
 
     // Find the appropriate team (home or away)
@@ -182,46 +197,52 @@ class _ScoresPageState extends State<ScoresPage> {
     final teamName = team['team']['displayName'] ?? team['team']['name'] ?? '';
     final logoPath = TeamLogoUtils.getTeamLogo(teamName);
 
-    return Expanded(
+    return Flexible(
       child: Row(
         mainAxisAlignment:
             isHome ? MainAxisAlignment.start : MainAxisAlignment.end,
         children: [
           if (!isHome)
-            Expanded(
+            Flexible(
               child: Text(
                 teamName,
                 style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
+                  fontSize: 14,
                 ),
                 textAlign: TextAlign.end,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
               ),
             ),
           if (logoPath != null && logoPath.isNotEmpty)
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 4),
               child: logoPath.endsWith('.svg')
                   ? SvgPicture.asset(
                       logoPath,
-                      height: 30,
-                      width: 30,
+                      height: 24,
+                      width: 24,
                     )
                   : Image.asset(
                       logoPath,
-                      height: 30,
-                      width: 30,
+                      height: 24,
+                      width: 24,
                       fit: BoxFit.contain,
                     ),
             ),
           if (isHome)
-            Expanded(
+            Flexible(
               child: Text(
                 teamName,
                 style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
+                  fontSize: 14,
                 ),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
               ),
             ),
         ],
@@ -434,7 +455,7 @@ class _ScoresPageState extends State<ScoresPage> {
             color: const Color(0xFF4CAF50).withOpacity(0.3),
           ),
           _buildStatCard(
-            'UPCOMING',
+            'NEXT 12H',
             totalUpcomingGames.toString(),
             const Color(0xFF4CAF50),
             CupertinoIcons.clock,
@@ -631,7 +652,7 @@ class _ScoresPageState extends State<ScoresPage> {
           const SizedBox(width: 8),
           Expanded(
             child: _buildFilterTab(
-              'Upcoming',
+              'Next 12H',
               'upcoming',
               selectedType,
               upcomingCount,
@@ -905,7 +926,9 @@ class _ScoresPageState extends State<ScoresPage> {
                 children: [
                   _buildTeamInfoFromCompetition(game, true),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    width: 100,  // Fixed width for score
+                    alignment: Alignment.center,
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
                       color: const Color(0xFF424242),
                       borderRadius: BorderRadius.circular(12),
@@ -919,9 +942,10 @@ class _ScoresPageState extends State<ScoresPage> {
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w700,
-                        fontSize: 18,
+                        fontSize: 16,
                         letterSpacing: 0.5,
                       ),
+                      textAlign: TextAlign.center,
                     ),
                   ),
                   _buildTeamInfoFromCompetition(game, false),

@@ -70,18 +70,15 @@ class AuthService {
 
   User? get currentUser {
     final user = supabase.auth.currentUser;
-    print('Current User Check: $user');
     return user;
   }
 
   Session? get currentSession {
     final session = supabase.auth.currentSession;
-    print('Current Session Check: $session');
     return session;
   }
 
   Stream<AuthState> get authStateChanges {
-    print('Setting up auth state stream');
     return supabase.auth.onAuthStateChange;
   }
 
@@ -177,14 +174,10 @@ class AuthService {
      required String password,
    }) async {
      try {
-       print('Attempting email sign in for: $email');
-       
        final response = await supabase.auth.signInWithPassword(
          email: email,
          password: password,
        );
-       
-       print('Sign in response: ${response.user?.id}');
        
        // Ensure profile exists for the user
        if (response.user != null) {
@@ -198,7 +191,6 @@ class AuthService {
                .maybeSingle();
            
            if (existingProfile == null) {
-             print('Creating profile for existing user');
              await supabase.from('profiles').insert({
                'id': response.user!.id,
                'username': response.user!.email?.split('@')[0] ?? 'user',
@@ -235,10 +227,7 @@ class AuthService {
    ///   - PlatformException: If Google services are unavailable
    Future<AuthResponse> signInWithGoogle() async {
     try {
-      print('Initializing Google Sign In');
-
       if (kIsWeb) {
-        print('Using web OAuth flow');
         final success = await supabase.auth.signInWithOAuth(
           Provider.google,
           redirectTo: Uri.base.origin + Uri.base.path,
@@ -254,29 +243,33 @@ class AuthService {
 
         return AuthResponse(session: null, user: null);
       } else {
-        print('Using mobile sign in flow');
-        
         // Sign out first to prevent "Future already completed" error
-        await _googleSignIn.signOut();
+        try {
+          await _googleSignIn.signOut();
+        } catch (e) {
+          // Ignore sign out errors
+        }
         
-        final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+        final GoogleSignInAccount? googleUser = await _googleSignIn.signIn().catchError((error) {
+          // Suppress "Future already completed" errors
+          if (error.toString().contains('Future already completed')) {
+            return null;
+          }
+          throw error;
+        });
 
         if (googleUser == null) {
-          print('Google Sign In was cancelled by user');
           throw 'Sign in cancelled';
         }
 
-        print('Getting Google authentication');
         final googleAuth = await googleUser.authentication;
         final accessToken = googleAuth.accessToken;
         final idToken = googleAuth.idToken;
 
         if (accessToken == null || idToken == null) {
-          print('Failed to get Google tokens');
           throw 'Authentication failed';
         }
 
-        print('Signing in to Supabase with Google tokens');
         final response = await supabase.auth.signInWithIdToken(
           provider: Provider.google,
           idToken: idToken,
@@ -311,18 +304,18 @@ class AuthService {
                 'updated_at': DateTime.now().toIso8601String(),
               });
             } catch (profileError) {
-              print('Profile creation error (this may be normal): $profileError');
               // Don't throw here - the profile might be created by a trigger
             }
           }
         }
 
-        print('Google sign in response: $response');
         return response;
       }
-    } catch (e, stackTrace) {
-      print('Google sign in error: $e');
-      print('Stack trace: $stackTrace');
+    } catch (e) {
+      // Only log actual errors, not expected cancellations
+      if (!e.toString().contains('cancelled') && !e.toString().contains('Future already completed')) {
+        print('Google sign in error: $e');
+      }
       rethrow;
     }
   }
@@ -343,11 +336,8 @@ class AuthService {
     try {
       final user = currentUser;
       if (user == null) {
-        print('No current user in getCurrentUserProfile');
         return null;
       }
-
-      print('Getting profile for user: ${user.id}');
 
       // Try to get existing profile
       final existingProfile = await supabase
@@ -356,11 +346,8 @@ class AuthService {
           .eq('id', user.id)
           .maybeSingle();
 
-      print('Existing profile: $existingProfile');
-
       // If no profile exists, create one
       if (existingProfile == null) {
-        print('No profile found, creating one');
         try {
           final insertedProfile = await supabase
               .from('profiles')
@@ -375,7 +362,6 @@ class AuthService {
               .select()
               .single();
 
-          print('Created profile: $insertedProfile');
           return insertedProfile;
         } catch (createError) {
           print('Error creating profile: $createError');
@@ -424,8 +410,6 @@ class AuthService {
         print('User is null in updateProfile');
         throw 'User not authenticated';
       }
-
-      print('Updating profile for user: ${user.id}');
 
       // Additional username uniqueness check
       if (username != null) {

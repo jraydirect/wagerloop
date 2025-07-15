@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../models/sports/game.dart';
 import '../models/sports/odds.dart';
 import '../models/sports/player.dart';
@@ -27,13 +28,8 @@ class SportsApiService {
   // ESPN API base URL
   final String _baseUrl = 'site.api.espn.com';
   
-  // API key for paid services (if needed)
-  String? _apiKey;
-  
-  // Set API key for any paid services
-  void setApiKey(String apiKey) {
-    _apiKey = apiKey;
-  }
+  // API key for paid services (if needed) - get from environment variables
+  String? get _apiKey => dotenv.env['ESPN_API_KEY'];
 
   // Sport codes for ESPN API - maps our app's sport keys to ESPN's format
   final Map<String, String> _sportCodes = {
@@ -52,65 +48,53 @@ class SportsApiService {
       return [];
     }
     
-    print('Searching for games with query: $query');
+    final normalizedQuery = query.toLowerCase();
+    List<Game> allGames = [];
     
-    try {
-      final normalizedQuery = query.toLowerCase();
-      List<Game> allGames = [];
-      
-      // The minimum date for returned games
-      final minDate = DateTime.now().subtract(const Duration(days: 1));
-      print('Using minimum date filter: ${minDate.toString()}');
-      
-      // Try sports in order of popularity
-      List<String> sportsToTry = ['NCAAB', 'NBA', 'NFL', 'NCAAF', 'MLB', 'NHL', 'Soccer'];
-      
-      for (final sportKey in sportsToTry) {
-        try {
-          print('Trying $sportKey scoreboard API');
-          final games = await _fetchGamesFromESPN(sportKey);
-          
-          // Filter games by team name and date
-          for (final game in games) {
-            try {
-              final homeMatch = game.homeTeam.toLowerCase().contains(normalizedQuery);
-              final awayMatch = game.awayTeam.toLowerCase().contains(normalizedQuery);
-              
-              if (homeMatch || awayMatch) {
-                // Check date is on or after minDate
-                if (game.gameTime.isAfter(minDate) || game.gameTime.isAtSameMomentAs(minDate)) {
-                  // Include games that are scheduled or live
-                  if (game.status == 'scheduled' || game.status == 'live') {
-                    print('Match found in $sportKey: ${game.homeTeam} vs ${game.awayTeam} (Status: ${game.status})');
-                    allGames.add(game);
-                    
-                    // Provide immediate feedback
-                    if (onIncrementalResults != null) {
-                      onIncrementalResults(List.from(allGames));
-                    }
+    // The minimum date for returned games
+    final minDate = DateTime.now().subtract(const Duration(days: 1));
+    
+    // Try sports in order of popularity
+    List<String> sportsToTry = ['NCAAB', 'NBA', 'NFL', 'NCAAF', 'MLB', 'NHL', 'Soccer'];
+    
+    for (final sportKey in sportsToTry) {
+      try {
+        final games = await _fetchGamesFromESPN(sportKey);
+        
+        // Filter games by team name and date
+        for (final game in games) {
+          try {
+            final homeMatch = game.homeTeam.toLowerCase().contains(normalizedQuery);
+            final awayMatch = game.awayTeam.toLowerCase().contains(normalizedQuery);
+            
+            if (homeMatch || awayMatch) {
+              // Check date is on or after minDate
+              if (game.gameTime.isAfter(minDate) || game.gameTime.isAtSameMomentAs(minDate)) {
+                // Include games that are scheduled or live
+                if (game.status == 'scheduled' || game.status == 'live') {
+                  allGames.add(game);
+                  
+                  // Provide immediate feedback
+                  if (onIncrementalResults != null) {
+                    onIncrementalResults(List.from(allGames));
                   }
                 }
               }
-            } catch (e) {
-              print('Error checking match in $sportKey: $e');
             }
+          } catch (e) {
+            // print('Error checking match in $sportKey: $e');
           }
-        } catch (e) {
-          print('Error searching $sportKey: $e');
-          continue;
         }
+      } catch (e) {
+        // print('Error searching $sportKey: $e');
+        continue;
       }
-      
-      // Sort games by date
-      allGames.sort((a, b) => a.gameTime.compareTo(b.gameTime));
-      
-      print('Search complete. Found ${allGames.length} games total');
-      
-      return allGames;
-    } catch (e) {
-      print('Error in searchGamesByTeam: $e');
-      return [];
     }
+    
+    // Sort games by date
+    allGames.sort((a, b) => a.gameTime.compareTo(b.gameTime));
+    
+    return allGames;
   }
 
   /// Fetch upcoming games for a specific sport
@@ -153,7 +137,7 @@ class SportsApiService {
       _lastFetchTime = now;
       return games;
     } catch (e) {
-      print('Error fetching games: $e');
+      // print('Error fetching games: $e');
       return [];
     }
   }
@@ -161,7 +145,7 @@ class SportsApiService {
   /// Fetch game with detailed sportsbook odds
   Future<Game?> fetchGameWithSportsbookOdds(String gameId, String sport, {List<String>? sportsbooks}) async {
     try {
-      print('Fetching game with sportsbook odds for gameId: $gameId, sport: $sport');
+      // print('Fetching game with sportsbook odds for gameId: $gameId, sport: $sport');
       
       // First fetch the game details from the standard API
       final games = await _fetchGamesFromESPN(sport);
@@ -171,13 +155,13 @@ class SportsApiService {
       
       // If not found by ID, try to match by team names
       if (gameIndex == -1) {
-        print('Game not found by ID in ESPN data, trying alternative matching');
+        // print('Game not found by ID in ESPN data, trying alternative matching');
         
         // Extract team names from the search query if available
         String? teamQuery;
         if (searchController != null && searchController!.text.isNotEmpty) {
           teamQuery = searchController!.text;
-          print('Using search text to match: $teamQuery');
+          // print('Using search text to match: $teamQuery');
         }
         
         if (teamQuery != null && teamQuery.contains('vs')) {
@@ -191,7 +175,7 @@ class SportsApiService {
               awayTeam = awayTeam.split('(')[0].trim();
             }
             
-            print('Trying to match: $homeTeam vs $awayTeam');
+            // print('Trying to match: $homeTeam vs $awayTeam');
             
             // Try to find a match by team names
             for (var game in games) {
@@ -200,7 +184,7 @@ class SportsApiService {
                   (game.homeTeam.toLowerCase().contains(awayTeam.toLowerCase()) && 
                    game.awayTeam.toLowerCase().contains(homeTeam.toLowerCase()))) {
                 
-                print('Found match by team names: ${game.homeTeam} vs ${game.awayTeam}');
+                // print('Found match by team names: ${game.homeTeam} vs ${game.awayTeam}');
                 gameIndex = games.indexOf(game);
                 break;
               }
@@ -211,22 +195,22 @@ class SportsApiService {
       
       // If still not found, log error and return null
       if (gameIndex == -1) {
-        print('Game not found with ID: $gameId in $sport');
+        // print('Game not found with ID: $gameId in $sport');
         return null;
       }
       
       final game = games[gameIndex];
-      print('Found game: ${game.homeTeam} vs ${game.awayTeam} at ${game.gameTime}');
+      // print('Found game: ${game.homeTeam} vs ${game.awayTeam} at ${game.gameTime}');
       
       // Get the sportsbooks odds service
       final sportsOddsService = SportsOddsService();
       
       // Try to directly fetch odds for just this game first
-      print('Fetching odds directly for gameId: $gameId');
+      // print('Fetching odds directly for gameId: $gameId');
       final directOdds = await sportsOddsService.fetchOddsForGame(gameId, sport, sportsbooks: sportsbooks);
       
       if (directOdds.isNotEmpty) {
-        print('Got direct odds for game from ${directOdds.length} sportsbooks');
+        // print('Got direct odds for game from ${directOdds.length} sportsbooks');
         // Create a new game object with the sportsbook odds included
         final gameWithOdds = Game(
           id: game.id,
@@ -246,9 +230,9 @@ class SportsApiService {
       }
       
       // If direct fetch fails, try getting all odds for the sport
-      print('Direct odds fetch failed or empty, trying to fetch all odds for sport');
+      // print('Direct odds fetch failed or empty, trying to fetch all odds for sport');
       final allOddsForSport = await sportsOddsService.fetchOddsForSport(sport);
-      print('Fetched odds for ${allOddsForSport.length} games in $sport');
+      // print('Fetched odds for ${allOddsForSport.length} games in $sport');
       
       // Extract the odds for this specific game
       Map<String, OddsData>? sportsbookOdds = allOddsForSport[gameId];
@@ -269,14 +253,14 @@ class SportsApiService {
       );
       
       if (sportsbookOdds == null || sportsbookOdds.isEmpty) {
-        print('No sportsbook odds found for game: $gameId');
+        // print('No sportsbook odds found for game: $gameId');
       } else {
-        print('Retrieved odds from ${sportsbookOdds.length} sportsbooks for game');
+        // print('Retrieved odds from ${sportsbookOdds.length} sportsbooks for game');
       }
       
       return gameWithOdds;
     } catch (e) {
-      print('Error fetching game with sportsbook odds: $e');
+      // print('Error fetching game with sportsbook odds: $e');
       return null;
     }
   }
@@ -302,11 +286,11 @@ class SportsApiService {
         final data = jsonDecode(response.body);
         return _parseESPNGames(data, sport);
       } else {
-        print('ESPN API request failed: Status: ${response.statusCode}');
+        // print('ESPN API request failed: Status: ${response.statusCode}');
         return [];
       }
     } catch (e) {
-      print('ESPN API call failed: $e');
+      // print('ESPN API call failed: $e');
       return [];
     }
   }
@@ -314,17 +298,16 @@ class SportsApiService {
   /// Parse ESPN API response into Game objects
   List<Game> _parseESPNGames(Map<String, dynamic> data, String sport) {
     final List<Game> games = [];
-    print('Starting to parse ESPN games for $sport');
     
     try {
       final events = data['events'] as List? ?? [];
       
       if (events.isEmpty) {
-        print('No events found in $sport scoreboard API');
+        // print('No events found in $sport scoreboard API');
         return [];
       }
       
-      print('Found ${events.length} events in $sport scoreboard');
+      // print('Found ${events.length} events in $sport scoreboard');
       
       for (var event in events) {
         try {
@@ -369,7 +352,7 @@ class SportsApiService {
           try {
             gameTime = DateTime.parse(dateString);
           } catch (e) {
-            print('Error parsing date for $id: $e');
+            // print('Error parsing date for $id: $e');
             gameTime = DateTime.now().add(const Duration(days: 1));
           }
           
@@ -447,7 +430,7 @@ class SportsApiService {
                   }
               }
             } catch (e) {
-              print('Error parsing live game data: $e');
+              // print('Error parsing live game data: $e');
               // Leave scores and period as null if parsing fails
             }
           }
@@ -480,15 +463,15 @@ class SportsApiService {
           
           games.add(game);
         } catch (e) {
-          print('Error parsing ESPN game data: $e');
+          // print('Error parsing ESPN game data: $e');
           continue;
         }
       }
     } catch (e) {
-      print('Error parsing ESPN games response: $e');
+      // print('Error parsing ESPN games response: $e');
     }
     
-    print('Parsed ${games.length} games for $sport from scoreboard API');
+    // print('Parsed ${games.length} games for $sport from scoreboard API');
     return games;
   }
 

@@ -46,7 +46,6 @@ class RealTimeProfileService extends ChangeNotifier {
             },
           );
       
-      print('Real-time profile updates initialized');
     } catch (e) {
       print('Error initializing profile updates: $e');
     }
@@ -68,8 +67,6 @@ class RealTimeProfileService extends ChangeNotifier {
           'timestamp': DateTime.now().toIso8601String(),
         });
         
-        print('Profile updated for user $userId: ${profile['username']}');
-        print('New avatar URL: ${profile['avatar_url']}');
       }
     }
     

@@ -41,6 +41,7 @@ class Pick {
   final String odds;
   final double? stake; // Optional stake amount
   final String? reasoning; // Why the user made this pick
+  final bool isSelected; // For UI selection state
 
   Pick({
     required this.id,
@@ -53,7 +54,37 @@ class Pick {
     required this.odds,
     this.stake,
     this.reasoning,
+    this.isSelected = true, // Default to selected
   });
+
+  /// Creates a copy of this pick with updated values
+  Pick copyWith({
+    String? id,
+    Game? game,
+    PickType? pickType,
+    PickSide? pickSide,
+    String? playerName,
+    String? propType,
+    double? propValue,
+    String? odds,
+    double? stake,
+    String? reasoning,
+    bool? isSelected,
+  }) {
+    return Pick(
+      id: id ?? this.id,
+      game: game ?? this.game,
+      pickType: pickType ?? this.pickType,
+      pickSide: pickSide ?? this.pickSide,
+      playerName: playerName ?? this.playerName,
+      propType: propType ?? this.propType,
+      propValue: propValue ?? this.propValue,
+      odds: odds ?? this.odds,
+      stake: stake ?? this.stake,
+      reasoning: reasoning ?? this.reasoning,
+      isSelected: isSelected ?? this.isSelected,
+    );
+  }
 
   /// Generates a human-readable display text for the pick.
   /// 
@@ -109,6 +140,7 @@ class Pick {
       odds: json['odds'],
       stake: json['stake']?.toDouble(),
       reasoning: json['reasoning'],
+      isSelected: json['is_selected'] ?? true,
     );
   }
 
@@ -131,6 +163,7 @@ class Pick {
       'odds': odds,
       'stake': stake,
       'reasoning': reasoning,
+      'is_selected': isSelected,
     };
   }
 }

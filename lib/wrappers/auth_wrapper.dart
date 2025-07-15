@@ -22,13 +22,8 @@ class _AuthWrapperState extends State<AuthWrapper> {
     return StreamBuilder<AuthState>(
       stream: _authService.authStateChanges,
       builder: (context, snapshot) {
-        print('Auth State Connection State: ${snapshot.connectionState}');
-        print('Auth State Data: ${snapshot.data}');
-        print('Auth State Error: ${snapshot.error}');
-
         // Handle stream errors
         if (snapshot.hasError) {
-          print('Auth Stream Error: ${snapshot.error}');
           return Scaffold(
             backgroundColor: Colors.black,
             body: Center(
@@ -55,11 +50,9 @@ class _AuthWrapperState extends State<AuthWrapper> {
 
         // Check current session
         final session = _authService.currentSession;
-        print('Checking session: $session');
 
         // If no session, show splash screen for first-time experience
         if (session == null) {
-          print('No session, showing FigmaBallSplash');
           return const FigmaBallSplash();
         }
 
@@ -81,12 +74,14 @@ class _AuthWrapperState extends State<AuthWrapper> {
                 profileSnapshot.data?['has_completed_onboarding'] ?? false;
 
             if (!hasCompletedOnboarding) {
-              print('Onboarding not completed, showing OnboardingPage');
               return const OnboardingPage();
             }
 
             // User is authenticated and has completed onboarding
-            print('Session found and onboarding complete, showing MainLayout');
+            final user = _authService.currentUser;
+            if (user != null) {
+              print('✅ Login successful: ${user.email}');
+            }
             return const MainLayout();
           },
         );

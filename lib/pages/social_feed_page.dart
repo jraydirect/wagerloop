@@ -16,6 +16,8 @@ import 'dart:convert';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/realtime_profile_service.dart';
 import 'user_profile_page.dart';
+import '../services/scan_service.dart';
+import 'scan_results_page.dart';
 
 class SocialFeedPage extends StatefulWidget {
   const SocialFeedPage({Key? key}) : super(key: key);
@@ -63,7 +65,6 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
               _handleRealTimeUpdate(data);
             },
             onError: (error) {
-              print('Real-time subscription error: $error');
               // Optionally retry the subscription after a delay
               Future.delayed(const Duration(seconds: 5), () {
                 if (mounted) {
@@ -73,7 +74,7 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
             },
           );
     } catch (e) {
-      print('Error setting up real-time updates: $e');
+      // print('Error setting up real-time updates: $e');
     }
   }
 
@@ -107,7 +108,7 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
             final newPost = await _mapSinglePostFromRealTimeData(postData);
             newPosts.add(newPost);
           } catch (e) {
-            print('Error mapping real-time post $postId: $e');
+            // print('Error mapping real-time post $postId: $e');
           }
         }
       }
@@ -127,7 +128,7 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
       });
       
       // Debug log
-      print('Added ${newPosts.length} new posts via real-time update');
+      // print('Added ${newPosts.length} new posts via real-time update');
     }
   }
 
@@ -148,7 +149,7 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
           .eq('post_id', postId);
       commentsCount = commentsCountResponse.count ?? 0;
     } catch (e) {
-      print('Error fetching comment count: $e');
+      // print('Error fetching comment count: $e');
     }
     
     if (postType == 'pick' && postData['picks_data'] != null) {
@@ -158,7 +159,7 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
         final picksJson = jsonDecode(postData['picks_data']);
         picks = (picksJson as List).map((pickJson) => Pick.fromJson(pickJson)).toList();
       } catch (e) {
-        print('Error parsing picks data: $e');
+        // print('Error parsing picks data: $e');
       }
       
       return PickPost(
@@ -220,7 +221,7 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
       username = profileData['username'] ?? 'Anonymous';
       avatarUrl = profileData['avatar_url'];
     } catch (e) {
-      print('Error fetching profile for real-time post: $e');
+      // print('Error fetching profile for real-time post: $e');
     }
     
     // Get accurate comment count for this post
@@ -232,7 +233,7 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
           .eq('post_id', postId);
       commentsCount = commentsCountResponse.count ?? 0;
     } catch (e) {
-      print('Error fetching comment count for real-time post: $e');
+      // print('Error fetching comment count for real-time post: $e');
     }
     
     if (postType == 'pick' && postData['picks_data'] != null) {
@@ -242,7 +243,7 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
         final picksJson = jsonDecode(postData['picks_data']);
         picks = (picksJson as List).map((pickJson) => Pick.fromJson(pickJson)).toList();
       } catch (e) {
-        print('Error parsing picks data: $e');
+        // print('Error parsing picks data: $e');
       }
       
       return PickPost(
@@ -317,7 +318,7 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
       });
     } catch (e) {
       setState(() => _error = 'Could not load posts. Please try again.');
-      print('Error loading posts: $e');
+      // print('Error loading posts: $e');
     } finally {
       setState(() => _isLoading = false);
     }
@@ -345,7 +346,7 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
         _hasMore = posts.length == _limit;
       });
     } catch (e) {
-      print('Error loading more posts: $e');
+      // print('Error loading more posts: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Could not load more posts. Please try again.')),
       );
@@ -376,7 +377,7 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
         const SnackBar(content: Text('Post created successfully!')),
       );
     } catch (e) {
-      print('Error creating post: $e');
+      // print('Error creating post: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Failed to create post. Please try again.'),
@@ -419,7 +420,7 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to update like. Please try again.')),
       );
-      print('Error toggling like: $e');
+      // print('Error toggling like: $e');
     }
   }
 
@@ -452,7 +453,89 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to update repost. Please try again.')),
       );
-      print('Error toggling repost: $e');
+      // print('Error toggling repost: $e');
+    }
+  }
+
+  Future<void> _handleScanButton() async {
+    // print('Scan button pressed');
+    final scanService = ScanService();
+    
+    try {
+      // Show image source selection dialog
+      // print('Showing image source dialog...');
+      final imageFile = await scanService.showImageSourceDialog(context);
+      // print('Image file result: ${imageFile?.path ?? 'null'}');
+      
+      if (imageFile != null && mounted) {
+        // Show loading dialog
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              backgroundColor: Colors.grey[800],
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const CircularProgressIndicator(color: Colors.green),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Processing betting slip...',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+
+        // Process the image
+        // print('Processing betting slip...');
+        final scanResult = await scanService.processBettingSlip(imageFile);
+        // print('Scan result: ${scanResult?.success ?? 'null'}');
+        
+        // Close loading dialog
+        if (mounted) {
+          Navigator.of(context).pop();
+        }
+
+        if (scanResult != null && scanResult.success && mounted) {
+          // Navigate to scan results page
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ScanResultsPage(scanResult: scanResult),
+            ),
+          );
+          
+          // If a pick post was created, add it instantly to the feed
+          if (result != null && result is PickPost) {
+            setState(() {
+              _posts.insert(0, result);
+              _offset++;
+            });
+          }
+        } else if (mounted) {
+          // Show error message
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(scanResult?.error ?? 'Failed to process betting slip'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      // print('Error handling scan: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error scanning betting slip: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -655,7 +738,7 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
         'created_at': item['created_at'],
       }).toList();
     } catch (e) {
-      print('Error getting $type: $e');
+      // print('Error getting $type: $e');
       return [];
     }
   }
@@ -1090,7 +1173,22 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
               // Fixed the button layout with proper constraints
               Row(
                 children: [
-                  const Spacer(), // Push buttons to the right
+                  // Scan button with Flexible wrapper
+                  Flexible(
+                    child: OutlinedButton.icon(
+                      onPressed: () async {
+                        await _handleScanButton();
+                      },
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Colors.blue),
+                        foregroundColor: Colors.blue,
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                      ),
+                      icon: const Icon(Icons.camera_alt, size: 18),
+                      label: const Text('Scan'),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
                   // Picks button with Flexible wrapper
                   Flexible(
                     child: OutlinedButton.icon(

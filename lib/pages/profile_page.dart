@@ -179,9 +179,6 @@ class _ProfilePageState extends State<ProfilePage> {
         throw 'User not authenticated';
       }
 
-      print('Starting image upload for user: $userId');
-      print('Image size: ${bytes.length} bytes');
-
       // Delete old image if exists
       final oldAvatarUrl = _userData?['avatar_url'];
       if (oldAvatarUrl != null && oldAvatarUrl.isNotEmpty) {
@@ -485,13 +482,6 @@ class _ProfilePageState extends State<ProfilePage> {
     try {
       final profile = await _authService.getCurrentUserProfile();
       final user = _authService.currentUser;
-
-      print('=== PROFILE DEBUG ===');
-      print('Profile data: $profile');
-      print('Avatar URL: ${profile?['avatar_url']}');
-      print('Username: ${profile?['username']}');
-      print('User email: ${user?.email}');
-      print('==================');
 
       if (profile != null && user != null) {
         setState(() {

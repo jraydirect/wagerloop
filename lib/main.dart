@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:device_preview/device_preview.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'services/supabase_config.dart';
 import 'wrappers/auth_wrapper.dart';
 import 'pages/auth/login_page.dart';
@@ -12,16 +14,30 @@ import 'pages/dice_bouncy_splash_screen.dart';
 import 'pages/figma_bouncy_loader.dart';
 import 'pages/figma_ball_splash.dart';
 import 'layouts/main_layout.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:io' show Platform;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Suppress Google Sign-In library errors
+  FlutterError.onError = (FlutterErrorDetails details) {
+    // Suppress "Future already completed" errors from Google Sign-In
+    if (details.exception.toString().contains('Future already completed') &&
+        details.stack.toString().contains('google_sign_in')) {
+      return;
+    }
+    // Let other errors through
+    FlutterError.presentError(details);
+  };
+
+  // Load environment variables
+  await dotenv.load(fileName: ".env");
+
   await Supabase.initialize(
-    url: SupabaseConfig.supaBaseURL,
-    anonKey: SupabaseConfig.supaBaseAnonKey,
+    url: dotenv.get('SUPABASE_URL') ?? SupabaseConfig.supaBaseURL,
+    anonKey: dotenv.get('SUPABASE_ANON_KEY') ?? SupabaseConfig.supaBaseAnonKey,
     authFlowType: AuthFlowType.pkce,
+    debug: false, // Reduce Supabase logging in production
   );
 
   runApp(

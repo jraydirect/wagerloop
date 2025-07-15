@@ -107,13 +107,13 @@ class SocialFeedService {
             post.reposts = repostsCount.count ?? 0;
           }
         } catch (e) {
-          print('Error checking like/repost status: $e');
+          // print('Error checking like/repost status: $e');
         }
       }
 
       return posts;
     } catch (e) {
-      print('Error fetching posts: $e');
+      // print('Error fetching posts: $e');
       rethrow;
     }
   }
@@ -154,7 +154,7 @@ class SocialFeedService {
           final picksJson = jsonDecode(post['picks_data']);
           picks = (picksJson as List).map((pickJson) => Pick.fromJson(pickJson)).toList();
         } catch (e) {
-          print('Error parsing picks data: $e');
+          // print('Error parsing picks data: $e');
         }
         
         posts.add(PickPost(
@@ -257,7 +257,7 @@ class SocialFeedService {
             final picksJson = jsonDecode(post['picks_data']);
             picks = (picksJson as List).map((pickJson) => Pick.fromJson(pickJson)).toList();
           } catch (e) {
-            print('Error parsing picks data: $e');
+            // print('Error parsing picks data: $e');
           }
           
           posts.add(PickPost(
@@ -299,7 +299,7 @@ class SocialFeedService {
       
       return posts;
     } catch (e) {
-      print('Error fetching user posts: $e');
+      // print('Error fetching user posts: $e');
       rethrow;
     }
   }
@@ -359,7 +359,7 @@ class SocialFeedService {
         avatarUrl: profileResponse['avatar_url'],
       );
     } catch (e) {
-      print('Error creating post: $e');
+      // print('Error creating post: $e');
       rethrow;
     }
   }
@@ -421,7 +421,7 @@ class SocialFeedService {
         picks: pickPost.picks,
       );
     } catch (e) {
-      print('Error creating pick post: $e');
+      // print('Error creating pick post: $e');
       rethrow;
     }
   }
@@ -480,7 +480,7 @@ class SocialFeedService {
         replyCount: response['reply_count'] ?? 0,
       );
     } catch (e) {
-      print('Error adding comment: $e');
+      // print('Error adding comment: $e');
       rethrow;
     }
   }
@@ -527,7 +527,7 @@ class SocialFeedService {
       // Organize comments into a threaded structure
       return _organizeCommentsIntoThreads(allComments);
     } catch (e) {
-      print('Error fetching comments: $e');
+      // print('Error fetching comments: $e');
       rethrow;
     }
   }
@@ -612,7 +612,7 @@ class SocialFeedService {
             .eq('user_id', user.id);
       }
     } catch (e) {
-      print('Error toggling like: $e');
+      // print('Error toggling like: $e');
       rethrow;
     }
   }
@@ -653,7 +653,7 @@ class SocialFeedService {
             .eq('user_id', user.id);
       }
     } catch (e) {
-      print('Error toggling repost: $e');
+      // print('Error toggling repost: $e');
       rethrow;
     }
   }
@@ -741,7 +741,7 @@ class SocialFeedService {
           })
           .toList();
     } catch (e) {
-      print('Error fetching user comments: $e');
+      // print('Error fetching user comments: $e');
       rethrow;
     }
   }
@@ -800,7 +800,7 @@ class SocialFeedService {
           .eq('id', postId)
           .eq('user_id', user.id); // Ensure only owner can delete
     } catch (e) {
-      print('Error deleting post: $e');
+      // print('Error deleting post: $e');
       rethrow;
     }
   }

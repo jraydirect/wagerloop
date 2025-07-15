@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:math' as Math;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../models/sports/sportsbook.dart';
 import '../models/sports/odds.dart';
 import 'sports_api_service.dart';
@@ -19,10 +20,9 @@ class SportsOddsService {
   factory SportsOddsService() => _instance;
   SportsOddsService._internal();
 
-  // The Odds API - replace with your actual API key
+  // The Odds API - get API key from environment variables
   final String _baseUrl = 'api.the-odds-api.com';
-  String? _apiKey = 'placeholder';
-  //String? _apiKey = '9413990d83982c8eb7e2f7af3deb42ab';
+  String? get _apiKey => dotenv.env['THE_ODDS_API_KEY'];
 
   // Cache for odds data to avoid frequent API calls
   final Map<String, List<dynamic>> _oddsCache = {};
@@ -34,15 +34,12 @@ class SportsOddsService {
     'fanduel'
   ];
 
-  /// Configures the API key for The Odds API.
+  /// Gets the API key for The Odds API from environment variables.
   /// 
-  /// Must be called before fetching odds data. The API key is required
-  /// to access real-time betting odds from supported sportsbooks.
-  /// 
-  /// Parameters:
-  ///   - apiKey: Valid API key from The Odds API service
-  void setApiKey(String apiKey) {
-    _apiKey = apiKey;
+  /// The API key is automatically loaded from the .env file.
+  /// Make sure THE_ODDS_API_KEY is set in your .env file.
+  String? getApiKey() {
+    return _apiKey;
   }
 
   // Map of sports from app terminology to The Odds API terminology
@@ -125,7 +122,6 @@ class SportsOddsService {
   ///   - Exception: If API key is missing or API request fails
   Future<Map<String, OddsData>> fetchOddsForGame(String gameId, String sport, {List<String>? sportsbooks}) async {
     if (_apiKey == null || _apiKey!.isEmpty) {
-      print('API key not set for SportsOddsService');
       return {};
     }
 
@@ -134,72 +130,55 @@ class SportsOddsService {
       return {};
     }
     
-    print('Fetching odds from The Odds API for game: $gameId in sport: $sport');
-
-    try {
-      // Check cache first to avoid unnecessary API calls
-      final cacheKey = '${sportApiCode}_${gameId}';
-      final now = DateTime.now();
-      
-      if (_oddsCache.containsKey(cacheKey) && 
-          _lastFetchTime != null && 
-          now.difference(_lastFetchTime!) < _cacheValidity) {
-        print('Using cached odds data for game: $gameId');
-        final gamesList = _oddsCache[cacheKey]!;
-        final gameData = gamesList.firstWhere(
-          (game) => game['id'] == gameId,
-          orElse: () => null,
-        );
-        if (gameData != null) {
-          return _parseOddsForGame(gameData, gameId, sportsbooks);
-        }
+    // Check cache first to avoid unnecessary API calls
+    final cacheKey = '${sportApiCode}_${gameId}';
+    final now = DateTime.now();
+    
+    if (_oddsCache.containsKey(cacheKey) && 
+        _lastFetchTime != null && 
+        now.difference(_lastFetchTime!) < _cacheValidity) {
+      final gamesList = _oddsCache[cacheKey]!;
+      final gameData = gamesList.firstWhere(
+        (game) => game['id'] == gameId,
+        orElse: () => null,
+      );
+      if (gameData != null) {
+        return _parseOddsForGame(gameData, gameId, sportsbooks);
       }
+    }
 
-      // API endpoint parameters
-      final queryParams = {
-        'apiKey': _apiKey!,
-        'regions': 'us',
-        'markets': 'h2h,spreads,totals',
-        'oddsFormat': 'american',
-        'dateFormat': 'iso',
-        'bookmakers': 'fanduel',
-      };
+    // API endpoint parameters
+    final queryParams = {
+      'apiKey': _apiKey!,
+      'regions': 'us',
+      'markets': 'h2h,spreads,totals',
+      'oddsFormat': 'american',
+      'dateFormat': 'iso',
+      'bookmakers': 'fanduel',
+    };
+    
+    final uri = Uri.https(_baseUrl, '/v4/sports/$sportApiCode/odds', queryParams);
+    
+    final response = await http.get(uri);
+    
+    if (response.statusCode == 200) {
+      final List<dynamic> data = json.decode(response.body);
+      // Cache the response
+      _oddsCache[cacheKey] = data;
+      _lastFetchTime = now;
       
-      print('The Odds API query params: $queryParams');
-
-      // Construct API URL
-      final uri = Uri.https(_baseUrl, '/v4/sports/$sportApiCode/odds', queryParams);
+      // Find the specific game from the list
+      final gameData = data.firstWhere(
+        (game) => game['id'] == gameId,
+        orElse: () => null,
+      );
       
-      print('Making API call to The Odds API: $uri');
-      final response = await http.get(uri);
-      
-      if (response.statusCode == 200) {
-        print('The Odds API response received with status 200');
-        final List<dynamic> data = json.decode(response.body);
-        print('Received ${data.length} games from The Odds API');
-        
-        // Cache the response
-        _oddsCache[cacheKey] = data;
-        _lastFetchTime = now;
-        
-        // Find the specific game from the list
-        final gameData = data.firstWhere(
-          (game) => game['id'] == gameId,
-          orElse: () => null,
-        );
-        
-        if (gameData != null) {
-          return _parseOddsForGame(gameData, gameId, sportsbooks);
-        } else {
-          print('Game with ID $gameId not found in API response');
-          return {};
-        }
+      if (gameData != null) {
+        return _parseOddsForGame(gameData, gameId, sportsbooks);
       } else {
-        print('Error fetching odds: ${response.statusCode}');
         return {};
       }
-    } catch (e) {
-      print('Error in fetchOddsForGame: $e');
+    } else {
       return {};
     }
   }
@@ -220,7 +199,6 @@ class SportsOddsService {
   ///   - Exception: If API key is missing or API request fails
   Future<Map<String, Map<String, OddsData>>> fetchOddsForSport(String sport) async {
     if (_apiKey == null || _apiKey!.isEmpty) {
-      print('API key not set for SportsOddsService');
       return {};
     }
 
@@ -262,12 +240,11 @@ class SportsOddsService {
         
         return result;
       } else {
-        print('The Odds API request failed: Status: ${response.statusCode}');
+        return {};
       }
       
       return {};
     } catch (e) {
-      print('Error fetching odds for sport: $e');
       return {};
     }
   }
@@ -281,7 +258,6 @@ class SportsOddsService {
 
   /// Parse odds data for a specific game
   Map<String, OddsData> _parseOddsForGame(Map<String, dynamic> gameData, String gameId, List<String>? sportsbooks) {
-    print('Parsing odds data for game');
     
     try {
       final Map<String, OddsData> result = {};
@@ -345,7 +321,6 @@ class SportsOddsService {
       
       return result;
     } catch (e) {
-      print('Error parsing odds data: $e');
       return {};
     }
   }
@@ -452,7 +427,6 @@ class SportsOddsService {
       
       return bestOdds;
     } catch (e) {
-      print('Error getting best odds: $e');
       return null;
     }
   }

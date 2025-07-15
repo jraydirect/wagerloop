@@ -85,7 +85,6 @@ class TeamLogoUtils {
     'Cleveland Cavaliers': 'assets/nbaLogos/cleveland-cavaliers.svg',
     'Dallas Mavericks': 'assets/nbaLogos/dallas-mavericks.svg',
     'Denver Nuggets': 'assets/nbaLogos/denver-nuggets.svg',
-    'Detroit Pistons': 'assets/nbaLogos/detroit-pistons.svg', // Note: may not exist in assets
     'Golden State Warriors': 'assets/nbaLogos/golden-state-warriors.svg',
     'Houston Rockets': 'assets/nbaLogos/houston-rockets.svg',
     'Indiana Pacers': 'assets/nbaLogos/indiana-pacers.svg',
@@ -97,7 +96,6 @@ class TeamLogoUtils {
     'Minnesota Timberwolves': 'assets/nbaLogos/minnesota-timberwolves.svg',
     'New Orleans Pelicans': 'assets/nbaLogos/orleans-pelicans.svg',
     'New York Knicks': 'assets/nbaLogos/new-york-knicks.svg',
-    'Oklahoma City Thunder': 'assets/nbaLogos/oklahoma-city-thunder.svg', // Note: may not exist in assets
     'Orlando Magic': 'assets/nbaLogos/orlando-magic.svg',
     'Philadelphia 76ers': 'assets/nbaLogos/philidephia-76ers.svg',
     'Phoenix Suns': 'assets/nbaLogos/phoenix-suns.svg',
@@ -117,7 +115,6 @@ class TeamLogoUtils {
     'Cavaliers': 'assets/nbaLogos/cleveland-cavaliers.svg',
     'Mavericks': 'assets/nbaLogos/dallas-mavericks.svg',
     'Nuggets': 'assets/nbaLogos/denver-nuggets.svg',
-    'Pistons': 'assets/nbaLogos/detroit-pistons.svg',
     'Warriors': 'assets/nbaLogos/golden-state-warriors.svg',
     'Rockets': 'assets/nbaLogos/houston-rockets.svg',
     'Pacers': 'assets/nbaLogos/indiana-pacers.svg',
@@ -129,7 +126,6 @@ class TeamLogoUtils {
     'Timberwolves': 'assets/nbaLogos/minnesota-timberwolves.svg',
     'Pelicans': 'assets/nbaLogos/orleans-pelicans.svg',
     'Knicks': 'assets/nbaLogos/new-york-knicks.svg',
-    'Thunder': 'assets/nbaLogos/oklahoma-city-thunder.svg',
     'Magic': 'assets/nbaLogos/orlando-magic.svg',
     '76ers': 'assets/nbaLogos/philidephia-76ers.svg',
     'Suns': 'assets/nbaLogos/phoenix-suns.svg',

@@ -57,14 +57,6 @@ class _ProfileAvatarState extends State<ProfileAvatar> {
                        widget.avatarUrl!.isNotEmpty && 
                        !_hasImageError;
     
-    // Debug logging
-    print('ProfileAvatar Debug:');
-    print('- Avatar URL: ${widget.avatarUrl}');
-    print('- Username: ${widget.username}');
-    print('- Has valid URL: $hasValidUrl');
-    print('- Has image error: $_hasImageError');
-    print('- Is loading: $_isLoading');
-    
     return GestureDetector(
       onTap: widget.onTap,
       child: CircleAvatar(
@@ -81,9 +73,6 @@ class _ProfileAvatarState extends State<ProfileAvatar> {
             : null,
         onBackgroundImageError: hasValidUrl
             ? (exception, stackTrace) {
-                print('Error loading avatar image: $exception');
-                print('Stack trace: $stackTrace');
-                print('Failed URL: ${widget.avatarUrl}');
                 if (mounted) {
                   setState(() {
                     _hasImageError = true;
@@ -121,7 +110,6 @@ class _ProfileAvatarState extends State<ProfileAvatar> {
     setState(() => _isLoading = true);
     
     try {
-      print('Testing URL accessibility: $url');
       final response = await http.head(
         Uri.parse(url),
         headers: {
@@ -130,11 +118,7 @@ class _ProfileAvatarState extends State<ProfileAvatar> {
         },
       ).timeout(const Duration(seconds: 10));
       
-      print('URL test response: ${response.statusCode}');
-      print('Content-Type: ${response.headers['content-type']}');
-      
       if (response.statusCode != 200) {
-        print('Warning: URL returned status code ${response.statusCode}');
         if (mounted && !_hasImageError) {
           setState(() {
             _hasImageError = true;
@@ -142,7 +126,6 @@ class _ProfileAvatarState extends State<ProfileAvatar> {
         }
       }
     } catch (e) {
-      print('URL accessibility test failed: $e');
       if (mounted && !_hasImageError) {
         setState(() {
           _hasImageError = true;
