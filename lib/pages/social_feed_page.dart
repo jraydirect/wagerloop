@@ -844,15 +844,22 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
 
     // Show picks if this is a PickPost
     if (post is PickPost && post.hasPicks) {
-      return Card(
-        margin: const EdgeInsets.only(bottom: 8),
-        color: Colors.grey[700], // Use green theme for all
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-          side: const BorderSide(color: Colors.green, width: 2),
+      return Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        decoration: BoxDecoration(
+          color: Colors.grey[750],
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.green.withOpacity(0.3), width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.2),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Padding(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
@@ -864,7 +871,7 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
                   ProfileAvatar(
                     avatarUrl: avatarUrl,
                     username: username,
-                    radius: 20,
+                    radius: 24,
                     backgroundColor: Colors.blue,
                     onTap: () {
                       Navigator.push(
@@ -875,7 +882,7 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
                       );
                     },
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -884,12 +891,18 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
                           username,
                           style: const TextStyle(
                             color: Colors.white,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
                           ),
                         ),
+                        const SizedBox(height: 2),
                         Text(
                           timeago.format(timestamp),
-                          style: TextStyle(color: Colors.grey[400], fontSize: 12),
+                          style: TextStyle(
+                            color: Colors.grey[400], 
+                            fontSize: 13,
+                            fontWeight: FontWeight.w400,
+                          ),
                         ),
                       ],
                     ),
@@ -897,24 +910,34 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
 
                 ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 16),
               // Content
               Text(
                 content,
-                style: const TextStyle(color: Colors.white),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 15,
+                  height: 1.4,
+                ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 20),
               // Picks display using the new widget
               PicksDisplayWidget(
                 picks: post.picks,
                 showParlayBadge: true, // Show parlay badge in the widget
                 compact: false,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 16),
               // Actions
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
+              Container(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.grey[800]?.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
                   _buildActionButton(
                     icon: isLiked ? Icons.favorite : Icons.favorite_border,
                     label: likes.toString(),
@@ -934,21 +957,29 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
                   ),
                 ],
               ),
+            ),
             ],
           ),
         ),
       );
     }
     // For regular posts, use the existing _buildPostCard logic
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      color: Colors.grey[700],
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-        side: const BorderSide(color: Colors.green, width: 2),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.grey[750],
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.green.withOpacity(0.3), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
@@ -960,7 +991,7 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
                 ProfileAvatar(
                   avatarUrl: avatarUrl,
                   username: username,
-                  radius: 20,
+                  radius: 24,
                   backgroundColor: Colors.blue,
                   onTap: () {
                     Navigator.push(
@@ -971,25 +1002,31 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
                     );
                   },
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        username,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
+                              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      username,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
                       ),
-                      Text(
-                        timeago.format(timestamp),
-                        style: TextStyle(color: Colors.grey[400], fontSize: 12),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      timeago.format(timestamp),
+                      style: TextStyle(
+                        color: Colors.grey[400], 
+                        fontSize: 13,
+                        fontWeight: FontWeight.w400,
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
+              ),
                 if (isOwnPost)
                   PopupMenuButton<String>(
                     onSelected: (String choice) async {
@@ -1067,11 +1104,15 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
                   ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 16),
             // Content
             Text(
               content,
-              style: const TextStyle(color: Colors.white),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 15,
+                height: 1.4,
+              ),
             ),
             
             // Show picks if this is a PickPost
@@ -1084,11 +1125,17 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
               ),
             ],
             
-            const SizedBox(height: 8),
+            const SizedBox(height: 16),
             // Actions
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.grey[800]?.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
                 _buildActionButton(
                   icon: isLiked ? Icons.favorite : Icons.favorite_border,
                   label: likes.toString(),
@@ -1108,6 +1155,7 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
                 ),
               ],
             ),
+          ),
           ],
         ),
       ),
@@ -1120,17 +1168,28 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
     required VoidCallback onTap,
     Color color = Colors.grey,
   }) {
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 20, color: color),
-            const SizedBox(width: 4),
-            Text(label, style: TextStyle(color: color)),
-          ],
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 20, color: color),
+              const SizedBox(width: 6),
+              Text(
+                label, 
+                style: TextStyle(
+                  color: color,
+                  fontWeight: FontWeight.w500,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -1139,14 +1198,21 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
   Widget _buildCreatePost() {
     return Padding(
       padding: const EdgeInsets.all(16),
-      child: Card(
-        color: Colors.grey[700],
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-          side: const BorderSide(color: Colors.green, width: 2),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.grey[750],
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.green.withOpacity(0.3), width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.15),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Padding(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(20),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -1160,29 +1226,37 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
                       return ProfileAvatar(
                         avatarUrl: profile?['avatar_url'],
                         username: profile?['username'] ?? 'You',
-                        radius: 20,
+                        radius: 24,
                         backgroundColor: Colors.green,
                         // No onTap for current user's avatar in create post section
                       );
                     },
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: TextField(
                       controller: _postController,
-                      style: const TextStyle(color: Colors.white),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 15,
+                        height: 1.4,
+                      ),
                       decoration: const InputDecoration(
                         hintText: 'Share your thoughts...',
-                        hintStyle: TextStyle(color: Colors.grey),
+                        hintStyle: TextStyle(
+                          color: Colors.grey,
+                          fontSize: 15,
+                        ),
                         border: InputBorder.none,
+                        contentPadding: EdgeInsets.symmetric(vertical: 8),
                       ),
                       maxLines: null,
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
-              // Fixed the button layout with proper constraints
+              const SizedBox(height: 16),
+              // Modern button layout
               Row(
                 children: [
                   // Scan button with Flexible wrapper
@@ -1192,15 +1266,19 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
                         await _handleScanButton();
                       },
                       style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Colors.blue),
+                        side: BorderSide(color: Colors.blue.withOpacity(0.7)),
                         foregroundColor: Colors.blue,
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        backgroundColor: Colors.blue.withOpacity(0.1),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                       icon: const Icon(Icons.camera_alt, size: 18),
-                      label: const Text('Scan'),
+                      label: const Text('Scan', style: TextStyle(fontWeight: FontWeight.w500)),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 12),
                   // Picks button with Flexible wrapper
                   Flexible(
                     child: OutlinedButton.icon(
@@ -1220,15 +1298,19 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
                         }
                       },
                       style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Colors.green),
+                        side: BorderSide(color: Colors.green.withOpacity(0.7)),
                         foregroundColor: Colors.green,
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        backgroundColor: Colors.green.withOpacity(0.1),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                       icon: const Icon(Icons.sports_basketball, size: 18),
-                      label: const Text('Pick'),
+                      label: const Text('Pick', style: TextStyle(fontWeight: FontWeight.w500)),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 12),
                   // Regular post button with Flexible wrapper
                   Flexible(
                     child: ElevatedButton(
@@ -1236,6 +1318,11 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.green,
                         foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 2,
                       ),
                       child: _isSubmitting
                           ? const SizedBox(
@@ -1246,7 +1333,7 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
                                 color: Colors.white,
                               ),
                             )
-                          : const Text('Post'),
+                          : const Text('Post', style: TextStyle(fontWeight: FontWeight.w600)),
                     ),
                   ),
                 ],
@@ -1279,16 +1366,17 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[800],
-      appBar: AppBar(
-        backgroundColor: Colors.grey[800],
-        title: Image.asset(
-          'assets/9d514000-7637-4e02-bc87-df46fcb2fe36_removalai_preview.png',
-          height: 40,
-          fit: BoxFit.contain,
+      backgroundColor: Colors.grey[850],
+              appBar: AppBar(
+          backgroundColor: Colors.grey[850],
+          elevation: 0,
+          title: Image.asset(
+            'assets/9d514000-7637-4e02-bc87-df46fcb2fe36_removalai_preview.png',
+            height: 40,
+            fit: BoxFit.contain,
+          ),
+          centerTitle: true,
         ),
-        centerTitle: true,
-      ),
       body: Column(
         children: [
           _buildCreatePost(),
@@ -1303,7 +1391,7 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
                     onRefresh: _loadPosts,
                     child: ListView.builder(
                       controller: _scrollController,
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       itemCount: _posts.length + (_hasMore ? 1 : 0),
                       itemBuilder: (context, index) {
                         if (index == _posts.length) {

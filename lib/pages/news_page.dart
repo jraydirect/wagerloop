@@ -104,9 +104,9 @@ class _NewsPageState extends State<NewsPage> {
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
-      backgroundColor: const Color(0xFF424242),
+      backgroundColor: const Color(0xFF363636),
       navigationBar: CupertinoNavigationBar(
-        backgroundColor: const Color(0xFF424242),
+        backgroundColor: const Color(0xFF363636),
         border: null,
         middle: Image.asset(
           'assets/9d514000-7637-4e02-bc87-df46fcb2fe36_removalai_preview.png',
@@ -117,39 +117,46 @@ class _NewsPageState extends State<NewsPage> {
       child: SafeArea(
         child: Column(
           children: [
-            // League Filter - Enhanced with blur effect
+            // League Filter - Enhanced with modern styling
             Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               decoration: BoxDecoration(
-                color: const Color(0xFF525252).withOpacity(0.6),
-                borderRadius: BorderRadius.circular(16),
+                color: const Color(0xFF525252),
+                borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: const Color(0xFF4CAF50).withOpacity(0.1),
+                  color: const Color(0xFF4CAF50).withOpacity(0.3),
                   width: 1,
                 ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.15),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                  child: Container(
-                    height: 60,
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    child: ListView.builder(
+              child: Container(
+                height: 70,
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                child: ListView.builder(
                       scrollDirection: Axis.horizontal,
+                      physics: const BouncingScrollPhysics(),
                       itemCount: leagues.length,
                       itemBuilder: (context, index) {
                         final league = leagues[index];
                         final isSelected = league == selectedLeague;
 
                         return Padding(
-                          padding: const EdgeInsets.only(right: 8),
+                          padding: EdgeInsets.only(
+                            left: index == 0 ? 8 : 0, 
+                            right: index == leagues.length - 1 ? 8 : 12
+                          ),
                           child: CupertinoButton(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                            borderRadius: BorderRadius.circular(20),
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                            borderRadius: BorderRadius.circular(16),
                             color: isSelected
                                 ? const Color(0xFF4CAF50)
-                                : Colors.transparent,
+                                : const Color(0xFF424242),
                             onPressed: () {
                               setState(() {
                                 selectedLeague = league;
@@ -173,9 +180,10 @@ class _NewsPageState extends State<NewsPage> {
                                         ? Colors.white 
                                         : const Color(0xFF4CAF50),
                                     fontWeight: isSelected 
-                                        ? FontWeight.w600 
-                                        : FontWeight.w500,
-                                    fontSize: 16,
+                                        ? FontWeight.w700 
+                                        : FontWeight.w600,
+                                    fontSize: 15,
+                                    letterSpacing: -0.2,
                                   ),
                                 ),
                               ],
@@ -186,8 +194,6 @@ class _NewsPageState extends State<NewsPage> {
                     ),
                   ),
                 ),
-              ),
-            ),
 
             // News List with enhanced styling
             Expanded(
@@ -216,14 +222,21 @@ class _NewsPageState extends State<NewsPage> {
                       ? Center(
                           child: Container(
                             margin: const EdgeInsets.all(20),
-                            padding: const EdgeInsets.all(24),
+                            padding: const EdgeInsets.all(28),
                             decoration: BoxDecoration(
                               color: const Color(0xFF525252),
-                              borderRadius: BorderRadius.circular(16),
+                              borderRadius: BorderRadius.circular(20),
                               border: Border.all(
                                 color: CupertinoColors.destructiveRed.withOpacity(0.3),
                                 width: 1,
                               ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.2),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
                             ),
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
@@ -254,9 +267,16 @@ class _NewsPageState extends State<NewsPage> {
                                 const SizedBox(height: 16),
                                 CupertinoButton(
                                   color: const Color(0xFF4CAF50),
-                                  borderRadius: BorderRadius.circular(12),
+                                  borderRadius: BorderRadius.circular(14),
+                                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                                   onPressed: fetchNews,
-                                  child: const Text('Try Again'),
+                                  child: const Text(
+                                    'Try Again',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 16,
+                                    ),
+                                  ),
                                 ),
                               ],
                             ),
@@ -301,7 +321,7 @@ class _NewsPageState extends State<NewsPage> {
                                     ),
                                   )
                                 : SliverPadding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                                     sliver: SliverList(
                                       delegate: SliverChildBuilderDelegate(
                                         (context, index) {
@@ -339,21 +359,21 @@ class _NewsPageState extends State<NewsPage> {
         margin: const EdgeInsets.symmetric(horizontal: 4),
         decoration: BoxDecoration(
           color: const Color(0xFF525252),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: const Color(0xFF4CAF50).withOpacity(0.1),
+            color: const Color(0xFF4CAF50).withOpacity(0.3),
             width: 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.15),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
+              color: Colors.black.withOpacity(0.25),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
             ),
           ],
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -362,7 +382,7 @@ class _NewsPageState extends State<NewsPage> {
                 Stack(
                   children: [
                     ClipRRect(
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
                       child: Image.network(
                         article['imageUrl']!,
                         height: 200,
@@ -394,13 +414,13 @@ class _NewsPageState extends State<NewsPage> {
                     Container(
                       height: 200,
                       decoration: BoxDecoration(
-                        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
                         gradient: LinearGradient(
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: [
                             Colors.transparent,
-                            Colors.black.withOpacity(0.1),
+                            Colors.black.withOpacity(0.15),
                           ],
                         ),
                       ),
@@ -409,7 +429,7 @@ class _NewsPageState extends State<NewsPage> {
                 ),
               // Article Content with enhanced styling
               Padding(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
@@ -419,10 +439,10 @@ class _NewsPageState extends State<NewsPage> {
                       cleanTitle,
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 19,
+                        fontWeight: FontWeight.w700,
                         height: 1.3,
-                        letterSpacing: -0.2,
+                        letterSpacing: -0.3,
                         decoration: TextDecoration.none,
                       ),
                       textAlign: TextAlign.start,
@@ -430,64 +450,75 @@ class _NewsPageState extends State<NewsPage> {
                       maxLines: 3,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
                     // Enhanced footer with date and source
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        // Date with icon
-                        Flexible(
-                          flex: 2,
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                CupertinoIcons.clock,
-                                size: 14,
-                                color: const Color(0xFF4CAF50),
-                              ),
-                              const SizedBox(width: 4),
-                              Flexible(
-                                child: Text(
-                                  _formatDate(article['pubDate'] ?? ''),
-                                  style: const TextStyle(
-                                    color: Color(0xFFBDBDBD),
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w400,
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF424242).withOpacity(0.6),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: const Color(0xFF4CAF50).withOpacity(0.1),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          // Date with icon
+                          Flexible(
+                            flex: 2,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  CupertinoIcons.clock,
+                                  size: 16,
+                                  color: const Color(0xFF4CAF50),
+                                ),
+                                const SizedBox(width: 8),
+                                Flexible(
+                                  child: Text(
+                                    _formatDate(article['pubDate'] ?? ''),
+                                    style: const TextStyle(
+                                      color: Color(0xFFE5E5E7),
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
                                   ),
-                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          // CBS Sports badge
+                          Flexible(
+                            flex: 1,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF4CAF50).withOpacity(0.15),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: const Color(0xFF4CAF50).withOpacity(0.4),
+                                  width: 1,
                                 ),
                               ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        // CBS Sports badge
-                        Flexible(
-                          flex: 1,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF4CAF50).withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(
-                                color: const Color(0xFF4CAF50).withOpacity(0.3),
-                                width: 0.5,
+                              child: Text(
+                                'CBS Sports',
+                                style: TextStyle(
+                                  color: const Color(0xFF4CAF50),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.center,
                               ),
                             ),
-                            child: Text(
-                              'CBS Sports',
-                              style: TextStyle(
-                                color: const Color(0xFF4CAF50),
-                                fontSize: 11,
-                                fontWeight: FontWeight.w500,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                              textAlign: TextAlign.center,
-                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ],
                 ),
@@ -641,9 +672,9 @@ class _ArticleDetailModalState extends State<ArticleDetailModal> {
         'No title';
 
     return CupertinoPageScaffold(
-      backgroundColor: const Color(0xFF1C1C1E),
+      backgroundColor: const Color(0xFF363636),
       navigationBar: CupertinoNavigationBar(
-        backgroundColor: const Color(0xFF1C1C1E),
+        backgroundColor: const Color(0xFF363636),
         middle: Text(
           'Article Details',
           style: TextStyle(
@@ -708,8 +739,8 @@ class _ArticleDetailModalState extends State<ArticleDetailModal> {
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
                                   colors: [
-                                    const Color(0xFF2E2E2E),
-                                    const Color(0xFF1C1C1E),
+                                    const Color(0xFF525252),
+                                    const Color(0xFF363636),
                                   ],
                                 ),
                               ),
@@ -768,7 +799,7 @@ class _ArticleDetailModalState extends State<ArticleDetailModal> {
                     child: Container(
                       padding: const EdgeInsets.all(28),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF2C2C2E).withOpacity(0.8),
+                        color: const Color(0xFF525252).withOpacity(0.8),
                         borderRadius: BorderRadius.circular(24),
                       ),
                       child: Column(
@@ -796,7 +827,7 @@ class _ArticleDetailModalState extends State<ArticleDetailModal> {
                             Container(
                               padding: const EdgeInsets.all(20),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF1C1C1E),
+                                color: const Color(0xFF424242),
                                 borderRadius: BorderRadius.circular(16),
                                 border: Border.all(
                                   color: const Color(0xFF4CAF50).withOpacity(0.08),
@@ -823,7 +854,7 @@ class _ArticleDetailModalState extends State<ArticleDetailModal> {
                           Container(
                             padding: const EdgeInsets.all(24),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF1C1C1E),
+                              color: const Color(0xFF424242),
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
                                 color: const Color(0xFF4CAF50).withOpacity(0.15),
@@ -865,7 +896,7 @@ class _ArticleDetailModalState extends State<ArticleDetailModal> {
                                 Container(
                                   padding: const EdgeInsets.all(16),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFF2C2C2E),
+                                    color: const Color(0xFF525252),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: Row(
@@ -919,7 +950,7 @@ class _ArticleDetailModalState extends State<ArticleDetailModal> {
                                     margin: const EdgeInsets.only(top: 12),
                                     padding: const EdgeInsets.all(16),
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFF2C2C2E),
+                                      color: const Color(0xFF525252),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Row(
