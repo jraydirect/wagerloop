@@ -434,13 +434,15 @@ class SocialFeedService {
   /// Parameters:
   ///   - postId: ID of the post to comment on
   ///   - content: Text content of the comment
+  ///   - parentCommentId: Optional ID of parent comment for replies
+  ///   - replyToUsername: Optional username being replied to
   /// 
   /// Returns:
   ///   Comment object representing the newly created comment
   /// 
   /// Throws:
   ///   - Exception: If user is not authenticated or comment creation fails
-  Future<Comment> addComment(String postId, String content) async {
+  Future<Comment> addComment(String postId, String content, {String? parentCommentId, String? replyToUsername}) async {
     try {
       final user = _supabase.auth.currentUser;
       if (user == null) throw 'User not authenticated';
@@ -458,6 +460,8 @@ class SocialFeedService {
             'post_id': postId,
             'user_id': user.id,
             'content': content,
+            'parent_comment_id': parentCommentId,
+            'reply_to_username': replyToUsername,
             'created_at': DateTime.now().toIso8601String(),
             'updated_at': DateTime.now().toIso8601String(),
           })
@@ -471,6 +475,9 @@ class SocialFeedService {
         timestamp: DateTime.parse(response['created_at']),
         likes: 0,
         avatarUrl: profileResponse['avatar_url'],
+        parentCommentId: response['parent_comment_id'],
+        replyToUsername: response['reply_to_username'],
+        replyCount: response['reply_count'] ?? 0,
       );
     } catch (e) {
       print('Error adding comment: $e');
@@ -482,17 +489,19 @@ class SocialFeedService {
   /// 
   /// Fetches comments with user information for display in post threads.
   /// Comments are ordered by creation time to show conversation flow.
+  /// Supports threaded replies with proper nesting.
   /// 
   /// Parameters:
   ///   - postId: ID of the post whose comments to retrieve
   /// 
   /// Returns:
-  ///   List<Comment> containing all comments for the post
+  ///   List<Comment> containing all comments for the post with nested replies
   /// 
   /// Throws:
   ///   - Exception: If database query fails
   Future<List<Comment>> fetchComments(String postId) async {
     try {
+      // Fetch all comments for the post (including replies)
       final response = await _supabase.from('comments').select('''
             *,
             profile:profiles!inner (
@@ -501,7 +510,7 @@ class SocialFeedService {
             )
           ''').eq('post_id', postId).order('created_at', ascending: true);
 
-      return (response as List<dynamic>)
+      final allComments = (response as List<dynamic>)
           .map((comment) => Comment(
                 id: comment['id'],
                 username: comment['profile']['username'] ?? 'Anonymous',
@@ -509,12 +518,62 @@ class SocialFeedService {
                 timestamp: DateTime.parse(comment['created_at']),
                 likes: 0,
                 avatarUrl: comment['profile']['avatar_url'],
+                parentCommentId: comment['parent_comment_id'],
+                replyToUsername: comment['reply_to_username'],
+                replyCount: comment['reply_count'] ?? 0,
               ))
           .toList();
+
+      // Organize comments into a threaded structure
+      return _organizeCommentsIntoThreads(allComments);
     } catch (e) {
       print('Error fetching comments: $e');
       rethrow;
     }
+  }
+
+  /// Organizes flat comment list into threaded structure with nested replies.
+  /// 
+  /// Parameters:
+  ///   - comments: Flat list of all comments
+  /// 
+  /// Returns:
+  ///   List<Comment> with replies nested under parent comments
+  List<Comment> _organizeCommentsIntoThreads(List<Comment> comments) {
+    final Map<String, Comment> commentMap = {};
+    final List<Comment> topLevelComments = [];
+
+    // First pass: create a map of all comments
+    for (final comment in comments) {
+      commentMap[comment.id] = comment.copyWith(replies: []);
+    }
+
+    // Second pass: organize into threads
+    for (final comment in comments) {
+      if (comment.parentCommentId == null) {
+        // This is a top-level comment
+        topLevelComments.add(commentMap[comment.id]!);
+      } else {
+        // This is a reply
+        final parentComment = commentMap[comment.parentCommentId];
+        if (parentComment != null) {
+          final updatedParent = parentComment.copyWith(
+            replies: [...parentComment.replies, commentMap[comment.id]!]
+          );
+          if (comment.parentCommentId != null) {
+            commentMap[comment.parentCommentId!] = updatedParent;
+          }
+          
+          // Update the top-level comment if it's in our list
+          final topLevelIndex = topLevelComments.indexWhere((c) => c.id == comment.parentCommentId);
+          if (topLevelIndex != -1) {
+            topLevelComments[topLevelIndex] = updatedParent;
+          }
+        }
+      }
+    }
+
+    return topLevelComments;
   }
 
   /// Toggles like status for a post or pick post.
@@ -595,6 +654,47 @@ class SocialFeedService {
       }
     } catch (e) {
       print('Error toggling repost: $e');
+      rethrow;
+    }
+  }
+
+  /// Fetches replies for a specific comment.
+  /// 
+  /// Retrieves all replies to a given comment for display in threaded discussions.
+  /// 
+  /// Parameters:
+  ///   - commentId: ID of the parent comment
+  /// 
+  /// Returns:
+  ///   List<Comment> containing all replies to the comment
+  /// 
+  /// Throws:
+  ///   - Exception: If database query fails
+  Future<List<Comment>> fetchCommentReplies(String commentId) async {
+    try {
+      final response = await _supabase.from('comments').select('''
+            *,
+            profile:profiles!inner (
+              username,
+              avatar_url
+            )
+          ''').eq('parent_comment_id', commentId).order('created_at', ascending: true);
+
+      return (response as List<dynamic>)
+          .map((comment) => Comment(
+                id: comment['id'],
+                username: comment['profile']['username'] ?? 'Anonymous',
+                content: comment['content'],
+                timestamp: DateTime.parse(comment['created_at']),
+                likes: 0,
+                avatarUrl: comment['profile']['avatar_url'],
+                parentCommentId: comment['parent_comment_id'],
+                replyToUsername: comment['reply_to_username'],
+                replyCount: comment['reply_count'] ?? 0,
+              ))
+          .toList();
+    } catch (e) {
+      print('Error fetching comment replies: $e');
       rethrow;
     }
   }

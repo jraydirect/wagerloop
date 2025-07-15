@@ -6,6 +6,10 @@ class Comment {
   final DateTime timestamp;
   final int likes;
   final String? avatarUrl;
+  final String? parentCommentId; // New field for reply functionality
+  final String? replyToUsername; // New field to show who this reply is to
+  final int replyCount; // New field to track number of replies
+  final List<Comment> replies; // New field to store nested replies
 
   Comment({
     required this.id,
@@ -14,6 +18,10 @@ class Comment {
     required this.timestamp,
     this.likes = 0,
     this.avatarUrl,
+    this.parentCommentId,
+    this.replyToUsername,
+    this.replyCount = 0,
+    this.replies = const [],
   });
 
   // Create a copy of the comment with modified properties
@@ -24,6 +32,10 @@ class Comment {
     DateTime? timestamp,
     int? likes,
     String? avatarUrl,
+    String? parentCommentId,
+    String? replyToUsername,
+    int? replyCount,
+    List<Comment>? replies,
   }) {
     return Comment(
       id: id ?? this.id,
@@ -32,6 +44,10 @@ class Comment {
       timestamp: timestamp ?? this.timestamp,
       likes: likes ?? this.likes,
       avatarUrl: avatarUrl ?? this.avatarUrl,
+      parentCommentId: parentCommentId ?? this.parentCommentId,
+      replyToUsername: replyToUsername ?? this.replyToUsername,
+      replyCount: replyCount ?? this.replyCount,
+      replies: replies ?? this.replies,
     );
   }
 
@@ -44,6 +60,10 @@ class Comment {
       'timestamp': timestamp.toIso8601String(),
       'likes': likes,
       'avatarUrl': avatarUrl,
+      'parentCommentId': parentCommentId,
+      'replyToUsername': replyToUsername,
+      'replyCount': replyCount,
+      'replies': replies.map((reply) => reply.toMap()).toList(),
     };
   }
 
@@ -61,6 +81,12 @@ class Comment {
       timestamp: DateTime.parse(map['timestamp']),
       likes: map['likes'] ?? 0,
       avatarUrl: map['avatarUrl'],
+      parentCommentId: map['parentCommentId'],
+      replyToUsername: map['replyToUsername'],
+      replyCount: map['replyCount'] ?? 0,
+      replies: map['replies'] != null 
+          ? (map['replies'] as List).map((reply) => Comment.fromMap(reply)).toList()
+          : [],
     );
   }
 
@@ -68,4 +94,10 @@ class Comment {
   factory Comment.fromJson(Map<String, dynamic> json) {
     return Comment.fromMap(json);
   }
+
+  // Helper method to check if this is a reply
+  bool get isReply => parentCommentId != null;
+
+  // Helper method to check if this comment has replies
+  bool get hasReplies => replyCount > 0 || replies.isNotEmpty;
 }

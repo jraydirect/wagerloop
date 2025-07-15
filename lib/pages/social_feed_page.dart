@@ -5,6 +5,7 @@ import '../models/comment.dart';
 import '../services/supabase_config.dart';
 import '../widgets/profile_avatar.dart';
 import '../widgets/picks_display_widget.dart';
+import '../widgets/threaded_comments_widget.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import '../services/auth_service.dart';
 import '../widgets/dice_loading_widget.dart';
@@ -715,117 +716,18 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
 
                       final comments = snapshot.data ?? [];
 
-                      if (comments.isEmpty) {
-                        return const Center(
-                          child: Text(
-                            'No comments yet',
-                            style: TextStyle(color: Colors.grey),
-                          ),
-                        );
-                      }
-
-                      return ListView.builder(
-                        itemCount: comments.length,
-                        itemBuilder: (context, index) {
-                          final comment = comments[index];
-                          return ListTile(
-                          leading: ProfileAvatar(
-                          avatarUrl: comment.avatarUrl, // Now using the actual avatar URL from the comment
-                          username: comment.username,
-                          radius: 20,
-                          backgroundColor: Colors.blue,
-                          onTap: () {
-                            // Profile navigation not available for comments yet
-                            // Would need user ID in comment data to enable profile navigation
-                          },
-                          ),
-                            title: Text(
-                              comment.username,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  comment.content,
-                                  style: const TextStyle(color: Colors.white),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  timeago.format(comment.timestamp),
-                                  style: const TextStyle(
-                                    color: Colors.grey,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
+                      return ThreadedCommentsWidget(
+                        postId: postId,
+                        comments: comments,
+                        onCommentAdded: () {
+                          // Refresh the main feed to update comment counts
+                          setState(() {});
+                          // Also refresh the comments list in the modal
+                          Navigator.pop(context);
+                          _showComments(post);
                         },
                       );
                     },
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _commentController,
-                          style: const TextStyle(color: Colors.white),
-                          decoration: InputDecoration(
-                            hintText: 'Add a comment...',
-                            hintStyle: const TextStyle(color: Colors.grey),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            filled: true,
-                            fillColor: Colors.grey[800],
-                          ),
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(
-                          Icons.send,
-                          color: Colors.green,
-                        ),
-                        onPressed: isSubmitting
-                            ? null
-                            : () async {
-                                if (_commentController.text.isEmpty) return;
-
-                                setModalState(() => isSubmitting = true);
-
-                                try {
-                                  await _socialFeedService.addComment(
-                                    postId,
-                                    _commentController.text,
-                                  );
-                                  _commentController.clear();
-                                  // Refresh the main feed to update comment counts
-                                  setState(() {});
-                                  // Also refresh the comments list in the modal
-                                  Navigator.pop(context);
-                                  _showComments(post);
-                                } catch (e) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                        'Failed to add comment. Please try again.',
-                                      ),
-                                    ),
-                                  );
-                                  print('Error adding comment: $e');
-                                } finally {
-                                  setModalState(() => isSubmitting = false);
-                                }
-                              },
-                      ),
-                    ],
                   ),
                 ),
               ],
