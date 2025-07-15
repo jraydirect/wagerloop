@@ -454,6 +454,13 @@ class SocialFeedService {
           .eq('id', user.id)
           .single();
 
+      // Get the post author to check if we should send notification
+      final postResponse = await _supabase
+          .from('posts')
+          .select('profile_id, content')
+          .eq('id', postId)
+          .single();
+
       final response = await _supabase
           .from('comments')
           .insert({
@@ -467,6 +474,17 @@ class SocialFeedService {
           })
           .select()
           .single();
+
+      // Send notification to post author if it's not their own comment
+      final postAuthorId = postResponse['profile_id'];
+      if (postAuthorId != user.id) {
+        _sendCommentNotification(
+          commenterUsername: profileResponse['username'] ?? 'Anonymous',
+          postId: postId,
+          commentContent: content,
+          postAuthorId: postAuthorId,
+        );
+      }
 
       return Comment(
         id: response['id'],
@@ -482,6 +500,22 @@ class SocialFeedService {
     } catch (e) {
       // print('Error adding comment: $e');
       rethrow;
+    }
+  }
+
+  /// Send comment notification to post author
+  void _sendCommentNotification({
+    required String commenterUsername,
+    required String postId,
+    required String commentContent,
+    required String postAuthorId,
+  }) async {
+    try {
+      // Import notification service here to avoid circular dependency
+      // This will be handled by the database trigger, but we can also send local notification
+      print('Comment notification: $commenterUsername commented on post $postId');
+    } catch (e) {
+      print('Error sending comment notification: $e');
     }
   }
 

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "339373837221",
+    "project_id": "mywagerloop",
+    "storage_bucket": "mywagerloop.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:339373837221:android:3ade4848438cddc0b8764c",
+        "android_client_info": {
+          "package_name": "com.launchos.mywagerloop"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAAoRLJ6aSjRQ0pDpO00GYITLvZd1flqtI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

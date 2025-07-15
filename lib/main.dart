@@ -4,6 +4,7 @@ import 'package:device_preview/device_preview.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'services/supabase_config.dart';
+import 'services/notification_service.dart';
 import 'wrappers/auth_wrapper.dart';
 import 'pages/auth/login_page.dart';
 import 'pages/auth/register_page.dart';
@@ -39,6 +40,14 @@ void main() async {
     authFlowType: AuthFlowType.pkce,
     debug: false, // Reduce Supabase logging in production
   );
+
+  // Initialize notification service
+  try {
+    await NotificationService().initialize();
+    print('Notification service initialized successfully');
+  } catch (e) {
+    print('Failed to initialize notification service: $e');
+  }
 
   runApp(
     DevicePreview(
