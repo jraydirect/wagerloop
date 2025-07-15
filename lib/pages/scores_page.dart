@@ -7,19 +7,18 @@ import 'dart:ui';
 import '../utils/team_logo_utils.dart';
 import 'game_details_page.dart';
 
-enum GameTimeFilter { today, upcoming }
-
 class ScoresPage extends StatefulWidget {
   @override
   _ScoresPageState createState() => _ScoresPageState();
 }
 
 class _ScoresPageState extends State<ScoresPage> {
-  List<dynamic> scores = [];
-  String selectedSport = 'football/nfl';
+  Map<String, List<dynamic>> allScores = {};
+  Map<String, bool> sportLoading = {};
+  Map<String, String?> sportErrors = {};
+  Map<String, bool> sportExpanded = {};
+  Map<String, String> selectedGameType = {};
   bool isLoading = true;
-  String? error;
-  GameTimeFilter selectedTimeFilter = GameTimeFilter.today;
 
   final Map<String, String> sportsMap = {
     'football/nfl': 'NFL',
@@ -42,100 +41,123 @@ class _ScoresPageState extends State<ScoresPage> {
   @override
   void initState() {
     super.initState();
-    fetchScores();
+    _initializeSports();
+    fetchAllScores();
   }
 
-  Future<void> fetchScores() async {
-    setState(() {
-      isLoading = true;
-      error = null;
-    });
-
-    switch (selectedTimeFilter) {
-      case GameTimeFilter.today:
-        await fetchTodayGames();
-        break;
-      case GameTimeFilter.upcoming:
-        await fetchUpcomingGames();
-        break;
+  void _initializeSports() {
+    for (String sport in sportsMap.keys) {
+      allScores[sport] = [];
+      sportLoading[sport] = false;
+      sportErrors[sport] = null;
+      sportExpanded[sport] = false;
+      selectedGameType[sport] = 'all';
     }
   }
 
-  Future<void> fetchTodayGames() async {
+  Future<void> fetchAllScores() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    // Fetch scores for all sports in parallel
+    await Future.wait(
+      sportsMap.keys.map((sport) => fetchSportScores(sport)),
+    );
+
+    setState(() {
+      isLoading = false;
+    });
+  }
+
+  Future<void> fetchSportScores(String sport) async {
+    setState(() {
+      sportLoading[sport] = true;
+      sportErrors[sport] = null;
+    });
+
     try {
       final today = DateTime.now();
       final yesterday = today.subtract(const Duration(days: 1));
+      final tomorrow = today.add(const Duration(days: 1));
+      final futureDate = tomorrow.add(const Duration(days: 7));
       
       // Format dates for ESPN API (YYYYMMDD)
-      final todayFormatted = today.toIso8601String().split('T')[0].replaceAll('-', '');
       final yesterdayFormatted = yesterday.toIso8601String().split('T')[0].replaceAll('-', '');
+      final futureFormatted = futureDate.toIso8601String().split('T')[0].replaceAll('-', '');
       
       final response = await http.get(Uri.parse(
-          'https://site.api.espn.com/apis/site/v2/sports/$selectedSport/scoreboard?dates=$yesterdayFormatted-$todayFormatted'));
+          'https://site.api.espn.com/apis/site/v2/sports/$sport/scoreboard?dates=$yesterdayFormatted-$futureFormatted'));
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         final events = data['events'] ?? [];
-        print('ESPN API Today Response: Found ${events.length} events');
+        
         setState(() {
-          scores = events;
-          isLoading = false;
+          allScores[sport] = events;
+          sportLoading[sport] = false;
         });
       } else {
         setState(() {
-          error = 'Failed to load scores';
-          isLoading = false;
+          sportErrors[sport] = 'Failed to load scores';
+          sportLoading[sport] = false;
         });
       }
     } catch (e) {
       setState(() {
-        error = 'Error connecting to the server';
-        isLoading = false;
+        sportErrors[sport] = 'Error connecting to server';
+        sportLoading[sport] = false;
       });
     }
   }
 
+  List<dynamic> getLiveGames(String sport) {
+    final games = allScores[sport] ?? [];
+    return games.where((game) {
+      final status = game['status'];
+      if (status == null || status['type'] == null) return false;
+      return status['type']['state'] == 'in';
+    }).toList();
+  }
 
+  List<dynamic> getUpcomingGames(String sport) {
+    final games = allScores[sport] ?? [];
+    return games.where((game) {
+      final status = game['status'];
+      if (status == null || status['type'] == null) return true;
+      return status['type']['state'] == 'pre';
+    }).toList();
+  }
 
-  Future<void> fetchUpcomingGames() async {
-    try {
-      final tomorrow = DateTime.now().add(const Duration(days: 1));
-      final futureDate = tomorrow.add(const Duration(days: 7)); // Next 7 days from tomorrow
-      
-      // Format dates for ESPN API (YYYYMMDD)
-      final tomorrowFormatted = tomorrow.toIso8601String().split('T')[0].replaceAll('-', '');
-      final futureFormatted = futureDate.toIso8601String().split('T')[0].replaceAll('-', '');
+  List<dynamic> getTodayGames(String sport) {
+    final games = allScores[sport] ?? [];
+    return games.where((game) {
+      final status = game['status'];
+      if (status == null || status['type'] == null) return false;
+      return status['type']['completed'] == true;
+    }).toList();
+  }
 
-      final response = await http.get(Uri.parse(
-          'https://site.api.espn.com/apis/site/v2/sports/$selectedSport/scoreboard?dates=$tomorrowFormatted-$futureFormatted'));
+  bool hasAnyGames(String sport) {
+    final games = allScores[sport] ?? [];
+    return games.isNotEmpty;
+  }
 
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        final events = data['events'] ?? [];
-        
-        // Filter out completed games and only show upcoming
-        final upcomingGames = events.where((game) {
-          final status = game['status'];
-          if (status == null || status['type'] == null) return true;
-          return status['type']['state'] == 'pre'; // Only pre-game status
-        }).toList();
-        
-        print('ESPN API Upcoming Response: Found ${upcomingGames.length} upcoming games');
-        setState(() {
-          scores = upcomingGames;
-          isLoading = false;
-        });
-      } else {
-        setState(() {
-          error = 'Failed to load upcoming games';
-          isLoading = false;
-        });
-      }
-    } catch (e) {
-      setState(() {
-        error = 'Error connecting to the server';
-        isLoading = false;
-      });
+  bool hasLiveGames(String sport) {
+    return getLiveGames(sport).isNotEmpty;
+  }
+
+  List<dynamic> getFilteredGames(String sport) {
+    final gameType = selectedGameType[sport] ?? 'all';
+    switch (gameType) {
+      case 'live':
+        return getLiveGames(sport);
+      case 'upcoming':
+        return getUpcomingGames(sport);
+      case 'today':
+        return getTodayGames(sport);
+      default:
+        return allScores[sport] ?? [];
     }
   }
 
@@ -241,42 +263,27 @@ class _ScoresPageState extends State<ScoresPage> {
     return status['type']['completed'] == true;
   }
 
-  String _getEmptyStateMessage() {
-    switch (selectedTimeFilter) {
-      case GameTimeFilter.today:
-        return 'No scores available';
-      case GameTimeFilter.upcoming:
-        return 'No upcoming games found';
+  bool _isGameLive(dynamic game) {
+    final status = game['status'];
+    if (status == null || status['type'] == null) return false;
+    return status['type']['state'] == 'in';
+  }
+
+  String _getEmptyStateMessage(String sport) {
+    if (sportLoading[sport] == true) {
+      return 'Loading ${sportsMap[sport]} games...';
+    } else if (sportErrors[sport] != null) {
+      return 'Failed to load ${sportsMap[sport]} games';
+    } else {
+      return 'No games found for ${sportsMap[sport]}';
     }
   }
 
-  Widget _buildTimeFilterButton(String label, GameTimeFilter filter) {
-    final isSelected = selectedTimeFilter == filter;
-    return Expanded(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4),
-        child: CupertinoButton(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          borderRadius: BorderRadius.circular(20),
-          color: isSelected ? const Color(0xFF4CAF50) : Colors.transparent,
-          onPressed: () {
-            setState(() {
-              selectedTimeFilter = filter;
-            });
-            fetchScores();
-          },
-          child: Text(
-            label,
-            style: TextStyle(
-              color: isSelected ? Colors.white : const Color(0xFF4CAF50),
-              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-              fontSize: 14,
-            ),
-          ),
-        ),
-      ),
-    );
+  String _getLoadingMessage() {
+    return 'Loading games...';
   }
+
+
 
   String formatScore(dynamic game) {
     // First check if the game object exists
@@ -286,13 +293,13 @@ class _ScoresPageState extends State<ScoresPage> {
 
     final competitions = game['competitions'];
     if (competitions == null || !(competitions is List) || competitions.isEmpty) {
-      return (selectedTimeFilter == GameTimeFilter.upcoming) ? 'vs' : '-';
+      return '-';
     }
 
     final competition = competitions[0];
     final competitors = competition['competitors'];
     if (competitors == null || !(competitors is List) || competitors.length < 2) {
-      return (selectedTimeFilter == GameTimeFilter.upcoming) ? 'vs' : '-';
+      return '-';
     }
 
     // Find home and away teams
@@ -323,247 +330,366 @@ class _ScoresPageState extends State<ScoresPage> {
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
-      backgroundColor: const Color(0xFF424242), // Same gray background as Colors.grey[800]
+      backgroundColor: const Color(0xFF424242),
       navigationBar: CupertinoNavigationBar(
-        backgroundColor: const Color(0xFF424242), // Same gray background
-        border: null, // Remove default border
+        backgroundColor: const Color(0xFF424242),
+        border: null,
         middle: Image.asset(
           'assets/9d514000-7637-4e02-bc87-df46fcb2fe36_removalai_preview.png',
           height: 40,
           fit: BoxFit.contain,
         ),
+        trailing: CupertinoButton(
+          padding: EdgeInsets.zero,
+          onPressed: fetchAllScores,
+          child: const Icon(
+            CupertinoIcons.refresh,
+            color: Color(0xFF4CAF50),
+          ),
+        ),
       ),
       child: SafeArea(
-        child: Column(
-          children: [
-            // Time Filter Buttons - Enhanced with blur effect
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: const Color(0xFF525252).withOpacity(0.6),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: const Color(0xFF4CAF50).withOpacity(0.1),
-                  width: 1,
+        child: isLoading
+            ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const CupertinoActivityIndicator(
+                      color: Color(0xFF4CAF50),
+                      radius: 20,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Loading all sports...',
+                      style: const TextStyle(
+                        color: Color(0xFFBDBDBD),
+                        fontSize: 16,
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                  ],
                 ),
+              )
+            : CustomScrollView(
+                physics: const BouncingScrollPhysics(),
+                slivers: [
+                  CupertinoSliverRefreshControl(
+                    onRefresh: fetchAllScores,
+                  ),
+                  // Quick Stats Header
+                  SliverToBoxAdapter(
+                    child: _buildQuickStatsHeader(),
+                  ),
+                  // Sports Sections
+                  SliverPadding(
+                    padding: const EdgeInsets.all(16),
+                    sliver: SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                          final sport = sportsMap.keys.elementAt(index);
+                          return _buildSportSection(sport);
+                        },
+                        childCount: sportsMap.length,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      ),
+    );
+  }
+
+  Widget _buildQuickStatsHeader() {
+    int totalLiveGames = 0;
+    int totalUpcomingGames = 0;
+    
+    for (String sport in sportsMap.keys) {
+      totalLiveGames += getLiveGames(sport).length;
+      totalUpcomingGames += getUpcomingGames(sport).length;
+    }
+
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF525252).withOpacity(0.6),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: const Color(0xFF4CAF50).withOpacity(0.1),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _buildStatCard(
+            'LIVE NOW',
+            totalLiveGames.toString(),
+            const Color(0xFFFF5722),
+            CupertinoIcons.antenna_radiowaves_left_right,
+          ),
+          Container(
+            width: 1,
+            height: 40,
+            color: const Color(0xFF4CAF50).withOpacity(0.3),
+          ),
+          _buildStatCard(
+            'UPCOMING',
+            totalUpcomingGames.toString(),
+            const Color(0xFF4CAF50),
+            CupertinoIcons.clock,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatCard(String label, String value, Color color, IconData icon) {
+    return Column(
+      children: [
+        Icon(
+          icon,
+          color: color,
+          size: 24,
+        ),
+        const SizedBox(height: 8),
+        Text(
+          value,
+          style: TextStyle(
+            color: color,
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            color: color.withOpacity(0.8),
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSportSection(String sport) {
+    final sportName = sportsMap[sport]!;
+    final liveGames = getLiveGames(sport);
+    final upcomingGames = getUpcomingGames(sport);
+    final todayGames = getTodayGames(sport);
+    final hasGames = hasAnyGames(sport);
+    final isLoading = sportLoading[sport] ?? false;
+    final error = sportErrors[sport];
+    final isExpanded = sportExpanded[sport] ?? false;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF525252).withOpacity(0.6),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: hasLiveGames(sport)
+              ? const Color(0xFFFF5722).withOpacity(0.3)
+              : const Color(0xFF4CAF50).withOpacity(0.1),
+          width: hasLiveGames(sport) ? 2 : 1,
+        ),
+      ),
+      child: Column(
+        children: [
+          // Collapsible Header
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                sportExpanded[sport] = !(sportExpanded[sport] ?? false);
+              });
+            },
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Image.asset(
+                    getLeagueLogoPath(sport),
+                    height: 28,
+                    width: 28,
+                    fit: BoxFit.contain,
+                    color: hasGames ? null : Colors.grey,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildTimeFilterButton('Today', GameTimeFilter.today),
-                        _buildTimeFilterButton('Upcoming', GameTimeFilter.upcoming),
+                        Text(
+                          sportName,
+                          style: TextStyle(
+                            color: hasGames ? Colors.white : Colors.grey,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        if (hasGames)
+                          Text(
+                            '${getFilteredGames(sport).length} games available',
+                            style: TextStyle(
+                              color: Colors.grey[400],
+                              fontSize: 12,
+                            ),
+                          ),
                       ],
                     ),
                   ),
-                ),
-              ),
-            ),
-            // Sports Filter - Enhanced with blur effect
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: const Color(0xFF525252).withOpacity(0.6),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: const Color(0xFF4CAF50).withOpacity(0.1),
-                  width: 1,
-                ),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                  child: Container(
-                    height: 60,
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: sportsMap.entries.length,
-                      itemBuilder: (context, index) {
-                        final entry = sportsMap.entries.elementAt(index);
-                        final isSelected = selectedSport == entry.key;
-
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: CupertinoButton(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                            borderRadius: BorderRadius.circular(20),
-                            color: isSelected 
-                                ? const Color(0xFF4CAF50)
-                                : Colors.transparent,
-                            onPressed: () {
-                              setState(() {
-                                selectedSport = entry.key;
-                              });
-                              fetchScores();
-                            },
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Image.asset(
-                                  getLeagueLogoPath(entry.key),
-                                  height: 20,
-                                  width: 20,
-                                  fit: BoxFit.contain,
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  entry.value,
-                                  style: TextStyle(
-                                    color: isSelected 
-                                        ? Colors.white 
-                                        : const Color(0xFF4CAF50),
-                                    fontWeight: isSelected 
-                                        ? FontWeight.w600 
-                                        : FontWeight.w500,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-              ),
-            ),
-
-            // Scores List with enhanced styling
-            Expanded(
-              child: isLoading
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                  if (hasLiveGames(sport))
+                    Container(
+                      margin: const EdgeInsets.only(right: 8),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFF5722),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          const CupertinoActivityIndicator(
-                            color: Color(0xFF4CAF50),
-                            radius: 20,
+                          const Icon(
+                            CupertinoIcons.antenna_radiowaves_left_right,
+                            color: Colors.white,
+                            size: 12,
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(width: 4),
                           Text(
-                            'Loading ${sportsMap[selectedSport]} scores...',
+                            '${liveGames.length}',
                             style: const TextStyle(
-                              color: Color(0xFFBDBDBD),
-                              fontSize: 16,
-                              fontWeight: FontWeight.w400,
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ],
                       ),
-                    )
-                  : error != null
-                      ? Center(
-                          child: Container(
-                            margin: const EdgeInsets.all(20),
-                            padding: const EdgeInsets.all(24),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF525252),
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                color: CupertinoColors.destructiveRed.withOpacity(0.3),
-                                width: 1,
-                              ),
-                            ),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(
-                                  CupertinoIcons.exclamationmark_triangle,
-                                  size: 48,
-                                  color: CupertinoColors.destructiveRed,
-                                ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  'Unable to load scores',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  error!,
-                                  style: const TextStyle(
-                                    color: Color(0xFFBDBDBD),
-                                    fontSize: 14,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                                const SizedBox(height: 16),
-                                CupertinoButton(
-                                  color: const Color(0xFF4CAF50),
-                                  borderRadius: BorderRadius.circular(12),
-                                  onPressed: fetchScores,
-                                  child: const Text('Try Again'),
-                                ),
-                              ],
-                            ),
-                          ),
-                        )
-                      : CustomScrollView(
-                          physics: const BouncingScrollPhysics(),
-                          slivers: [
-                            CupertinoSliverRefreshControl(
-                              onRefresh: fetchScores,
-                            ),
-                            scores.isEmpty
-                                ? SliverFillRemaining(
-                                    child: Center(
-                                      child: Column(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          Icon(
-                                            CupertinoIcons.sportscourt,
-                                            size: 64,
-                                            color: const Color(0xFF4CAF50).withOpacity(0.5),
-                                          ),
-                                          const SizedBox(height: 16),
-                                          Text(
-                                            'No games found',
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 20,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 8),
-                                          Text(
-                                            _getEmptyStateMessage(),
-                                            style: const TextStyle(
-                                              color: Color(0xFFBDBDBD),
-                                              fontSize: 16,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  )
-                                : SliverPadding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                    sliver: SliverList(
-                                      delegate: SliverChildBuilderDelegate(
-                                        (context, index) {
-                                          final game = scores[index];
-                                          return Padding(
-                                            padding: const EdgeInsets.only(bottom: 16),
-                                            child: _buildScoreCard(game),
-                                          );
-                                        },
-                                        childCount: scores.length,
-                                      ),
-                                    ),
-                                  ),
-                          ],
-                        ),
+                    ),
+                  Icon(
+                    isExpanded ? CupertinoIcons.chevron_up : CupertinoIcons.chevron_down,
+                    color: hasGames ? const Color(0xFF4CAF50) : Colors.grey,
+                    size: 20,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          
+          // Expandable Content
+          if (isExpanded) ...[
+            Container(
+              height: 1,
+              color: const Color(0xFF4CAF50).withOpacity(0.1),
+            ),
+            
+            // Filter Tabs
+            if (hasGames) _buildFilterTabs(sport),
+            
+            // Games Content
+            Container(
+              padding: const EdgeInsets.all(16),
+              child: _buildGamesContent(sport, isLoading, error, hasGames),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilterTabs(String sport) {
+    final selectedType = selectedGameType[sport] ?? 'all';
+    final liveCount = getLiveGames(sport).length;
+    final upcomingCount = getUpcomingGames(sport).length;
+    final todayCount = getTodayGames(sport).length;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        children: [
+          Expanded(
+            child: _buildFilterTab(
+              'All',
+              'all',
+              selectedType,
+              (allScores[sport] ?? []).length,
+              sport,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: _buildFilterTab(
+              'Live',
+              'live',
+              selectedType,
+              liveCount,
+              sport,
+              color: const Color(0xFFFF5722),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: _buildFilterTab(
+              'Upcoming',
+              'upcoming',
+              selectedType,
+              upcomingCount,
+              sport,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: _buildFilterTab(
+              'Today',
+              'today',
+              selectedType,
+              todayCount,
+              sport,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilterTab(String label, String value, String selected, int count, String sport, {Color? color}) {
+    final isSelected = selected == value;
+    final tabColor = color ?? const Color(0xFF4CAF50);
+    
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          selectedGameType[sport] = value;
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+        decoration: BoxDecoration(
+          color: isSelected ? tabColor.withOpacity(0.2) : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isSelected ? tabColor : Colors.transparent,
+            width: 1,
+          ),
+        ),
+        child: Column(
+          children: [
+            Text(
+              count.toString(),
+              style: TextStyle(
+                color: isSelected ? tabColor : Colors.grey[400],
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? tabColor : Colors.grey[400],
+                fontSize: 10,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ],
         ),
@@ -571,7 +697,108 @@ class _ScoresPageState extends State<ScoresPage> {
     );
   }
 
-  Widget _buildScoreCard(dynamic game) {
+  Widget _buildGamesContent(String sport, bool isLoading, String? error, bool hasGames) {
+    if (isLoading) {
+      return const Center(
+        child: CupertinoActivityIndicator(
+          color: Color(0xFF4CAF50),
+        ),
+      );
+    }
+    
+    if (error != null) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFF424242),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: CupertinoColors.destructiveRed.withOpacity(0.3),
+          ),
+        ),
+        child: Row(
+          children: [
+            const Icon(
+              CupertinoIcons.exclamationmark_triangle,
+              color: CupertinoColors.destructiveRed,
+              size: 20,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                error,
+                style: const TextStyle(
+                  color: Color(0xFFBDBDBD),
+                  fontSize: 14,
+                ),
+              ),
+            ),
+            CupertinoButton(
+              padding: EdgeInsets.zero,
+              onPressed: () => fetchSportScores(sport),
+              child: const Text(
+                'Retry',
+                style: TextStyle(
+                  color: Color(0xFF4CAF50),
+                  fontSize: 14,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    
+    if (!hasGames) {
+      return Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: const Color(0xFF424242),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Center(
+          child: Text(
+            'No games available',
+            style: TextStyle(
+              color: Colors.grey[400],
+              fontSize: 16,
+            ),
+          ),
+        ),
+      );
+    }
+    
+    final filteredGames = getFilteredGames(sport);
+    if (filteredGames.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: const Color(0xFF424242),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Center(
+          child: Text(
+            'No games in this category',
+            style: TextStyle(
+              color: Colors.grey[400],
+              fontSize: 16,
+            ),
+          ),
+        ),
+      );
+    }
+    
+    return Column(
+      children: filteredGames.map((game) => Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: _buildScoreCard(game, sport),
+      )).toList(),
+    );
+  }
+
+
+
+  Widget _buildScoreCard(dynamic game, String sport) {
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -579,7 +806,7 @@ class _ScoresPageState extends State<ScoresPage> {
           CupertinoPageRoute(
             builder: (context) => GameDetailsPage(
               game: game,
-              sport: selectedSport,
+              sport: sport,
             ),
           ),
         );
@@ -590,13 +817,17 @@ class _ScoresPageState extends State<ScoresPage> {
           color: const Color(0xFF525252),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: const Color(0xFF4CAF50).withOpacity(0.1),
-            width: 1,
+            color: _isGameLive(game)
+                ? const Color(0xFFFF5722).withOpacity(0.6)
+                : const Color(0xFF4CAF50).withOpacity(0.1),
+            width: _isGameLive(game) ? 2 : 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.15),
-              blurRadius: 12,
+              color: _isGameLive(game)
+                  ? const Color(0xFFFF5722).withOpacity(0.3)
+                  : Colors.black.withOpacity(0.15),
+              blurRadius: _isGameLive(game) ? 8 : 12,
               offset: const Offset(0, 4),
             ),
           ],
@@ -613,21 +844,29 @@ class _ScoresPageState extends State<ScoresPage> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: _isGameCompleted(game) 
-                          ? const Color(0xFF4CAF50)
-                          : const Color(0xFF424242),
+                      color: _isGameLive(game)
+                          ? const Color(0xFFFF5722)
+                          : _isGameCompleted(game) 
+                              ? const Color(0xFF4CAF50)
+                              : const Color(0xFF424242),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: _isGameCompleted(game)
-                            ? const Color(0xFF4CAF50)
-                            : const Color(0xFF4CAF50).withOpacity(0.3),
+                        color: _isGameLive(game)
+                            ? const Color(0xFFFF5722)
+                            : _isGameCompleted(game)
+                                ? const Color(0xFF4CAF50)
+                                : const Color(0xFF4CAF50).withOpacity(0.3),
                         width: 1,
                       ),
                     ),
                     child: Text(
                       formatGameStatus(game),
                       style: TextStyle(
-                        color: _isGameCompleted(game) ? Colors.white : const Color(0xFF4CAF50),
+                        color: _isGameLive(game) 
+                            ? Colors.white 
+                            : _isGameCompleted(game) 
+                                ? Colors.white 
+                                : const Color(0xFF4CAF50),
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),
@@ -636,18 +875,24 @@ class _ScoresPageState extends State<ScoresPage> {
                   Container(
                     padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
-                      color: _isGameCompleted(game)
-                          ? const Color(0xFF4CAF50).withOpacity(0.1)
-                          : const Color(0xFF424242),
+                      color: _isGameLive(game)
+                          ? const Color(0xFFFF5722).withOpacity(0.1)
+                          : _isGameCompleted(game)
+                              ? const Color(0xFF4CAF50).withOpacity(0.1)
+                              : const Color(0xFF424242),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
-                      _isGameCompleted(game)
-                          ? CupertinoIcons.checkmark_circle_fill
-                          : CupertinoIcons.clock,
-                      color: _isGameCompleted(game)
-                          ? const Color(0xFF4CAF50)
-                          : const Color(0xFF4CAF50).withOpacity(0.7),
+                      _isGameLive(game)
+                          ? CupertinoIcons.antenna_radiowaves_left_right
+                          : _isGameCompleted(game)
+                              ? CupertinoIcons.checkmark_circle_fill
+                              : CupertinoIcons.clock,
+                      color: _isGameLive(game)
+                          ? const Color(0xFFFF5722)
+                          : _isGameCompleted(game)
+                              ? const Color(0xFF4CAF50)
+                              : const Color(0xFF4CAF50).withOpacity(0.7),
                       size: 20,
                     ),
                   ),
