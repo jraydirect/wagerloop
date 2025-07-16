@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'stadium_info_page.dart';
 import 'coaches_info_page.dart';
+import 'wager_gpt_page.dart';
 
 class DiscoverPage extends StatefulWidget {
   const DiscoverPage({Key? key}) : super(key: key);
@@ -280,30 +281,39 @@ class _DiscoverPageState extends State<DiscoverPage> with TickerProviderStateMix
                   color: Colors.transparent,
                   child: InkWell(
                     onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(4),
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: feature['gradient'] as List<Color>,
-                                  ),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Icon(feature['icon'], color: Colors.white, size: 16),
-                              ),
-                              const SizedBox(width: 12),
-                              Text('${feature['name']} activated'),
-                            ],
+                      if (feature['name'] == 'WagerGPT') {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const WagerGPTPage(),
                           ),
-                          backgroundColor: (feature['gradient'] as List<Color>)[0].withOpacity(0.9),
-                          behavior: SnackBarBehavior.floating,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                          margin: const EdgeInsets.all(16),
-                        ),
-                      );
+                        );
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: feature['gradient'] as List<Color>,
+                                    ),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Icon(feature['icon'], color: Colors.white, size: 16),
+                                ),
+                                const SizedBox(width: 12),
+                                Text('${feature['name']} activated'),
+                              ],
+                            ),
+                            backgroundColor: (feature['gradient'] as List<Color>)[0].withOpacity(0.9),
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            margin: const EdgeInsets.all(16),
+                          ),
+                        );
+                      }
                     },
                     borderRadius: BorderRadius.circular(24),
                     splashColor: (feature['gradient'] as List<Color>)[0].withOpacity(0.2),

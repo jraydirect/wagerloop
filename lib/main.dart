@@ -31,7 +31,7 @@ void main() async {
   };
 
   // Load environment variables
-  await dotenv.load(fileName: ".env");
+  await dotenv.load(fileName: "assets/.env");
 
   await Supabase.initialize(
     url: dotenv.get('SUPABASE_URL') ?? SupabaseConfig.supaBaseURL,
