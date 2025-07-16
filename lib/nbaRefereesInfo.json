@@ -1,0 +1,85 @@
+[
+    {
+      "name": "Tony Brothers",
+      "age": 60,
+      "tendencies": {
+        "home_fouls_per_game": 19.74,
+        "road_fouls_per_game": 19.36,
+        "home_win_pct": 0.593,
+        "home_win_margin": 4.0,
+        "player_survey": {
+          "best_votes_pct": 28.8,
+          "worst_votes_pct": 8.5,
+          "quotes": [
+            "He always talks s— to us",
+            "He takes everything personal"
+          ],
+          "source": "Bleacher Report player poll (59 players)"
+        },
+        "notes": "Tends to call more fouls on the road; officiated 19 NBA Finals games"
+      }
+    },
+    {
+      "name": "Scott Foster",
+      "age": 58,
+      "tendencies": {
+        "home_fouls_per_game": 19.09,
+        "road_fouls_per_game": 19.78,
+        "foul_whistle_rate": "99th percentile",
+        "nicknames": ["The Extender", "Agent 48"],
+        "player_survey": {
+          "best_votes_pct": 0,
+          "worst_votes_pct": 25.4,
+          "quotes": [
+            "He's the worst ref to ever do it in the NBA",
+            "He takes everything personally. He's awful."
+          ],
+          "source": "Bleacher Report and BasketNews player polls"
+        },
+        "notes": "Associated with Tim Donaghy; known for tight whistles and series-extending games"
+      }
+    },
+    {
+      "name": "Marc Davis",
+      "age": 53,
+      "tendencies": {
+        "home_fouls_per_game": 18.84,
+        "road_fouls_per_game": 17.95,
+        "home_win_pct": 0.487,
+        "player_survey": {
+          "best_votes_pct": 4.6,
+          "worst_votes_pct": 6.8,
+          "quotes": [],
+          "notes": "Mixed reputation—some praise, some criticism",
+          "source": "CelticsBlog summary of NBA player poll"
+        },
+        "notes": "Longtime crew chief, moderate foul volume"
+      }
+    },
+    {
+      "name": "Bill Kennedy",
+      "age": 58,
+      "tendencies": {
+        "experience_years": 29,
+        "player_survey": {
+          "notes": "Generally respected among players and peers; few public complaints",
+          "source": "Media reports, no public survey ranking"
+        },
+        "notes": "Veteran crew chief; officiated 5 NBA Finals games and international events; noted for calm demeanor"
+      }
+    },
+    {
+      "name": "Tyler Ford",
+      "age": 40,
+      "tendencies": {
+        "games_officiated": 463,
+        "playoff_games": 31,
+        "player_survey": {
+          "notes": "No strong opinions expressed by players in major surveys",
+          "source": "No available polling data"
+        },
+        "notes": "Mid-career ref, stable and balanced foul rates; no extreme tendencies noted"
+      }
+    }
+  ]
+  

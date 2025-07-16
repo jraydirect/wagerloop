@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'stadium_info_page.dart';
 import 'coaches_info_page.dart';
+import 'referees_info_page.dart';
 import 'wager_gpt_page.dart';
 import 'weather_info_page.dart';
 
@@ -140,6 +141,13 @@ class _DiscoverPageState extends State<DiscoverPage> with TickerProviderStateMix
                         context,
                         MaterialPageRoute(
                           builder: (context) => const CoachesInfoPage(),
+                        ),
+                      );
+                    } else if (tool['name'] == 'Referees') {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const RefereesInfoPage(),
                         ),
                       );
                     } else if (tool['name'] == 'Weather') {

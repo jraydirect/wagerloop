@@ -1,0 +1,293 @@
+[
+    {
+      "name": "Jerry Layne",
+      "age": 67,
+      "tendencies": {
+        "strike_zone_accuracy": "High (historically consistent)",
+        "challenge_overturn_rate": "Moderate (based on general human umpire trends)",
+        "ejections_per_game": "Low",
+        "reputation": {
+          "best_traits": [
+            "Veteran presence and experience",
+            "Generally consistent and calm demeanor",
+            "Good game management"
+          ],
+          "worst_traits": [
+            "Can be perceived as having a slightly wider strike zone at times"
+          ],
+          "notes": "One of the longest-tenured and most respected umpires in MLB. *Retired at the end of the 2024 season, so no longer active in 2025 on-field.*"
+        }
+      }
+    },
+    {
+      "name": "Bill Miller",
+      "age": 59,
+      "tendencies": {
+        "strike_zone_accuracy": "Above Average",
+        "challenge_overturn_rate": "Moderate",
+        "ejections_per_game": "Moderate",
+        "reputation": {
+          "best_traits": [
+            "Solid mechanics",
+            "Consistently assigned to playoff games"
+          ],
+          "worst_traits": [
+            "Some occasional inconsistency with the low strike"
+          ],
+          "notes": "A crew chief with significant experience, often found in important games. Remains active in 2025."
+        }
+      }
+    },
+    {
+      "name": "Alfonso Marquez",
+      "age": 52,
+      "tendencies": {
+        "strike_zone_accuracy": "Above Average",
+        "challenge_overturn_rate": "Moderate",
+        "ejections_per_game": "Low to Moderate",
+        "reputation": {
+          "best_traits": [
+            "Respected by players and coaches",
+            "Consistent strike zone",
+            "Good communication"
+          ],
+          "worst_traits": [
+            "Minor variations depending on game pressure"
+          ],
+          "notes": "Widely considered one of the better and more reliable home plate umpires. First Mexican-born umpire in MLB. Remains active in 2025."
+        }
+      }
+    },
+    {
+      "name": "Dan Iassogna",
+      "age": 56,
+      "tendencies": {
+        "strike_zone_accuracy": "Above Average",
+        "challenge_overturn_rate": "Moderate (noted in recent ASG ABS trial)",
+        "ejections_per_game": "Low",
+        "reputation": {
+          "best_traits": [
+            "Solid and generally accurate strike zone",
+            "Calm demeanor",
+            "Experienced crew chief"
+          ],
+          "worst_traits": [
+            "None consistently cited as major issues"
+          ],
+          "notes": "A reliable umpire chosen for many high-stakes games. Was the plate umpire for the 2025 MLB All-Star Game featuring the ABS challenge system. Remains active in 2025."
+        }
+      }
+    },
+    {
+      "name": "Hunter Wendelstedt",
+      "age": 53,
+      "tendencies": {
+        "strike_zone_accuracy": "Average to Above Average",
+        "challenge_overturn_rate": "Moderate",
+        "ejections_per_game": "Moderate",
+        "reputation": {
+          "best_traits": [
+            "Follows in his father's footsteps (Harry Wendelstedt)",
+            "Consistent game calling"
+          ],
+          "worst_traits": [
+            "Can be seen as quick to eject if challenged"
+          ],
+          "notes": "Part of a well-known umpiring family. Known for maintaining control of the game. Remains active in 2025."
+        }
+      }
+    },
+    {
+      "name": "Mark Wegner",
+      "age": 54,
+      "tendencies": {
+        "strike_zone_accuracy": "Above Average",
+        "challenge_overturn_rate": "Moderate",
+        "ejections_per_game": "Low",
+        "reputation": {
+          "best_traits": [
+            "Generally accurate and fair",
+            "Manages game flow well"
+          ],
+          "worst_traits": [
+            "No major recurring criticisms"
+          ],
+          "notes": "A steady presence behind the plate, typically delivers a clean game. Remains active in 2025."
+        }
+      }
+    },
+    {
+      "name": "Laz Diaz",
+      "age": 62,
+      "tendencies": {
+        "strike_zone_accuracy": "Can be inconsistent (historically perceived)",
+        "challenge_overturn_rate": "Potentially Higher (if ABS fully implemented)",
+        "ejections_per_game": "High",
+        "reputation": {
+          "best_traits": [
+            "Passion for the game",
+            "Known for energy"
+          ],
+          "worst_traits": [
+            "Perceived inconsistent strike zone",
+            "Quick temper / ejections"
+          ],
+          "notes": "One of the more polarizing umpires, often discussed for his expressive calls and sometimes contentious interactions. Remains active in 2025."
+        }
+      }
+    },
+    {
+      "name": "CB Bucknor",
+      "age": 63,
+      "tendencies": {
+        "strike_zone_accuracy": "Can be inconsistent (historically perceived)",
+        "challenge_overturn_rate": "Potentially Higher (if ABS fully implemented)",
+        "ejections_per_game": "Moderate",
+        "reputation": {
+          "best_traits": [
+            "Long tenure and experience"
+          ],
+          "worst_traits": [
+            "Frequent criticism for pitch calling accuracy",
+            "Can draw the ire of players and fans"
+          ],
+          "notes": "Another umpire who frequently draws attention, often for perceived inaccuracies in his strike zone calls. Remains active in 2025."
+        }
+      }
+    },
+    {
+      "name": "Chad Fairchild",
+      "age": 54,
+      "tendencies": {
+        "strike_zone_accuracy": "Above Average",
+        "challenge_overturn_rate": "Moderate",
+        "ejections_per_game": "Low",
+        "reputation": {
+          "best_traits": [
+            "Reliable and consistent",
+            "Good demeanor"
+          ],
+          "worst_traits": [
+            "No consistent major complaints"
+          ],
+          "notes": "A solid, steady umpire who generally handles games without significant issues. Remains active in 2025."
+        }
+      }
+    },
+    {
+      "name": "Ron Kulpa",
+      "age": 58,
+      "tendencies": {
+        "strike_zone_accuracy": "Above Average",
+        "challenge_overturn_rate": "Moderate",
+        "ejections_per_game": "Moderate",
+        "reputation": {
+          "best_traits": [
+            "Veteran presence",
+            "Maintains control"
+          ],
+          "worst_traits": [
+            "Some occasional controversial calls"
+          ],
+          "notes": "A long-time umpire known for a straightforward approach to calling games. Remains active in 2025."
+        }
+      }
+    },
+    {
+      "name": "Todd Tichenor",
+      "age": 50,
+      "tendencies": {
+        "strike_zone_accuracy": "Above Average",
+        "challenge_overturn_rate": "Moderate",
+        "ejections_per_game": "Low",
+        "reputation": {
+          "best_traits": [
+            "Generally accurate pitch calls",
+            "Calm on the field"
+          ],
+          "worst_traits": [
+            "No major recurring criticisms"
+          ],
+          "notes": "A well-regarded umpire who has been assigned to post-season series. Remains active in 2025."
+        }
+      }
+    },
+    {
+      "name": "Cory Blaser",
+      "age": 43,
+      "tendencies": {
+        "strike_zone_accuracy": "Above Average",
+        "challenge_overturn_rate": "Low",
+        "ejections_per_game": "Low",
+        "reputation": {
+          "best_traits": [
+            "Accurate strike zone",
+            "Good rapport with players",
+            "Rising talent"
+          ],
+          "worst_traits": [
+            "Still gaining experience at the highest level"
+          ],
+          "notes": "One of the younger umpires who is often praised for his accuracy and professionalism. Remains active in 2025."
+        }
+      }
+    },
+    {
+      "name": "Pat Hoberg",
+      "age": 39,
+      "tendencies": {
+        "strike_zone_accuracy": "Excellent",
+        "challenge_overturn_rate": "Very Low",
+        "ejections_per_game": "Very Low",
+        "reputation": {
+          "best_traits": [
+            "Consistently rated as one of the most accurate umpires",
+            "Unassuming and professional"
+          ],
+          "worst_traits": [
+            "None consistently cited, highly regarded"
+          ],
+          "notes": "Widely considered among the best in the league for his incredible accuracy. A favorite among pitch-tracking enthusiasts. Remains active in 2025."
+        }
+      }
+    },
+    {
+      "name": "Nick Mahrley",
+      "age": 37,
+      "tendencies": {
+        "strike_zone_accuracy": "Above Average",
+        "challenge_overturn_rate": "Low",
+        "ejections_per_game": "Low",
+        "reputation": {
+          "best_traits": [
+            "Solid and consistent",
+            "Calm demeanor"
+          ],
+          "worst_traits": [
+            "Relatively newer to full-time role"
+          ],
+          "notes": "A newer full-time umpire quickly building a reputation for consistency. Remains active in 2025."
+        }
+      }
+    },
+    {
+      "name": "John Tumpane",
+      "age": 46,
+      "tendencies": {
+        "strike_zone_accuracy": "Above Average",
+        "challenge_overturn_rate": "Moderate",
+        "ejections_per_game": "Moderate",
+        "reputation": {
+          "best_traits": [
+            "Generally well-regarded for his calls",
+            "Professional"
+          ],
+          "worst_traits": [
+            "No major consistent complaints"
+          ],
+          "notes": "A capable and dependable umpire who usually provides a smooth game. Remains active in 2025."
+        }
+      }
+    }
+  ]
+  

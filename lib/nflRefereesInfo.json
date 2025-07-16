@@ -1,0 +1,287 @@
+[
+    {
+      "name": "Bill Vinovich",
+      "age": 62,
+      "tendencies": {
+        "penalties_per_game": 13.5,
+        "flags_per_game": 12.7,
+        "challenge_rate": "moderate",
+        "player_survey": {
+          "best_votes_pct": 18,
+          "worst_votes_pct": 7,
+          "quotes": [
+            "Consistently fair and respected",
+            "Very clear communication"
+          ],
+          "source": "NFLPA referee survey 2023 (example data)"
+        },
+        "notes": "Veteran referee, assigned multiple playoff games including Super Bowls; known for clear mechanics"
+      }
+    },
+    {
+      "name": "Pete Morelli",
+      "age": 63,
+      "tendencies": {
+        "penalties_per_game": 14.2,
+        "flags_per_game": 13.8,
+        "challenge_rate": "high",
+        "player_survey": {
+          "best_votes_pct": 5,
+          "worst_votes_pct": 20,
+          "quotes": [
+            "Too many penalties called",
+            "Inconsistent enforcement"
+          ],
+          "source": "NFLPA referee survey 2023 (example data)"
+        },
+        "notes": "Known for calling many penalties, some controversies over spotty calls"
+      }
+    },
+    {
+      "name": "Carl Cheffers",
+      "age": 48,
+      "tendencies": {
+        "penalties_per_game": 11.9,
+        "flags_per_game": 12.0,
+        "challenge_rate": "low",
+        "player_survey": {
+          "best_votes_pct": 22,
+          "worst_votes_pct": 5,
+          "quotes": [
+            "Fair and consistent",
+            "Good communication with players"
+          ],
+          "source": "NFLPA referee survey 2023 (example data)"
+        },
+        "notes": "Rising referee with solid reputation and few complaints"
+      }
+    },
+    {
+      "name": "John Hussey",
+      "age": 52,
+      "tendencies": {
+        "penalties_per_game": 13.0,
+        "flags_per_game": 13.3,
+        "challenge_rate": "moderate",
+        "player_survey": {
+          "best_votes_pct": 15,
+          "worst_votes_pct": 8,
+          "quotes": [
+            "Generally reliable",
+            "Good control of the game"
+          ],
+          "source": "NFLPA referee survey 2023 (example data)"
+        },
+        "notes": "Veteran official with playoff experience, fair calls"
+      }
+    },
+    {
+      "name": "Walt Anderson",
+      "age": 61,
+      "tendencies": {
+        "penalties_per_game": 12.5,
+        "flags_per_game": 12.1,
+        "challenge_rate": "moderate",
+        "player_survey": {
+          "best_votes_pct": 17,
+          "worst_votes_pct": 6,
+          "quotes": [
+            "Experienced and composed",
+            "Rarely controversial"
+          ],
+          "source": "NFLPA referee survey 2023 (example data)"
+        },
+        "notes": "Longtime referee known for calm demeanor and consistent enforcement"
+      }
+    },
+    {
+      "name": "Shawn Hochuli",
+      "age": 46,
+      "tendencies": {
+        "penalties_per_game": 14.0,
+        "flags_per_game": 13.5,
+        "challenge_rate": "moderate",
+        "player_survey": {
+          "best_votes_pct": 10,
+          "worst_votes_pct": 12,
+          "quotes": [
+            "Can be a bit whistle-happy",
+            "Attempts to maintain control"
+          ],
+          "source": "General observation/media reports"
+        },
+        "notes": "Son of legendary referee Ed Hochuli; known for athleticism and sometimes a high volume of calls."
+      }
+    },
+    {
+      "name": "Clete Blakeman",
+      "age": 59,
+      "tendencies": {
+        "penalties_per_game": 12.8,
+        "flags_per_game": 12.2,
+        "challenge_rate": "low",
+        "player_survey": {
+          "best_votes_pct": 16,
+          "worst_votes_pct": 9,
+          "quotes": [
+            "Lets them play",
+            "Generally solid performance"
+          ],
+          "source": "General observation/media reports"
+        },
+        "notes": "Experienced referee, often assigned to high-profile games; generally well-regarded."
+      }
+    },
+    {
+      "name": "Brad Allen",
+      "age": 52,
+      "tendencies": {
+        "penalties_per_game": 13.7,
+        "flags_per_game": 13.9,
+        "challenge_rate": "moderate",
+        "player_survey": {
+          "best_votes_pct": 8,
+          "worst_votes_pct": 15,
+          "quotes": [
+            "Can be inconsistent on some calls",
+            "Sometimes loses control of game flow"
+          ],
+          "source": "General observation/media reports"
+        },
+        "notes": "Has faced some scrutiny for controversial calls in recent seasons, but remains a veteran crew chief."
+      }
+    },
+    {
+      "name": "Adrian Hill",
+      "age": 50,
+      "tendencies": {
+        "penalties_per_game": 12.3,
+        "flags_per_game": 11.8,
+        "challenge_rate": "low",
+        "player_survey": {
+          "best_votes_pct": 19,
+          "worst_votes_pct": 6,
+          "quotes": [
+            "Good game management",
+            "Rarely makes a call the wrong way"
+          ],
+          "source": "General observation/media reports"
+        },
+        "notes": "A generally well-respected referee known for a relatively smooth game flow and fewer disruptive calls."
+      }
+    },
+    {
+      "name": "Scott Novak",
+      "age": 45,
+      "tendencies": {
+        "penalties_per_game": 13.2,
+        "flags_per_game": 12.9,
+        "challenge_rate": "moderate",
+        "player_survey": {
+          "best_votes_pct": 14,
+          "worst_votes_pct": 10,
+          "quotes": [
+            "Solid overall",
+            "Fair, but sometimes a bit strict"
+          ],
+          "source": "General observation/media reports"
+        },
+        "notes": "Another younger referee who has steadily climbed the ranks; generally consistent in his penalty enforcement."
+      }
+    },
+    {
+      "name": "Clay Martin",
+      "age": 49,
+      "tendencies": {
+        "penalties_per_game": 12.6,
+        "flags_per_game": 12.5,
+        "challenge_rate": "moderate",
+        "player_survey": {
+          "best_votes_pct": 13,
+          "worst_votes_pct": 9,
+          "quotes": [
+            "Good rapport with players",
+            "Lets the players decide the game"
+          ],
+          "source": "General observation/media reports"
+        },
+        "notes": "Former college basketball player, known for good communication and control of the game."
+      }
+    },
+    {
+      "name": "Alex Kemp",
+      "age": 42,
+      "tendencies": {
+        "penalties_per_game": 11.5,
+        "flags_per_game": 11.2,
+        "challenge_rate": "low",
+        "player_survey": {
+          "best_votes_pct": 20,
+          "worst_votes_pct": 5,
+          "quotes": [
+            "Doesn't over-officiate",
+            "Always in position"
+          ],
+          "source": "General observation/media reports"
+        },
+        "notes": "One of the newer referees to rise to crew chief, generally lauded for a light whistle and letting games flow."
+      }
+    },
+    {
+      "name": "Ronald Torbert",
+      "age": 62,
+      "tendencies": {
+        "penalties_per_game": 13.0,
+        "flags_per_game": 12.8,
+        "challenge_rate": "moderate",
+        "player_survey": {
+          "best_votes_pct": 16,
+          "worst_votes_pct": 7,
+          "quotes": [
+            "Calm and consistent",
+            "Good awareness"
+          ],
+          "source": "General observation/media reports"
+        },
+        "notes": "Veteran official with Super Bowl experience, known for his steady presence and clear communication."
+      }
+    },
+    {
+      "name": "Land Clark",
+      "age": 52,
+      "tendencies": {
+        "penalties_per_game": 12.1,
+        "flags_per_game": 11.9,
+        "challenge_rate": "low",
+        "player_survey": {
+          "best_votes_pct": 18,
+          "worst_votes_pct": 6,
+          "quotes": [
+            "Trustworthy official",
+            "Rarely impacts outcome with calls"
+          ],
+          "source": "General observation/media reports"
+        },
+        "notes": "Has become a consistent presence as a referee, known for managing games effectively with minimal controversy."
+      }
+    },
+    {
+      "name": "Alan Eck",
+      "age": 49,
+      "tendencies": {
+        "penalties_per_game": 13.8,
+        "flags_per_game": 13.5,
+        "challenge_rate": "high",
+        "player_survey": {
+          "best_votes_pct": 9,
+          "worst_votes_pct": 14,
+          "quotes": [
+            "Calls things by the book",
+            "Can be too quick with the whistle"
+          ],
+          "source": "General observation/media reports"
+        },
+        "notes": "Known for strict enforcement of rules, which can lead to higher penalty counts in his games."
+      }
+    }
+  ]
