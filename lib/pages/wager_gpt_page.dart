@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/wager_gpt_service.dart';
+import '../services/auth_service.dart';
+import '../widgets/profile_avatar.dart';
 
 class WagerGPTPage extends StatefulWidget {
   const WagerGPTPage({Key? key}) : super(key: key);
@@ -13,9 +15,11 @@ class _WagerGPTPageState extends State<WagerGPTPage> with TickerProviderStateMix
   final ScrollController _scrollController = ScrollController();
   final List<ChatMessage> _messages = [];
   final WagerGPTService _wagerGPTService = WagerGPTService.instance;
+  final AuthService _authService = AuthService();
   bool _isLoading = false;
   bool _isTyping = false;
   String? _initializationError;
+  Map<String, dynamic>? _userProfile;
   
   late AnimationController _fadeController;
   late AnimationController _pulseController;
@@ -25,6 +29,7 @@ class _WagerGPTPageState extends State<WagerGPTPage> with TickerProviderStateMix
   @override
   void initState() {
     super.initState();
+    _loadUserProfile();
     _initializeWagerGPT();
     _setupAnimations();
     _addWelcomeMessage();
@@ -49,6 +54,19 @@ class _WagerGPTPageState extends State<WagerGPTPage> with TickerProviderStateMix
     
     _fadeController.forward();
     _pulseController.repeat(reverse: true);
+  }
+
+  void _loadUserProfile() async {
+    try {
+      final profile = await _authService.getCurrentUserProfile();
+      if (mounted) {
+        setState(() {
+          _userProfile = profile;
+        });
+      }
+    } catch (e) {
+      print('Error loading user profile: $e');
+    }
   }
 
   void _initializeWagerGPT() {
@@ -237,6 +255,17 @@ class _WagerGPTPageState extends State<WagerGPTPage> with TickerProviderStateMix
   }
 
   Widget _buildAvatar(bool isUser) {
+    if (isUser && _userProfile != null) {
+      // Use the ProfileAvatar widget for the user
+      return ProfileAvatar(
+        avatarUrl: _userProfile!['avatar_url'],
+        username: _userProfile!['username'] ?? _userProfile!['email'] ?? 'User',
+        radius: 18,
+        backgroundColor: Colors.green,
+      );
+    }
+    
+    // Default avatar for AI or when user profile is not loaded
     return Container(
       width: 36,
       height: 36,
@@ -330,6 +359,9 @@ class _WagerGPTPageState extends State<WagerGPTPage> with TickerProviderStateMix
 
   @override
   void dispose() {
+    // Clear chat history when user exits WagerGPT
+    _wagerGPTService.clearChatHistory();
+    
     _messageController.dispose();
     _scrollController.dispose();
     _fadeController.dispose();
