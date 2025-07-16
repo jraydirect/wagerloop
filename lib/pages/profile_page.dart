@@ -19,13 +19,16 @@ class ProfilePage extends StatefulWidget {
   _ProfilePageState createState() => _ProfilePageState();
 }
 
-class _ProfilePageState extends State<ProfilePage> {
+class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin {
   final _authService = AuthService();
   final _socialFeedService = SupabaseConfig.socialFeedService;
   final _formKey = GlobalKey<FormState>();
   bool _isEditing = false;
   bool _isLoading = true;
   String? _error;
+
+  // Tab controller for posts/comments/likes tabs
+  late TabController _tabController;
 
   // User data
   Map<String, dynamic>? _userData;
@@ -103,6 +106,7 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 3, vsync: this);
     _loadUserProfile();
     _loadUserPosts();
     _loadFollowerCounts();
@@ -1781,40 +1785,41 @@ class _ProfilePageState extends State<ProfilePage> {
                 _buildTeamsList(),
 
                 SizedBox(height: 32),
-                Text(
-                  'My Posts',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+                // Tabbed interface for Posts, Comments, and Likes
+                Container(
+                  child: Column(
+                    children: [
+                      TabBar(
+                        controller: _tabController,
+                        tabs: [
+                          Tab(text: 'Posts'),
+                          Tab(text: 'Comments/Replies'),
+                          Tab(text: 'Likes'),
+                        ],
+                        labelColor: Colors.white,
+                        unselectedLabelColor: Colors.grey,
+                        indicatorColor: Colors.green,
+                      ),
+                      SizedBox(
+                        height: 400, // Fixed height for the tab content
+                        child: TabBarView(
+                          controller: _tabController,
+                          children: [
+                            SingleChildScrollView(
+                              child: _buildPostsList(),
+                            ),
+                            SingleChildScrollView(
+                              child: _buildCommentsList(),
+                            ),
+                            SingleChildScrollView(
+                              child: _buildLikedPostsList(),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                SizedBox(height: 16),
-                _buildPostsList(),
-
-                SizedBox(height: 32),
-                Text(
-                  'Liked Posts',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                SizedBox(height: 16),
-                _buildLikedPostsList(),
-
-                SizedBox(height: 32),
-                Text(
-                  'My Comments',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                SizedBox(height: 16),
-                _buildCommentsList(),
 
                 SizedBox(height: 32),
                 ElevatedButton(
@@ -1836,6 +1841,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   void dispose() {
+    _tabController.dispose();
     _followNotifier.removeListener(_onFollowChanged);
     _usernameController.dispose();
     _fullNameController.dispose();
