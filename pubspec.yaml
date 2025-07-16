@@ -88,6 +88,10 @@ flutter:
     - assets/casino-chip.gif
     - assets/espnWager.png
     - assets/ce71b5ba-35f9-4f31-aadf-2875b00dda9f_removalai_preview.png
+    - lib/mlbBallparkInfo.json
+    - lib/nflStadiumInfo.json
+    - lib/nbaStadiumInfo.json
+    - lib/nhlStadiumInfo.json
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in

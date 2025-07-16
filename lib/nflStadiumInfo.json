@@ -1,0 +1,258 @@
+[
+  {
+    "team": "Arizona Cardinals",
+    "stadium_name": "State Farm Stadium",
+    "location": "Glendale, AZ",
+    "decibel_average_dBA": "95-105 (estimated)",
+    "elevation_feet": 1125,
+    "crowd_capacity": 63400
+  },
+  {
+    "team": "Atlanta Falcons",
+    "stadium_name": "Mercedes-Benz Stadium",
+    "location": "Atlanta, GA",
+    "decibel_average_dBA": "95-105 (estimated)",
+    "elevation_feet": 1050,
+    "crowd_capacity": 71000
+  },
+  {
+    "team": "Baltimore Ravens",
+    "stadium_name": "M&T Bank Stadium",
+    "location": "Baltimore, MD",
+    "decibel_average_dBA": "90-100 (estimated)",
+    "elevation_feet": 130,
+    "crowd_capacity": 71008
+  },
+  {
+    "team": "Buffalo Bills",
+    "stadium_name": "Highmark Stadium",
+    "location": "Orchard Park, NY",
+    "decibel_average_dBA": "100-110 (estimated)",
+    "elevation_feet": 620,
+    "crowd_capacity": 71608
+  },
+  {
+    "team": "Carolina Panthers",
+    "stadium_name": "Bank of America Stadium",
+    "location": "Charlotte, NC",
+    "decibel_average_dBA": "90-100 (estimated)",
+    "elevation_feet": 750,
+    "crowd_capacity": 74867
+  },
+  {
+    "team": "Chicago Bears",
+    "stadium_name": "Soldier Field",
+    "location": "Chicago, IL",
+    "decibel_average_dBA": "90-100 (estimated)",
+    "elevation_feet": 596,
+    "crowd_capacity": 61500
+  },
+  {
+    "team": "Cincinnati Bengals",
+    "stadium_name": "Paycor Stadium",
+    "location": "Cincinnati, OH",
+    "decibel_average_dBA": "90-100 (estimated)",
+    "elevation_feet": 482,
+    "crowd_capacity": 65515
+  },
+  {
+    "team": "Cleveland Browns",
+    "stadium_name": "Huntington Bank Field",
+    "location": "Cleveland, OH",
+    "decibel_average_dBA": "90-100 (estimated)",
+    "elevation_feet": 582,
+    "crowd_capacity": 67431
+  },
+  {
+    "team": "Dallas Cowboys",
+    "stadium_name": "AT&T Stadium",
+    "location": "Arlington, TX",
+    "decibel_average_dBA": "95-105 (estimated)",
+    "elevation_feet": 600,
+    "crowd_capacity": 80000
+  },
+  {
+    "team": "Denver Broncos",
+    "stadium_name": "Empower Field at Mile High",
+    "location": "Denver, CO",
+    "decibel_average_dBA": "100-110 (estimated)",
+    "elevation_feet": 5280,
+    "crowd_capacity": 76125
+  },
+  {
+    "team": "Detroit Lions",
+    "stadium_name": "Ford Field",
+    "location": "Detroit, MI",
+    "decibel_average_dBA": "100-115 (peak 133.6)",
+    "elevation_feet": 600,
+    "crowd_capacity": 65000
+  },
+  {
+    "team": "Green Bay Packers",
+    "stadium_name": "Lambeau Field",
+    "location": "Green Bay, WI",
+    "decibel_average_dBA": "100-110 (estimated)",
+    "elevation_feet": 640,
+    "crowd_capacity": 81441
+  },
+  {
+    "team": "Houston Texans",
+    "stadium_name": "NRG Stadium",
+    "location": "Houston, TX",
+    "decibel_average_dBA": "90-100 (estimated)",
+    "elevation_feet": 50,
+    "crowd_capacity": 72220
+  },
+  {
+    "team": "Indianapolis Colts",
+    "stadium_name": "Lucas Oil Stadium",
+    "location": "Indianapolis, IN",
+    "decibel_average_dBA": "90-100 (estimated)",
+    "elevation_feet": 715,
+    "crowd_capacity": 67000
+  },
+  {
+    "team": "Jacksonville Jaguars",
+    "stadium_name": "EverBank Stadium",
+    "location": "Jacksonville, FL",
+    "decibel_average_dBA": "90-100 (estimated)",
+    "elevation_feet": 15,
+    "crowd_capacity": 67838
+  },
+  {
+    "team": "Kansas City Chiefs",
+    "stadium_name": "Arrowhead Stadium",
+    "location": "Kansas City, MO",
+    "decibel_average_dBA": "110-120 (peak 142.2)",
+    "elevation_feet": 750,
+    "crowd_capacity": 76416
+  },
+  {
+    "team": "Las Vegas Raiders",
+    "stadium_name": "Allegiant Stadium",
+    "location": "Paradise, NV",
+    "decibel_average_dBA": "95-105 (estimated)",
+    "elevation_feet": 2000,
+    "crowd_capacity": 65000
+  },
+  {
+    "team": "Los Angeles Chargers",
+    "stadium_name": "SoFi Stadium",
+    "location": "Inglewood, CA",
+    "decibel_average_dBA": "90-100 (estimated)",
+    "elevation_feet": 110,
+    "crowd_capacity": 70240
+  },
+  {
+    "team": "Los Angeles Rams",
+    "stadium_name": "SoFi Stadium",
+    "location": "Inglewood, CA",
+    "decibel_average_dBA": "90-100 (estimated)",
+    "elevation_feet": 110,
+    "crowd_capacity": 70240
+  },
+  {
+    "team": "Miami Dolphins",
+    "stadium_name": "Hard Rock Stadium",
+    "location": "Miami Gardens, FL",
+    "decibel_average_dBA": "90-100 (estimated)",
+    "elevation_feet": 10,
+    "crowd_capacity": 65326
+  },
+  {
+    "team": "Minnesota Vikings",
+    "stadium_name": "U.S. Bank Stadium",
+    "location": "Minneapolis, MN",
+    "decibel_average_dBA": "100-110 (estimated)",
+    "elevation_feet": 830,
+    "crowd_capacity": 66655
+  },
+  {
+    "team": "New England Patriots",
+    "stadium_name": "Gillette Stadium",
+    "location": "Foxborough, MA",
+    "decibel_average_dBA": "90-100 (estimated)",
+    "elevation_feet": 140,
+    "crowd_capacity": 66829
+  },
+  {
+    "team": "New Orleans Saints",
+    "stadium_name": "Caesars Superdome",
+    "location": "New Orleans, LA",
+    "decibel_average_dBA": "100-115 (peak 136.6)",
+    "elevation_feet": 3,
+    "crowd_capacity": 73208
+  },
+  {
+    "team": "New York Giants",
+    "stadium_name": "MetLife Stadium",
+    "location": "East Rutherford, NJ",
+    "decibel_average_dBA": "90-100 (estimated)",
+    "elevation_feet": 10,
+    "crowd_capacity": 82500
+  },
+  {
+    "team": "New York Jets",
+    "stadium_name": "MetLife Stadium",
+    "location": "East Rutherford, NJ",
+    "decibel_average_dBA": "90-100 (estimated)",
+    "elevation_feet": 10,
+    "crowd_capacity": 82500
+  },
+  {
+    "team": "Philadelphia Eagles",
+    "stadium_name": "Lincoln Financial Field",
+    "location": "Philadelphia, PA",
+    "decibel_average_dBA": "95-105 (estimated)",
+    "elevation_feet": 35,
+    "crowd_capacity": 69596
+  },
+  {
+    "team": "Pittsburgh Steelers",
+    "stadium_name": "Acrisure Stadium",
+    "location": "Pittsburgh, PA",
+    "decibel_average_dBA": "90-100 (estimated)",
+    "elevation_feet": 750,
+    "crowd_capacity": 68400
+  },
+  {
+    "team": "San Francisco 49ers",
+    "stadium_name": "Levi's Stadium",
+    "location": "Santa Clara, CA",
+    "decibel_average_dBA": "90-100 (estimated)",
+    "elevation_feet": 50,
+    "crowd_capacity": 68500
+  },
+  {
+    "team": "Seattle Seahawks",
+    "stadium_name": "Lumen Field",
+    "location": "Seattle, WA",
+    "decibel_average_dBA": "110-120 (peak 137.6)",
+    "elevation_feet": 10,
+    "crowd_capacity": 69000
+  },
+  {
+    "team": "Tampa Bay Buccaneers",
+    "stadium_name": "Raymond James Stadium",
+    "location": "Tampa, FL",
+    "decibel_average_dBA": "90-100 (estimated)",
+    "elevation_feet": 48,
+    "crowd_capacity": 69218
+  },
+  {
+    "team": "Tennessee Titans",
+    "stadium_name": "Nissan Stadium",
+    "location": "Nashville, TN",
+    "decibel_average_dBA": "90-100 (estimated)",
+    "elevation_feet": 450,
+    "crowd_capacity": 69143
+  },
+  {
+    "team": "Washington Commanders",
+    "stadium_name": "Northwest Stadium",
+    "location": "Landover, MD",
+    "decibel_average_dBA": "85-95 (estimated)",
+    "elevation_feet": 200,
+    "crowd_capacity": 62000
+  }
+]

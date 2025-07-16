@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'stadium_info_page.dart';
 
 class DiscoverPage extends StatefulWidget {
   const DiscoverPage({Key? key}) : super(key: key);
@@ -124,21 +125,30 @@ class _DiscoverPageState extends State<DiscoverPage> with TickerProviderStateMix
                 color: Colors.transparent,
                 child: InkWell(
                   onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Row(
-                          children: [
-                            Icon(tool['icon'], color: Colors.white, size: 18),
-                            const SizedBox(width: 8),
-                            Text('${tool['name']} activated'),
-                          ],
+                    if (tool['name'] == 'Stadium Info') {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const StadiumInfoPage(),
                         ),
-                        backgroundColor: tool['color'].withOpacity(0.9),
-                        behavior: SnackBarBehavior.floating,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                        margin: const EdgeInsets.all(16),
-                      ),
-                    );
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Row(
+                            children: [
+                              Icon(tool['icon'], color: Colors.white, size: 18),
+                              const SizedBox(width: 8),
+                              Text('${tool['name']} activated'),
+                            ],
+                          ),
+                          backgroundColor: tool['color'].withOpacity(0.9),
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          margin: const EdgeInsets.all(16),
+                        ),
+                      );
+                    }
                   },
                   borderRadius: BorderRadius.circular(22),
                   splashColor: tool['color'].withOpacity(0.3),

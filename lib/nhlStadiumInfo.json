@@ -1,0 +1,258 @@
+[
+  {
+    "team": "Anaheim Ducks",
+    "stadium_name": "Honda Center",
+    "location": "Anaheim, CA",
+    "decibel_average_dBA": "90-100 (estimated)",
+    "elevation_feet": 160,
+    "crowd_capacity": 17174
+  },
+  {
+    "team": "Arizona Coyotes",
+    "stadium_name": "Mullett Arena",
+    "location": "Tempe, AZ",
+    "decibel_average_dBA": "90-100 (estimated)",
+    "elevation_feet": 1150,
+    "crowd_capacity": 4600
+  },
+  {
+    "team": "Boston Bruins",
+    "stadium_name": "TD Garden",
+    "location": "Boston, MA",
+    "decibel_average_dBA": "95-105 (estimated)",
+    "elevation_feet": 20,
+    "crowd_capacity": 17850
+  },
+  {
+    "team": "Buffalo Sabres",
+    "stadium_name": "KeyBank Center",
+    "location": "Buffalo, NY",
+    "decibel_average_dBA": "90-100 (estimated)",
+    "elevation_feet": 570,
+    "crowd_capacity": 19070
+  },
+  {
+    "team": "Calgary Flames",
+    "stadium_name": "Scotiabank Saddledome",
+    "location": "Calgary, AB, Canada",
+    "decibel_average_dBA": "90-100 (estimated)",
+    "elevation_feet": 3438,
+    "crowd_capacity": 19289
+  },
+  {
+    "team": "Carolina Hurricanes",
+    "stadium_name": "PNC Arena",
+    "location": "Raleigh, NC",
+    "decibel_average_dBA": "90-100 (estimated)",
+    "elevation_feet": 380,
+    "crowd_capacity": 18680
+  },
+  {
+    "team": "Chicago Blackhawks",
+    "stadium_name": "United Center",
+    "location": "Chicago, IL",
+    "decibel_average_dBA": "95-105 (estimated, designed to amplify noise)",
+    "elevation_feet": 596,
+    "crowd_capacity": 19717
+  },
+  {
+    "team": "Colorado Avalanche",
+    "stadium_name": "Ball Arena",
+    "location": "Denver, CO",
+    "decibel_average_dBA": "95-105 (estimated)",
+    "elevation_feet": 5197,
+    "crowd_capacity": 18007
+  },
+  {
+    "team": "Columbus Blue Jackets",
+    "stadium_name": "Nationwide Arena",
+    "location": "Columbus, OH",
+    "decibel_average_dBA": "90-100 (estimated)",
+    "elevation_feet": 780,
+    "crowd_capacity": 18136
+  },
+  {
+    "team": "Dallas Stars",
+    "stadium_name": "American Airlines Center",
+    "location": "Dallas, TX",
+    "decibel_average_dBA": "90-100 (estimated)",
+    "elevation_feet": 426,
+    "crowd_capacity": 18532
+  },
+  {
+    "team": "Detroit Red Wings",
+    "stadium_name": "Little Caesars Arena",
+    "location": "Detroit, MI",
+    "decibel_average_dBA": "90-100 (estimated)",
+    "elevation_feet": 600,
+    "crowd_capacity": 19515
+  },
+  {
+    "team": "Edmonton Oilers",
+    "stadium_name": "Rogers Place",
+    "location": "Edmonton, AB, Canada",
+    "decibel_average_dBA": "95-105 (estimated)",
+    "elevation_feet": 2189,
+    "crowd_capacity": 18347
+  },
+  {
+    "team": "Florida Panthers",
+    "stadium_name": "Amerant Bank Arena",
+    "location": "Sunrise, FL",
+    "decibel_average_dBA": "90-100 (estimated, peak 130.9 reported)",
+    "elevation_feet": 10,
+    "crowd_capacity": 19250
+  },
+  {
+    "team": "Los Angeles Kings",
+    "stadium_name": "Crypto.com Arena",
+    "location": "Los Angeles, CA",
+    "decibel_average_dBA": "90-100 (estimated)",
+    "elevation_feet": 239,
+    "crowd_capacity": 18230
+  },
+  {
+    "team": "Minnesota Wild",
+    "stadium_name": "Xcel Energy Center",
+    "location": "St. Paul, MN",
+    "decibel_average_dBA": "90-100 (estimated)",
+    "elevation_feet": 760,
+    "crowd_capacity": 17954
+  },
+  {
+    "team": "Montreal Canadiens",
+    "stadium_name": "Bell Centre",
+    "location": "Montreal, QC, Canada",
+    "decibel_average_dBA": "95-105 (estimated)",
+    "elevation_feet": 110,
+    "crowd_capacity": 21105
+  },
+  {
+    "team": "Nashville Predators",
+    "stadium_name": "Bridgestone Arena",
+    "location": "Nashville, TN",
+    "decibel_average_dBA": "95-105 (estimated, peak 107 reported)",
+    "elevation_feet": 450,
+    "crowd_capacity": 17159
+  },
+  {
+    "team": "New Jersey Devils",
+    "stadium_name": "Prudential Center",
+    "location": "Newark, NJ",
+    "decibel_average_dBA": "90-100 (estimated)",
+    "elevation_feet": 30,
+    "crowd_capacity": 16514
+  },
+  {
+    "team": "New York Islanders",
+    "stadium_name": "UBS Arena",
+    "location": "Elmont, NY",
+    "decibel_average_dBA": "90-100 (estimated)",
+    "elevation_feet": 60,
+    "crowd_capacity": 17255
+  },
+  {
+    "team": "New York Rangers",
+    "stadium_name": "Madison Square Garden",
+    "location": "New York, NY",
+    "decibel_average_dBA": "95-105 (estimated)",
+    "elevation_feet": 35,
+    "crowd_capacity": 18000
+  },
+  {
+    "team": "Ottawa Senators",
+    "stadium_name": "Canadian Tire Centre",
+    "location": "Ottawa, ON, Canada",
+    "decibel_average_dBA": "85-95 (estimated)",
+    "elevation_feet": 220,
+    "crowd_capacity": 18652
+  },
+  {
+    "team": "Philadelphia Flyers",
+    "stadium_name": "Wells Fargo Center",
+    "location": "Philadelphia, PA",
+    "decibel_average_dBA": "90-100 (estimated)",
+    "elevation_feet": 35,
+    "crowd_capacity": 19543
+  },
+  {
+    "team": "Pittsburgh Penguins",
+    "stadium_name": "PPG Paints Arena",
+    "location": "Pittsburgh, PA",
+    "decibel_average_dBA": "90-100 (estimated)",
+    "elevation_feet": 750,
+    "crowd_capacity": 18387
+  },
+  {
+    "team": "San Jose Sharks",
+    "stadium_name": "SAP Center at San Jose",
+    "location": "San Jose, CA",
+    "decibel_average_dBA": "90-100 (estimated)",
+    "elevation_feet": 60,
+    "crowd_capacity": 17562
+  },
+  {
+    "team": "Seattle Kraken",
+    "stadium_name": "Climate Pledge Arena",
+    "location": "Seattle, WA",
+    "decibel_average_dBA": "90-100 (estimated)",
+    "elevation_feet": 10,
+    "crowd_capacity": 17100
+  },
+  {
+    "team": "St. Louis Blues",
+    "stadium_name": "Enterprise Center",
+    "location": "St. Louis, MO",
+    "decibel_average_dBA": "90-100 (estimated)",
+    "elevation_feet": 465,
+    "crowd_capacity": 18096
+  },
+  {
+    "team": "Tampa Bay Lightning",
+    "stadium_name": "Amalie Arena",
+    "location": "Tampa, FL",
+    "decibel_average_dBA": "90-100 (estimated)",
+    "elevation_feet": 48,
+    "crowd_capacity": 19092
+  },
+  {
+    "team": "Toronto Maple Leafs",
+    "stadium_name": "Scotiabank Arena",
+    "location": "Toronto, ON, Canada",
+    "decibel_average_dBA": "95-105 (estimated)",
+    "elevation_feet": 247,
+    "crowd_capacity": 18819
+  },
+  {
+    "team": "Vancouver Canucks",
+    "stadium_name": "Rogers Arena",
+    "location": "Vancouver, BC, Canada",
+    "decibel_average_dBA": "90-100 (estimated)",
+    "elevation_feet": 30,
+    "crowd_capacity": 18910
+  },
+  {
+    "team": "Vegas Golden Knights",
+    "stadium_name": "T-Mobile Arena",
+    "location": "Paradise, NV",
+    "decibel_average_dBA": "100-110 (estimated)",
+    "elevation_feet": 2000,
+    "crowd_capacity": 17500
+  },
+  {
+    "team": "Washington Capitals",
+    "stadium_name": "Capital One Arena",
+    "location": "Washington, D.C.",
+    "decibel_average_dBA": "90-100 (estimated)",
+    "elevation_feet": 46,
+    "crowd_capacity": 18573
+  },
+  {
+    "team": "Winnipeg Jets",
+    "stadium_name": "Canada Life Centre",
+    "location": "Winnipeg, MB, Canada",
+    "decibel_average_dBA": "90-100 (estimated)",
+    "elevation_feet": 760,
+    "crowd_capacity": 15321
+  }
+]

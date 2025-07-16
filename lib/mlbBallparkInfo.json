@@ -1,0 +1,242 @@
+[
+  {
+    "team": "Arizona Diamondbacks",
+    "stadium_name": "Chase Field",
+    "location": "Phoenix, AZ",
+    "decibel_average_dBA": "83",
+    "elevation_feet": 1082,
+    "crowd_capacity": 48405
+  },
+  {
+    "team": "Atlanta Braves",
+    "stadium_name": "Truist Park",
+    "location": "Cumberland, GA",
+    "decibel_average_dBA": "95",
+    "elevation_feet": 939,
+    "crowd_capacity": 41149
+  },
+  {
+    "team": "Baltimore Orioles",
+    "stadium_name": "Oriole Park at Camden Yards",
+    "location": "Baltimore, MD",
+    "decibel_average_dBA": "78",
+    "elevation_feet": 130,
+    "crowd_capacity": 44970
+  },
+  {
+    "team": "Boston Red Sox",
+    "stadium_name": "Fenway Park",
+    "location": "Boston, MA",
+    "decibel_average_dBA": "91",
+    "elevation_feet": 20,
+    "crowd_capacity": 39928
+  },
+  {
+    "team": "Chicago Cubs",
+    "stadium_name": "Wrigley Field",
+    "location": "Chicago, IL",
+    "decibel_average_dBA": "91",
+    "elevation_feet": 596,
+    "crowd_capacity": 41160
+  },
+  {
+    "team": "Chicago White Sox",
+    "stadium_name": "Guaranteed Rate Field",
+    "location": "Chicago, IL",
+    "decibel_average_dBA": "80-90 (estimated)",
+    "elevation_feet": 596,
+    "crowd_capacity": 40615
+  },
+  {
+    "team": "Cincinnati Reds",
+    "stadium_name": "Great American Ball Park",
+    "location": "Cincinnati, OH",
+    "decibel_average_dBA": "85",
+    "elevation_feet": 683,
+    "crowd_capacity": 42941
+  },
+  {
+    "team": "Cleveland Guardians",
+    "stadium_name": "Progressive Field",
+    "location": "Cleveland, OH",
+    "decibel_average_dBA": "80-90 (estimated)",
+    "elevation_feet": 582,
+    "crowd_capacity": 34830
+  },
+  {
+    "team": "Colorado Rockies",
+    "stadium_name": "Coors Field",
+    "location": "Denver, CO",
+    "decibel_average_dBA": "80",
+    "elevation_feet": 5183,
+    "crowd_capacity": 46897
+  },
+  {
+    "team": "Detroit Tigers",
+    "stadium_name": "Comerica Park",
+    "location": "Detroit, MI",
+    "decibel_average_dBA": "80-90 (estimated)",
+    "elevation_feet": 596,
+    "crowd_capacity": 40950
+  },
+  {
+    "team": "Houston Astros",
+    "stadium_name": "Minute Maid Park",
+    "location": "Houston, TX",
+    "decibel_average_dBA": "80-90 (estimated)",
+    "elevation_feet": 38,
+    "crowd_capacity": 41168
+  },
+  {
+    "team": "Kansas City Royals",
+    "stadium_name": "Kauffman Stadium",
+    "location": "Kansas City, MO",
+    "decibel_average_dBA": "80-90 (estimated, peak 101.1)",
+    "elevation_feet": 750,
+    "crowd_capacity": 38030
+  },
+  {
+    "team": "Los Angeles Angels",
+    "stadium_name": "Angel Stadium of Anaheim",
+    "location": "Anaheim, CA",
+    "decibel_average_dBA": "80-90 (estimated)",
+    "elevation_feet": 160,
+    "crowd_capacity": 45517
+  },
+  {
+    "team": "Los Angeles Dodgers",
+    "stadium_name": "Dodger Stadium",
+    "location": "Los Angeles, CA",
+    "decibel_average_dBA": "84",
+    "elevation_feet": 267,
+    "crowd_capacity": 56000
+  },
+  {
+    "team": "Miami Marlins",
+    "stadium_name": "loanDepot Park",
+    "location": "Miami, FL",
+    "decibel_average_dBA": "83",
+    "elevation_feet": 15,
+    "crowd_capacity": 36742
+  },
+  {
+    "team": "Milwaukee Brewers",
+    "stadium_name": "American Family Field",
+    "location": "Milwaukee, WI",
+    "decibel_average_dBA": "80-90 (estimated)",
+    "elevation_feet": 593,
+    "crowd_capacity": 41900
+  },
+  {
+    "team": "Minnesota Twins",
+    "stadium_name": "Target Field",
+    "location": "Minneapolis, MN",
+    "decibel_average_dBA": "80-90 (estimated)",
+    "elevation_feet": 812,
+    "crowd_capacity": 39504
+  },
+  {
+    "team": "New York Mets",
+    "stadium_name": "Citi Field",
+    "location": "Queens, NY",
+    "decibel_average_dBA": "87",
+    "elevation_feet": 54,
+    "crowd_capacity": 41800
+  },
+  {
+    "team": "New York Yankees",
+    "stadium_name": "Yankee Stadium",
+    "location": "Bronx, NY",
+    "decibel_average_dBA": "87",
+    "elevation_feet": 54,
+    "crowd_capacity": 46537
+  },
+  {
+    "team": "Oakland Athletics",
+    "stadium_name": "Oakland Coliseum",
+    "location": "Oakland, CA",
+    "decibel_average_dBA": "80-90 (estimated)",
+    "elevation_feet": 42,
+    "crowd_capacity": 46847
+  },
+  {
+    "team": "Philadelphia Phillies",
+    "stadium_name": "Citizens Bank Park",
+    "location": "Philadelphia, PA",
+    "decibel_average_dBA": "83 (peak 111)",
+    "elevation_feet": 9,
+    "crowd_capacity": 43500
+  },
+  {
+    "team": "Pittsburgh Pirates",
+    "stadium_name": "PNC Park",
+    "location": "Pittsburgh, PA",
+    "decibel_average_dBA": "80-90 (estimated)",
+    "elevation_feet": 743,
+    "crowd_capacity": 38496
+  },
+  {
+    "team": "San Diego Padres",
+    "stadium_name": "Petco Park",
+    "location": "San Diego, CA",
+    "decibel_average_dBA": "96",
+    "elevation_feet": 13,
+    "crowd_capacity": 39860
+  },
+  {
+    "team": "San Francisco Giants",
+    "stadium_name": "Oracle Park",
+    "location": "San Francisco, CA",
+    "decibel_average_dBA": "83",
+    "elevation_feet": 63,
+    "crowd_capacity": 42300
+  },
+  {
+    "team": "Seattle Mariners",
+    "stadium_name": "T-Mobile Park",
+    "location": "Seattle, WA",
+    "decibel_average_dBA": "92",
+    "elevation_feet": 10,
+    "crowd_capacity": 47929
+  },
+  {
+    "team": "St. Louis Cardinals",
+    "stadium_name": "Busch Stadium",
+    "location": "St. Louis, MO",
+    "decibel_average_dBA": "95",
+    "elevation_feet": 455,
+    "crowd_capacity": 44383
+  },
+  {
+    "team": "Tampa Bay Rays",
+    "stadium_name": "Tropicana Field",
+    "location": "St. Petersburg, FL",
+    "decibel_average_dBA": "80-90 (estimated)",
+    "elevation_feet": 44,
+    "crowd_capacity": 25000
+  },
+  {
+    "team": "Texas Rangers",
+    "stadium_name": "Globe Life Field",
+    "location": "Arlington, TX",
+    "decibel_average_dBA": "90",
+    "elevation_feet": 616,
+    "crowd_capacity": 40300
+  },
+  {
+    "team": "Toronto Blue Jays",
+    "stadium_name": "Rogers Centre",
+    "location": "Toronto, ON, Canada",
+    "decibel_average_dBA": "90-100 (estimated)",
+    "elevation_feet": 247,
+    "crowd_capacity": 39150
+  },
+  {
+    "team": "Washington Nationals",
+    "stadium_name": "Nationals Park",
+    "location": "Washington, D.C.",
+    "decibel_average_dBA": "87",
+    "elevation_feet": 25,
+    "crowd_capacity": 41888
+  }
+]
