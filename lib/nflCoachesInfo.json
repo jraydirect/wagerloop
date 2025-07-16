@@ -1,0 +1,352 @@
+[
+  {
+    "team": "Arizona Cardinals",
+    "head_coach": "Jonathan Gannon",
+    "age": "42 (as of July 16, 2025)",
+    "years_coaching": "Approx. 3 NFL seasons as head coach (started 2023)",
+    "accomplishments": [
+      "Building a foundation for a young team"
+    ],
+    "play_style": "Defense-first approach, emphasizing aggressive fronts and versatile secondary play. Offensively, aims to utilize speed and create explosive plays, adapting to quarterback strengths."
+  },
+  {
+    "team": "Atlanta Falcons",
+    "head_coach": "Raheem Morris",
+    "age": "48 (as of July 16, 2025)",
+    "years_coaching": "Approx. 5 NFL seasons as head coach (stints with Bucs, Falcons, Commanders)",
+    "accomplishments": [
+      "NFC Champion as assistant coach (Rams 2021)",
+      "Highly respected defensive coordinator"
+    ],
+    "play_style": "Known for building strong defensive units with energy and intensity. Offensively, likely to emphasize a balanced attack with a strong run game and efficient passing."
+  },
+  {
+    "team": "Baltimore Ravens",
+    "head_coach": "John Harbaugh",
+    "age": "62 (as of July 16, 2025)",
+    "years_coaching": "Approx. 18 NFL seasons as head coach (started 2008)",
+    "accomplishments": [
+      "Super Bowl XLVII Champion",
+      "Multiple AFC North titles and playoff appearances",
+      "Known for consistent competitiveness"
+    ],
+    "play_style": "Physical, run-heavy offense with a strong emphasis on disciplined and aggressive defense. Adapts well to quarterback strengths, known for strong special teams play and culture."
+  },
+  {
+    "team": "Buffalo Bills",
+    "head_coach": "Sean McDermott",
+    "age": "51 (as of July 16, 2025)",
+    "years_coaching": "Approx. 9 NFL seasons as head coach (started 2017)",
+    "accomplishments": [
+      "Multiple AFC East titles and playoff appearances",
+      "Built a perennial contender"
+    ],
+    "play_style": "Defensive-minded coach emphasizing disciplined, fundamental defense. Offensively, prioritizes quarterback strengths and a balanced attack, often utilizing RPOs and explosive passing plays."
+  },
+  {
+    "team": "Carolina Panthers",
+    "head_coach": "Dave Canales",
+    "age": "43 (as of July 16, 2025)",
+    "years_coaching": "1 NFL season as head coach (2024 will be his first full season)",
+    "accomplishments": [
+      "Instrumental in developing quarterbacks (Russell Wilson, Geno Smith, Baker Mayfield) as coordinator"
+    ],
+    "play_style": "As a first-time head coach, his style will emerge, but based on his background, expect an offense focused on quarterback development, efficient passing, and leveraging play-action and RPOs. Likely to build a tough, competitive team."
+  },
+  {
+    "team": "Chicago Bears",
+    "head_coach": "Ben Johnson",
+    "age": "38 (as of July 16, 2025)",
+    "years_coaching": "1 NFL season as head coach (2024 will be his first full season)",
+    "accomplishments": [
+      "Highly successful offensive coordinator with Detroit Lions, transforming their offense"
+    ],
+    "play_style": "Expected to bring an innovative, modern offensive approach focusing on pre-snap motion, creative play-calling, and maximizing quarterback and play-maker talent. Aims for a disciplined, aggressive team."
+  },
+  {
+    "team": "Cincinnati Bengals",
+    "head_coach": "Zac Taylor",
+    "age": "41 (as of July 16, 2025)",
+    "years_coaching": "Approx. 7 NFL seasons as head coach (started 2019)",
+    "accomplishments": [
+      "AFC Champion (2021)",
+      "Led Bengals to Super Bowl LVI"
+    ],
+    "play_style": "Offensive-minded coach, known for building strong relationships with players. Emphasizes modern passing concepts, spread formations, and a complementary run game. Focuses on poise and execution in critical moments."
+  },
+  {
+    "team": "Cleveland Browns",
+    "head_coach": "Kevin Stefanski",
+    "age": "43 (as of July 16, 2025)",
+    "years_coaching": "Approx. 6 NFL seasons as head coach (started 2020)",
+    "accomplishments": [
+      "AP NFL Coach of the Year (2020)",
+      "Led Browns to playoff appearance, ending long drought"
+    ],
+    "play_style": "Run-heavy offensive scheme, often utilizing play-action and multiple tight end sets. Emphasizes strong offensive line play and disciplined, physical defense."
+  },
+  {
+    "team": "Dallas Cowboys",
+    "head_coach": "Brian Schottenheimer",
+    "age": "51 (as of July 16, 2025)",
+    "years_coaching": "1 NFL season as head coach (2024 will be his first full season)",
+    "accomplishments": [
+      "Long-time offensive coordinator with NFL experience"
+    ],
+    "play_style": "As a first-time head coach, his style will evolve, but historically, his offensive units have been run-oriented with strong passing game complements. Expect a focus on discipline and maximizing veteran talent."
+  },
+  {
+    "team": "Denver Broncos",
+    "head_coach": "Sean Payton",
+    "age": "61 (as of July 16, 2025)",
+    "years_coaching": "Approx. 18 NFL seasons as head coach (started 2006 with Saints)",
+    "accomplishments": [
+      "Super Bowl XLIV Champion (Saints)",
+      "AP NFL Coach of the Year (2006)",
+      "Known for offensive innovation and developing quarterbacks"
+    ],
+    "play_style": "Highly influential offensive mind, known for complex, precise passing schemes and leveraging mismatches. Values disciplined defense and strong special teams. Adapts to his quarterback's strengths."
+  },
+  {
+    "team": "Detroit Lions",
+    "head_coach": "Dan Campbell",
+    "age": "49 (as of July 16, 2025)",
+    "years_coaching": "Approx. 4 NFL seasons as head coach (started 2021)",
+    "accomplishments": [
+      "Led Lions to first division title in 30 years and NFC Championship appearance"
+    ],
+    "play_style": "Physical, hard-nosed, and aggressive. Emphasizes a strong running game, play-action, and a relentless defensive effort. Known for his motivational leadership and fostering a tough, competitive culture."
+  },
+  {
+    "team": "Green Bay Packers",
+    "head_coach": "Matt LaFleur",
+    "age": "45 (as of July 16, 2025)",
+    "years_coaching": "Approx. 7 NFL seasons as head coach (started 2019)",
+    "accomplishments": [
+      "Multiple NFC North titles",
+      "Reached NFC Championship games",
+      "Successfully transitioned team from Hall of Fame QB to new era"
+    ],
+    "play_style": "Offensive innovator known for a run-heavy play-action attack. Emphasizes spacing, motion, and quarterback efficiency. Aims for a disciplined, complementary defense."
+  },
+  {
+    "team": "Houston Texans",
+    "head_coach": "DeMeco Ryans",
+    "age": "40 (as of July 16, 2025)",
+    "years_coaching": "Approx. 3 NFL seasons as head coach (started 2023)",
+    "accomplishments": [
+      "Led Texans to surprising division title and playoff appearance in first season"
+    ],
+    "play_style": "Defensive-minded coach, known for an aggressive, fast, and physical defense. Offensively, fosters a dynamic scheme that leverages quarterback talent and play-making receivers."
+  },
+  {
+    "team": "Indianapolis Colts",
+    "head_coach": "Shane Steichen",
+    "age": "39 (as of July 16, 2025)",
+    "years_coaching": "Approx. 3 NFL seasons as head coach (started 2023)",
+    "accomplishments": [
+      "Instrumental in Jalen Hurts' development as Eagles OC",
+      "Guided Colts to competitive season despite QB injury"
+    ],
+    "play_style": "Offensive-focused, known for tailoring schemes to quarterback strengths, utilizing RPOs, and a strong run game. Emphasizes situational football and offensive efficiency."
+  },
+  {
+    "team": "Jacksonville Jaguars",
+    "head_coach": "Liam Coen",
+    "age": "39 (as of July 16, 2025)",
+    "years_coaching": "1 NFL season as head coach (2024 will be his first full season)",
+    "accomplishments": [
+      "Experience as offensive coordinator in NFL and NCAA"
+    ],
+    "play_style": "As a first-time head coach, his style will develop, but he's known for offensive schemes that leverage quarterback talent and a diverse passing attack. Focuses on player development and a modern approach."
+  },
+  {
+    "team": "Kansas City Chiefs",
+    "head_coach": "Andy Reid",
+    "age": "66 (as of July 16, 2025)",
+    "years_coaching": "Approx. 27 NFL seasons as head coach (started 1999 with Eagles)",
+    "accomplishments": [
+      "3x Super Bowl Champion (Chiefs)",
+      "AP NFL Coach of the Year (2002)",
+      "Multiple Conference Championships and Division titles",
+      "One of the winningest coaches in NFL history"
+    ],
+    "play_style": "Offensive mastermind, known for innovative play-calling, diverse offensive schemes, and maximizing quarterback talent. Adapts his system to his personnel. Emphasizes strong preparation and situational football."
+  },
+  {
+    "team": "Las Vegas Raiders",
+    "head_coach": "Pete Carroll",
+    "age": "73 (as of July 16, 2025)",
+    "years_coaching": "Approx. 19 NFL seasons as head coach (stints with Jets, Patriots, Seahawks)",
+    "accomplishments": [
+      "Super Bowl XLVIII Champion (Seahawks)",
+      "Known for building strong team cultures and defensive identities"
+    ],
+    "play_style": "Emphasizes a run-first offensive approach and an aggressive, ball-hawking defense. Known for his positive energy, player-friendly approach, and focus on competition."
+  },
+  {
+    "team": "Los Angeles Chargers",
+    "head_coach": "Jim Harbaugh",
+    "age": "61 (as of July 16, 2025)",
+    "years_coaching": "Approx. 5 NFL seasons as head coach (started 2011 with 49ers)",
+    "accomplishments": [
+      "Led 49ers to Super Bowl XLVII",
+      "Highly successful college coach (Michigan National Champion)",
+      "Known for quickly turning around programs"
+    ],
+    "play_style": "Physical, run-heavy offense emphasizing strong offensive line play and disciplined execution. Demands a tough, aggressive defense. Known for his intense, competitive nature and ability to instill a winning mindset."
+  },
+  {
+    "team": "Los Angeles Rams",
+    "head_coach": "Sean McVay",
+    "age": "39 (as of July 16, 2025)",
+    "years_coaching": "Approx. 9 NFL seasons as head coach (started 2017)",
+    "accomplishments": [
+      "Super Bowl LVI Champion",
+      "AP NFL Coach of the Year (2017)",
+      "Youngest head coach to win a Super Bowl"
+    ],
+    "play_style": "Offensive innovator known for creative play designs, motion, and leveraging mismatches. Emphasizes a balanced attack with both run and pass concepts. Known for high energy and detailed preparation."
+  },
+  {
+    "team": "Miami Dolphins",
+    "head_coach": "Mike McDaniel",
+    "age": "42 (as of July 16, 2025)",
+    "years_coaching": "Approx. 4 NFL seasons as head coach (started 2022)",
+    "accomplishments": [
+      "Known for developing an explosive, speed-based offensive attack"
+    ],
+    "play_style": "Innovative offensive mind, heavily influenced by the Shanahan system. Emphasizes creative run schemes, play-action, and leveraging speed and athleticism in the passing game. Aims for a fast, disciplined defense."
+  },
+  {
+    "team": "Minnesota Vikings",
+    "head_coach": "Kevin O'Connell",
+    "age": "39 (as of July 16, 2025)",
+    "years_coaching": "Approx. 4 NFL seasons as head coach (started 2022)",
+    "accomplishments": [
+      "Super Bowl LVI Champion as Rams OC",
+      "Led Vikings to division title in first year"
+    ],
+    "play_style": "Offensive-focused coach who tailors his scheme to the quarterback's strengths. Emphasizes a modern, pass-heavy attack with good spacing and efficient play. Fosters a positive and collaborative environment."
+  },
+  {
+    "team": "New England Patriots",
+    "head_coach": "Mike Vrabel",
+    "age": "49 (as of July 16, 2025)",
+    "years_coaching": "Approx. 7 NFL seasons as head coach (started 2018 with Titans)",
+    "accomplishments": [
+      "AP NFL Coach of the Year (2021)",
+      "Led Titans to multiple playoff appearances and AFC Championship game"
+    ],
+    "play_style": "Known for building tough, physical, and disciplined teams. Emphasizes a strong running game, effective play-action, and an aggressive, hard-nosed defense. Instills a demanding culture."
+  },
+  {
+    "team": "New Orleans Saints",
+    "head_coach": "Kellen Moore",
+    "age": "36 (as of July 16, 2025)",
+    "years_coaching": "1 NFL season as head coach (2024 will be his first full season)",
+    "accomplishments": [
+      "Highly respected offensive coordinator with diverse experience"
+    ],
+    "play_style": "As a first-time head coach, his full style is TBD, but known for aggressive, pass-heavy offensive schemes that aim to create explosive plays. Expect a focus on maximizing quarterback talent and an adaptable offensive philosophy."
+  },
+  {
+    "team": "New York Giants",
+    "head_coach": "Brian Daboll",
+    "age": "49 (as of July 16, 2025)",
+    "years_coaching": "Approx. 4 NFL seasons as head coach (started 2022)",
+    "accomplishments": [
+      "AP NFL Coach of the Year (2022)",
+      "Led Giants to first playoff win in a decade"
+    ],
+    "play_style": "Known for his energetic and demanding coaching style. Offensively, he tailors the scheme to his personnel, often utilizing RPOs and a strong running game. Emphasizes physicality and competitiveness on defense."
+  },
+  {
+    "team": "New York Jets",
+    "head_coach": "Aaron Glenn",
+    "age": "52 (as of July 16, 2025)",
+    "years_coaching": "1 NFL season as head coach (2024 will be his first full season)",
+    "accomplishments": [
+      "Successful defensive coordinator with Detroit Lions, built an aggressive unit"
+    ],
+    "play_style": "As a first-time head coach, his full style is TBD, but expected to bring a highly aggressive, attacking defensive philosophy. Will likely emphasize player accountability and a strong, competitive culture."
+  },
+  {
+    "team": "Philadelphia Eagles",
+    "head_coach": "Nick Sirianni",
+    "age": "44 (as of July 16, 2025)",
+    "years_coaching": "Approx. 4 NFL seasons as head coach (started 2021)",
+    "accomplishments": [
+      "NFC Champion (2022)",
+      "Led Eagles to Super Bowl LVII"
+    ],
+    "play_style": "Offensive-focused, emphasizes a strong running game, RPOs, and vertical passing. Known for his motivational style and fostering a positive team culture. Aims for an opportunistic defense."
+  },
+  {
+    "team": "Pittsburgh Steelers",
+    "head_coach": "Mike Tomlin",
+    "age": "53 (as of July 16, 2025)",
+    "years_coaching": "Approx. 19 NFL seasons as head coach (started 2007)",
+    "accomplishments": [
+      "Super Bowl XLIII Champion",
+      "Never had a losing season as head coach",
+      "One of the longest-tenured and most respected coaches"
+    ],
+    "play_style": "Defensive-minded coach known for aggressive, physical defense and a commitment to running the ball. Emphasizes toughness, accountability, and strong leadership. His teams are often well-prepared and disciplined."
+  },
+  {
+    "team": "San Francisco 49ers",
+    "head_coach": "Kyle Shanahan",
+    "age": "45 (as of July 16, 2025)",
+    "years_coaching": "Approx. 9 NFL seasons as head coach (started 2017)",
+    "accomplishments": [
+      "2x NFC Champion",
+      "Led 49ers to multiple Super Bowl appearances and NFC Championship games",
+      "One of the league's top offensive minds"
+    ],
+    "play_style": "Offensive genius, known for his intricate, run-heavy scheme (outside zone) that creates explosive play-action opportunities. Emphasizes versatility and precise execution. Aims for a fast, disciplined, and physical defense."
+  },
+  {
+    "team": "Seattle Seahawks",
+    "head_coach": "Mike Macdonald",
+    "age": "37 (as of July 16, 2025)",
+    "years_coaching": "Approx. 2 NFL seasons as head coach (started 2024)",
+    "accomplishments": [
+      "Led one of the NFL's top defenses as Baltimore Ravens DC"
+    ],
+    "play_style": "Expected to bring an innovative, aggressive, and versatile defensive scheme to Seattle. Will focus on creating pressure and disrupting opposing offenses. Offensively, will likely adapt to personnel, emphasizing efficiency and capitalizing on strengths."
+  },
+  {
+    "team": "Tampa Bay Buccaneers",
+    "head_coach": "Todd Bowles",
+    "age": "61 (as of July 16, 2025)",
+    "years_coaching": "Approx. 8 NFL seasons as head coach (stints with Jets, Buccaneers)",
+    "accomplishments": [
+      "Super Bowl LV Champion as Bucs DC",
+      "Led Buccaneers to division titles"
+    ],
+    "play_style": "Defensive-minded coach known for his aggressive, blitz-heavy schemes. Emphasizes creating turnovers and disrupting opposing quarterbacks. Offensively, often builds around strong offensive line play and versatile skill players."
+  },
+  {
+    "team": "Tennessee Titans",
+    "head_coach": "Brian Callahan",
+    "age": "40 (as of July 16, 2025)",
+    "years_coaching": "Approx. 2 NFL seasons as head coach (started 2024)",
+    "accomplishments": [
+      "Successful offensive coordinator with Cincinnati Bengals, helped develop Joe Burrow"
+    ],
+    "play_style": "Expected to bring a modern, pass-heavy offensive approach, emphasizing quarterback development, efficient throws, and leveraging receiving talent. Will aim to build a disciplined and competitive team."
+  },
+  {
+    "team": "Washington Commanders",
+    "head_coach": "Dan Quinn",
+    "age": "54 (as of July 16, 2025)",
+    "years_coaching": "Approx. 8 NFL seasons as head coach (started 2015 with Falcons)",
+    "accomplishments": [
+      "NFC Champion (2016)",
+      "Led Falcons to Super Bowl LI",
+      "Highly respected defensive coordinator (2x Super Bowl as DC)"
+    ],
+    "play_style": "Defensive-minded coach who emphasizes speed, physicality, and relentless effort on defense. Promotes a strong team culture and accountability. Offensively, often seeks a balanced attack with strong run principles."
+  }
+]

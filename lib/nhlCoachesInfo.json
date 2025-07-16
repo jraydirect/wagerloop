@@ -1,0 +1,357 @@
+[
+  {
+    "team": "Anaheim Ducks",
+    "head_coach": "Joel Quenneville",
+    "age": "66 (as of July 16, 2025)",
+    "years_coaching": "Approx. 27 NHL seasons (started 1996)",
+    "accomplishments": [
+      "3x Stanley Cup Champion (Chicago Blackhawks)",
+      "2nd all-time in NHL coaching wins",
+      "Jack Adams Award (2000)"
+    ],
+    "play_style": "Veteran coach known for demanding accountability, strong defensive systems, and getting the most out of his star players. Adapts to his roster, often focusing on responsible two-way play."
+  },
+  {
+    "team": "Arizona Coyotes",
+    "head_coach": "Andre Tourigny",
+    "age": "50 (as of July 16, 2025)",
+    "years_coaching": "Approx. 4 NHL seasons (started 2021)",
+    "accomplishments": [
+      "Guiding a rebuilding team and developing young talent"
+    ],
+    "play_style": "Emphasizes hard work, structure, and player development. Aims for an aggressive forecheck and a resilient defensive system, fostering a competitive mindset."
+  },
+  {
+    "team": "Boston Bruins",
+    "head_coach": "Marco Sturm",
+    "age": "46 (as of July 16, 2025)",
+    "years_coaching": "1 NHL season (2024-25 will be his first full season)",
+    "accomplishments": [
+      "Successful assistant coach with the Boston Bruins",
+      "Highly respected former NHL player"
+    ],
+    "play_style": "As a first-time head coach, his style will develop, but likely to emphasize strong fundamentals, disciplined play, and a modern approach to offense and defense, drawing from his experience with the organization."
+  },
+  {
+    "team": "Buffalo Sabres",
+    "head_coach": "Lindy Ruff",
+    "age": "65 (as of July 16, 2025)",
+    "years_coaching": "Approx. 26 NHL seasons (started 1997)",
+    "accomplishments": [
+      "Jack Adams Award (2006)",
+      "Led multiple teams to playoff success",
+      "Longest-tenured coach in Sabres history"
+    ],
+    "play_style": "Known for demanding an aggressive forecheck, strong defensive commitment, and a high-tempo offensive game. Emphasizes accountability and a relentless work ethic."
+  },
+  {
+    "team": "Calgary Flames",
+    "head_coach": "Ryan Huska",
+    "age": "49 (as of July 16, 2025)",
+    "years_coaching": "Approx. 2 NHL seasons (started 2023)",
+    "accomplishments": [
+      "Extensive coaching experience in the AHL and as an NHL assistant"
+    ],
+    "play_style": "Focuses on structure, commitment to defense, and a strong work ethic. Aims for a disciplined team that plays with pace and competes hard."
+  },
+  {
+    "team": "Carolina Hurricanes",
+    "head_coach": "Rod Brind'Amour",
+    "age": "55 (as of July 16, 2025)",
+    "years_coaching": "Approx. 8 NHL seasons (started 2018)",
+    "accomplishments": [
+      "Jack Adams Award (2021)",
+      "Led Hurricanes to multiple deep playoff runs and division titles",
+      "Known for intense fitness and player accountability"
+    ],
+    "play_style": "Demands an extremely high-tempo, aggressive forechecking game with relentless puck pressure. Emphasizes fitness, structured defense, and a high volume of shots on goal."
+  },
+  {
+    "team": "Chicago Blackhawks",
+    "head_coach": "Jeff Blashill",
+    "age": "51 (as of July 16, 2025)",
+    "years_coaching": "Approx. 8 NHL seasons (started 2015)",
+    "accomplishments": [
+      "Calder Cup Champion (AHL)",
+      "Experience guiding rebuilding teams"
+    ],
+    "play_style": "Focuses on player development, structure, and establishing strong defensive habits. Aims for a disciplined team that buys into the system, adapting offense to talent."
+  },
+  {
+    "team": "Colorado Avalanche",
+    "head_coach": "Jared Bednar",
+    "age": "53 (as of July 16, 2025)",
+    "years_coaching": "Approx. 10 NHL seasons (started 2016)",
+    "accomplishments": [
+      "2022 Stanley Cup Champion",
+      "Calder Cup Champion (AHL), Kelly Cup Champion (ECHL)"
+    ],
+    "play_style": "High-octane, fast-paced offensive attack driven by skill and transition. Emphasizes aggressive puck pursuit and a tenacious forecheck, while fostering a strong winning culture."
+  },
+  {
+    "team": "Columbus Blue Jackets",
+    "head_coach": "Dean Evason",
+    "age": "60 (as of July 16, 2025)",
+    "years_coaching": "Approx. 6 NHL seasons (started 2020)",
+    "accomplishments": [
+      "Guided Minnesota Wild to playoff appearances"
+    ],
+    "play_style": "Known for demanding a relentless, hard-working, and physical game. Emphasizes strong defensive zone play, aggressive forechecking, and a competitive spirit."
+  },
+  {
+    "team": "Dallas Stars",
+    "head_coach": "Glen Gulutzan",
+    "age": "53 (as of July 16, 2025)",
+    "years_coaching": "Approx. 7 NHL seasons (stints with Dallas, Calgary)",
+    "accomplishments": [
+      "Experience as an NHL head coach and assistant coach with successful teams"
+    ],
+    "play_style": "Known for his focus on structure, attention to detail, and a disciplined defensive game. Aims for a responsible two-way team, leveraging offensive talent effectively."
+  },
+  {
+    "team": "Detroit Red Wings",
+    "head_coach": "Todd McLellan",
+    "age": "57 (as of July 16, 2025)",
+    "years_coaching": "Approx. 17 NHL seasons (started 2008)",
+    "accomplishments": [
+      "Guided multiple teams to playoff success (Sharks, Oilers, Kings)",
+      "Experienced coach in various stages of team building"
+    ],
+    "play_style": "Emphasizes a structured, up-tempo game with a focus on puck possession and offensive zone time. Known for developing players and implementing clear systems."
+  },
+  {
+    "team": "Edmonton Oilers",
+    "head_coach": "Kris Knoblauch",
+    "age": "45 (as of July 16, 2025)",
+    "years_coaching": "Approx. 2 NHL seasons (started 2023)",
+    "accomplishments": [
+      "Led Oilers to Stanley Cup Final after mid-season hire",
+      "Memorial Cup Champion (WHL)"
+    ],
+    "play_style": "Leverages the team's elite offensive talent, promoting a fast-paced, high-skill game. Focuses on special teams, puck control, and allowing stars to generate offense while improving defensive commitment."
+  },
+  {
+    "team": "Florida Panthers",
+    "head_coach": "Paul Maurice",
+    "age": "58 (as of July 16, 2025)",
+    "years_coaching": "Approx. 29 NHL seasons (started 1995)",
+    "accomplishments": [
+      "2024 Stanley Cup Champion",
+      "Reached Stanley Cup Final multiple times",
+      "One of the longest-tenured and most experienced coaches in NHL history"
+    ],
+    "play_style": "Known for his demanding but fair approach, emphasizing a physical, aggressive forecheck and disciplined defensive play. Adapts to his roster, often fostering a resilient and gritty team."
+  },
+  {
+    "team": "Los Angeles Kings",
+    "head_coach": "Jim Hiller",
+    "age": "55 (as of July 16, 2025)",
+    "years_coaching": "Approx. 2 NHL seasons (started 2024 as interim, then permanent)",
+    "accomplishments": [
+      "Led Kings to a strong finish and playoff appearance after mid-season hire"
+    ],
+    "play_style": "Emphasizes a strong defensive foundation, responsible two-way play, and an organized structure. Aims to improve offensive consistency and special teams effectiveness."
+  },
+  {
+    "team": "Minnesota Wild",
+    "head_coach": "John Hynes",
+    "age": "49 (as of July 16, 2025)",
+    "years_coaching": "Approx. 9 NHL seasons (started 2015)",
+    "accomplishments": [
+      "Guided multiple teams to playoff contention"
+    ],
+    "play_style": "Known for a structured, up-tempo game with an emphasis on speed and forechecking. Demands strong defensive play and accountability from his players."
+  },
+  {
+    "team": "Montreal Canadiens",
+    "head_coach": "Martin St. Louis",
+    "age": "50 (as of July 16, 2025)",
+    "years_coaching": "Approx. 4 NHL seasons (started 2022)",
+    "accomplishments": [
+      "Hall of Fame player, bringing high hockey IQ to coaching"
+    ],
+    "play_style": "Focuses on player development, empowering offensive creativity, and fostering a positive, learning environment. Aims for a fast, skilled, and unpredictable offensive game."
+  },
+  {
+    "team": "Nashville Predators",
+    "head_coach": "Andrew Brunette",
+    "age": "51 (as of July 16, 2025)",
+    "years_coaching": "Approx. 3 NHL seasons (started 2022)",
+    "accomplishments": [
+      "Jack Adams Award finalist (2022 with Florida)",
+      "Led Panthers to Presidents' Trophy"
+    ],
+    "play_style": "Emphasizes a modern, offense-first approach with focus on puck possession, creativity, and high-skill plays. Aims for an exciting, up-tempo game while striving for defensive consistency."
+  },
+  {
+    "team": "New Jersey Devils",
+    "head_coach": "Sheldon Keefe",
+    "age": "44 (as of July 16, 2025)",
+    "years_coaching": "Approx. 6 NHL seasons (started 2019)",
+    "accomplishments": [
+      "Calder Cup Champion (AHL)",
+      "Led Maple Leafs to consistent playoff appearances"
+    ],
+    "play_style": "Known for his analytically-driven approach, emphasizing puck possession, offensive zone time, and leveraging player skill. Aims for a fast-paced, high-event game."
+  },
+  {
+    "team": "New York Islanders",
+    "head_coach": "Patrick Roy",
+    "age": "59 (as of July 16, 2025)",
+    "years_coaching": "Approx. 3 NHL seasons (started 2023)",
+    "accomplishments": [
+      "Jack Adams Award (2014)",
+      "Hall of Fame player, bringing intense passion and winning mentality"
+    ],
+    "play_style": "Demands high intensity, strong goaltending, and a responsible defensive game. Known for his fiery passion and focus on mental toughness, aiming to instill a winning culture."
+  },
+  {
+    "team": "New York Rangers",
+    "head_coach": "Mike Sullivan",
+    "age": "56 (as of July 16, 2025)",
+    "years_coaching": "Approx. 13 NHL seasons (started 2003)",
+    "accomplishments": [
+      "2x Stanley Cup Champion (Pittsburgh Penguins)",
+      "Consistently leads competitive teams"
+    ],
+    "play_style": "Emphasizes a fast, aggressive forecheck and a relentless puck pursuit game. Demands accountability in all three zones, focusing on strong defensive habits and quick transitions to offense."
+  },
+  {
+    "team": "Ottawa Senators",
+    "head_coach": "Travis Green",
+    "age": "54 (as of July 16, 2025)",
+    "years_coaching": "Approx. 6 NHL seasons (started 2017)",
+    "accomplishments": [
+      "Led Canucks to playoff appearance (2020)"
+    ],
+    "play_style": "Known for demanding a high-energy, aggressive game with strong forechecking and defensive commitment. Aims to build a fast and physical team."
+  },
+  {
+    "team": "Philadelphia Flyers",
+    "head_coach": "Rick Tocchet",
+    "age": "60 (as of July 16, 2025)",
+    "years_coaching": "Approx. 8 NHL seasons (started 2017)",
+    "accomplishments": [
+      "Jack Adams Award (2023)",
+      "Led Canucks to significant improvement"
+    ],
+    "play_style": "Demands a physical, hard-working, and defensive-minded game. Emphasizes accountability, discipline, and a strong forecheck. Known for instilling a tough culture."
+  },
+  {
+    "team": "Pittsburgh Penguins",
+    "head_coach": "Dan Muse",
+    "age": "42 (as of July 16, 2025)",
+    "years_coaching": "1 NHL season (2024-25 will be his first full season)",
+    "accomplishments": [
+      "Successful college and international coaching background",
+      "Highly regarded for player development"
+    ],
+    "play_style": "As a first-time NHL head coach, his style will evolve, but is expected to focus on player development, structured systems, and leveraging speed and skill, drawing from his diverse experience."
+  },
+  {
+    "team": "San Jose Sharks",
+    "head_coach": "Ryan Warsofsky",
+    "age": "37 (as of July 16, 2025)",
+    "years_coaching": "1 NHL season (2024-25 will be his first full season)",
+    "accomplishments": [
+      "Calder Cup Champion (AHL), Kelly Cup Champion (ECHL)",
+      "Rising star in the coaching ranks, known for player development"
+    ],
+    "play_style": "As a first-time NHL head coach, his full style is TBD, but expected to bring a modern approach with an emphasis on player development, strong fundamentals, and an adaptable system for a rebuilding team."
+  },
+  {
+    "team": "Seattle Kraken",
+    "head_coach": "Lane Lambert",
+    "age": "60 (as of July 16, 2025)",
+    "years_coaching": "Approx. 4 NHL seasons (started 2022)",
+    "accomplishments": [
+      "Long-time successful NHL assistant coach"
+    ],
+    "play_style": "Known for his tactical approach and focus on structure and defensive responsibility. Aims for a disciplined team that minimizes mistakes and capitalizes on opportunities."
+  },
+  {
+    "team": "St. Louis Blues",
+    "head_coach": "Drew Bannister",
+    "age": "51 (as of July 16, 2025)",
+    "years_coaching": "Approx. 2 NHL seasons (started 2023 as interim, then permanent)",
+    "accomplishments": [
+      "Extensive experience as a head coach in the AHL and OHL"
+    ],
+    "play_style": "Emphasizes a structured and disciplined game, strong defensive responsibility, and consistent effort. Aims to develop young players and create a competitive team identity."
+  },
+  {
+    "team": "Tampa Bay Lightning",
+    "head_coach": "Jon Cooper",
+    "age": "57 (as of July 16, 2025)",
+    "years_coaching": "Approx. 13 NHL seasons (started 2013)",
+    "accomplishments": [
+      "2x Stanley Cup Champion",
+      "Longest-tenured coach in the NHL",
+      "Jack Adams Award finalist multiple times"
+    ],
+    "play_style": "Adapts his system to his highly skilled roster, emphasizing puck possession, elite offensive creativity, and strategic defensive play. Known for strong player relationships and in-game adjustments."
+  },
+  {
+    "team": "Toronto Maple Leafs",
+    "head_coach": "Craig Berube",
+    "age": "59 (as of July 16, 2025)",
+    "years_coaching": "Approx. 7 NHL seasons (started 2013)",
+    "accomplishments": [
+      "2019 Stanley Cup Champion (St. Louis Blues)",
+      "Known for instilling toughness and accountability"
+    ],
+    "play_style": "Demands a physical, hard-nosed, and defensive-minded game. Emphasizes responsible play, strong forechecking, and a competitive edge, aiming to get the most out of his roster's talent."
+  },
+  {
+    "team": "Utah Hockey Club",
+    "head_coach": "Andre Tourigny",
+    "age": "50 (as of July 16, 2025)",
+    "years_coaching": "Approx. 4 NHL seasons (started 2021 with Arizona, now with Utah)",
+    "accomplishments": [
+      "Guiding a rebuilding team and developing young talent"
+    ],
+    "play_style": "Emphasizes hard work, structure, and player development. Aims for an aggressive forecheck and a resilient defensive system, fostering a competitive mindset."
+  },
+  {
+    "team": "Vancouver Canucks",
+    "head_coach": "Adam Foote",
+    "age": "54 (as of July 16, 2025)",
+    "years_coaching": "1 NHL season (2024-25 will be his first full season)",
+    "accomplishments": [
+      "2x Stanley Cup Champion as a player",
+      "Highly respected former NHL defenseman known for leadership"
+    ],
+    "play_style": "As a first-time head coach, his full style is TBD, but expected to emphasize strong defensive play, physicality, and accountability, drawing from his extensive playing experience."
+  },
+  {
+    "team": "Vegas Golden Knights",
+    "head_coach": "Bruce Cassidy",
+    "age": "59 (as of July 16, 2025)",
+    "years_coaching": "Approx. 10 NHL seasons (started 2002)",
+    "accomplishments": [
+      "2023 Stanley Cup Champion",
+      "Jack Adams Award (2020)"
+    ],
+    "play_style": "Known for his demanding but fair approach, emphasizing a fast, aggressive, and skilled game. Focuses on puck possession, offensive zone pressure, and strong special teams."
+  },
+  {
+    "team": "Washington Capitals",
+    "head_coach": "Spencer Carbery",
+    "age": "43 (as of July 16, 2025)",
+    "years_coaching": "Approx. 2 NHL seasons (started 2023)",
+    "accomplishments": [
+      "Extensive experience in player development and as an assistant coach"
+    ],
+    "play_style": "Focuses on a fast, attacking game with an emphasis on special teams and leveraging offensive talent. Aims to improve defensive consistency and integrate young players."
+  },
+  {
+    "team": "Winnipeg Jets",
+    "head_coach": "Scott Arniel",
+    "age": "61 (as of July 16, 2025)",
+    "years_coaching": "Approx. 4 NHL seasons (started 2010)",
+    "accomplishments": [
+      "Experience as an NHL head coach and long-time assistant"
+    ],
+    "play_style": "Known for demanding a hard-working, disciplined game with a focus on defensive structure and accountability. Aims to maximize effort and competitiveness from his roster."
+  }
+]

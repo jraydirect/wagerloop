@@ -30,25 +30,25 @@ class _CoachesInfoPageState extends State<CoachesInfoPage>
       'fileName': 'lib/nbaCoachesInfo.json',
     },
     {
-      'name': 'MLB',
-      'icon': Icons.sports_baseball,
-      'color': Colors.orange,
-      'available': false,
-      'fileName': '',
-    },
-    {
       'name': 'NFL',
       'icon': Icons.sports_football,
       'color': Colors.purple,
-      'available': false,
-      'fileName': '',
+      'available': true,
+      'fileName': 'lib/nflCoachesInfo.json',
+    },
+    {
+      'name': 'MLB',
+      'icon': Icons.sports_baseball,
+      'color': Colors.orange,
+      'available': true,
+      'fileName': 'lib/mlbCoachesInfo.json',
     },
     {
       'name': 'NHL',
       'icon': Icons.sports_hockey,
       'color': Colors.teal,
-      'available': false,
-      'fileName': '',
+      'available': true,
+      'fileName': 'lib/nhlCoachesInfo.json',
     },
   ];
 

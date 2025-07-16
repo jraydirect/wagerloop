@@ -1,0 +1,320 @@
+[
+  {
+    "team": "Arizona Diamondbacks",
+    "head_coach": "Torey Lovullo",
+    "age": "59 (as of July 16, 2025)",
+    "years_coaching": "Approx. 9 MLB seasons (started 2017)",
+    "accomplishments": [
+      "2023 National League Champion",
+      "2017 NL Manager of the Year"
+    ],
+    "play_style": "Known for strong player relationships, aggressive baserunning, and a focus on fundamental baseball. Emphasizes pitching and defense."
+  },
+  {
+    "team": "Atlanta Braves",
+    "head_coach": "Brian Snitker",
+    "age": "69 (as of July 16, 2025)",
+    "years_coaching": "Approx. 10 MLB seasons (started 2016)",
+    "accomplishments": [
+      "2021 World Series Champion",
+      "2x NL Manager of the Year (2018, 2022)",
+      "Multiple NL East titles"
+    ],
+    "play_style": "Veteran manager with a calm demeanor, known for trusting his players and analytics. Focuses on strong pitching, balanced offense, and clubhouse chemistry."
+  },
+  {
+    "team": "Baltimore Orioles",
+    "head_coach": "Tony Mansolino (Interim)",
+    "age": "43 (as of July 16, 2025)",
+    "years_coaching": "1 MLB season (interim role)",
+    "accomplishments": [
+      "Previously a highly-regarded third base coach for the Orioles"
+    ],
+    "play_style": "As an interim manager, likely maintains the existing team's aggressive and analytically-driven approach. Focuses on fundamental play and energy."
+  },
+  {
+    "team": "Boston Red Sox",
+    "head_coach": "Alex Cora",
+    "age": "48 (as of July 16, 2025)",
+    "years_coaching": "Approx. 7 MLB seasons (started 2018, with a break in 2020)",
+    "accomplishments": [
+      "2018 World Series Champion",
+      "Multiple AL East titles"
+    ],
+    "play_style": "Known for his strong communication with players, strategic in-game management, and willingness to embrace analytics. Often emphasizes aggressive offensive play."
+  },
+  {
+    "team": "Chicago Cubs",
+    "head_coach": "Craig Counsell",
+    "age": "53 (as of July 16, 2025)",
+    "years_coaching": "Approx. 11 MLB seasons (started 2015)",
+    "accomplishments": [
+      "3x NL Manager of the Year (2020, 2021, 2023)",
+      "Led Brewers to multiple playoff appearances"
+    ],
+    "play_style": "Highly analytical and strategic, known for aggressive bullpen management and in-game decisions. Adaptable to his roster's strengths, often maximizing platoons and matchups."
+  },
+  {
+    "team": "Chicago White Sox",
+    "head_coach": "Will Venable",
+    "age": "41 (as of July 16, 2025)",
+    "years_coaching": "1 MLB season (2024 is his first)",
+    "accomplishments": [
+      "Highly regarded former player and coach, known for strong communication and player development"
+    ],
+    "play_style": "As a first-year manager, his style is still developing, but is expected to emphasize modern baseball principles, including pitching, defense, and leveraging offensive opportunities."
+  },
+  {
+    "team": "Cincinnati Reds",
+    "head_coach": "Terry Francona",
+    "age": "65 (as of July 16, 2025)",
+    "years_coaching": "Approx. 24 MLB seasons (started 1997)",
+    "accomplishments": [
+      "2x World Series Champion (Boston Red Sox 2004, 2007)",
+      "3x AL Manager of the Year (2013, 2016, 2022)",
+      "Led Guardians to multiple playoff appearances"
+    ],
+    "play_style": "Highly respected veteran manager, known for his calm demeanor, strong player relationships, and ability to get the most out of his teams. Emphasizes fundamentals and in-game strategy."
+  },
+  {
+    "team": "Cleveland Guardians",
+    "head_coach": "Stephen Vogt",
+    "age": "39 (as of July 16, 2025)",
+    "years_coaching": "1 MLB season (2024 is his first)",
+    "accomplishments": [
+      "Respected former player with strong leadership qualities, known for high baseball IQ"
+    ],
+    "play_style": "As a rookie manager, his style will be shaped, but expected to emphasize strong fundamentals, pitching, defense, and a collaborative approach, drawing from his playing experience as a catcher."
+  },
+  {
+    "team": "Colorado Rockies",
+    "head_coach": "Warren Schaeffer (Interim)",
+    "age": "39 (as of July 16, 2025)",
+    "years_coaching": "1 MLB season (interim role)",
+    "accomplishments": [
+      "Long-time coach in the Rockies' minor league system"
+    ],
+    "play_style": "As an interim, likely maintains the existing organizational philosophy, focusing on offensive production at altitude and developing young talent."
+  },
+  {
+    "team": "Detroit Tigers",
+    "head_coach": "A.J. Hinch",
+    "age": "50 (as of July 16, 2025)",
+    "years_coaching": "Approx. 11 MLB seasons (started 2009)",
+    "accomplishments": [
+      "2017 World Series Champion (Houston Astros)",
+      "Led Tigers through a significant rebuild"
+    ],
+    "play_style": "Known for his calm presence, strong communication, and ability to connect with players. Utilizes analytics effectively and focuses on situational hitting and modern pitching strategies."
+  },
+  {
+    "team": "Houston Astros",
+    "head_coach": "Joe Espada",
+    "age": "49 (as of July 16, 2025)",
+    "years_coaching": "1 MLB season (2024 is his first)",
+    "accomplishments": [
+      "Long-time successful bench coach for the Astros, contributing to World Series wins"
+    ],
+    "play_style": "As a first-year manager, expected to maintain the Astros' analytically-driven approach with a focus on power hitting, strong starting pitching, and aggressive bullpen usage."
+  },
+  {
+    "team": "Kansas City Royals",
+    "head_coach": "Matt Quatraro",
+    "age": "50 (as of July 16, 2025)",
+    "years_coaching": "Approx. 3 MLB seasons (started 2023)",
+    "accomplishments": [
+      "Instrumental in Rays' success as a bench coach"
+    ],
+    "play_style": "Analytically inclined, focuses on pitching, defense, and smart baserunning. Aims to develop young talent and build a cohesive team."
+  },
+  {
+    "team": "Los Angeles Angels",
+    "head_coach": "Ron Washington",
+    "age": "72 (as of July 16, 2025)",
+    "years_coaching": "Approx. 10 MLB seasons (started 2007, with a break)",
+    "accomplishments": [
+      "Led Texas Rangers to back-to-back World Series appearances (2010, 2011)",
+      "Highly respected third base coach and infield instructor"
+    ],
+    "play_style": "Known for his motivational leadership, intense focus on defense and fundamentals, especially infield play and baserunning. Promotes a strong work ethic and aggressive style."
+  },
+  {
+    "team": "Los Angeles Dodgers",
+    "head_coach": "Dave Roberts",
+    "age": "52 (as of July 16, 2025)",
+    "years_coaching": "Approx. 10 MLB seasons (started 2016)",
+    "accomplishments": [
+      "2020 World Series Champion",
+      "2x NL Manager of the Year (2016, 2017)",
+      "Multiple NL West titles"
+    ],
+    "play_style": "Embraces analytics and platoons, known for aggressive bullpen management and in-game decisions. Fosters a positive clubhouse culture and leverages the team's depth and talent."
+  },
+  {
+    "team": "Miami Marlins",
+    "head_coach": "Clayton McCullough",
+    "age": "45 (as of July 16, 2025)",
+    "years_coaching": "1 MLB season (2024 is his first)",
+    "accomplishments": [
+      "Highly regarded coach in the Dodgers organization, known for player development"
+    ],
+    "play_style": "As a rookie manager, his style is still taking shape, but likely to emphasize player development, strong fundamentals, and a modern, adaptive approach to offensive and defensive strategies."
+  },
+  {
+    "team": "Milwaukee Brewers",
+    "head_coach": "Pat Murphy",
+    "age": "56 (as of July 16, 2025)",
+    "years_coaching": "Approx. 2 MLB seasons (started 2024)",
+    "accomplishments": [
+      "Long-time college coach (Notre Dame, Arizona State)",
+      "Interim manager experience with Padres"
+    ],
+    "play_style": "Known for his intense, passionate approach and strong player relationships. Focuses on aggressive play, pitching depth, and a competitive spirit, often drawing on his college coaching background."
+  },
+  {
+    "team": "Minnesota Twins",
+    "head_coach": "Rocco Baldelli",
+    "age": "43 (as of July 16, 2025)",
+    "years_coaching": "Approx. 7 MLB seasons (started 2019)",
+    "accomplishments": [
+      "2019 AL Manager of the Year",
+      "Multiple AL Central titles"
+    ],
+    "play_style": "Analytically inclined, values versatility and matchups. Known for creative bullpen usage and a focus on both power and patience at the plate. Strong communicator."
+  },
+  {
+    "team": "New York Mets",
+    "head_coach": "Carlos Mendoza",
+    "age": "44 (as of July 16, 2025)",
+    "years_coaching": "1 MLB season (2024 is his first)",
+    "accomplishments": [
+      "Long-time bench coach for the New York Yankees, gaining experience in a high-pressure environment"
+    ],
+    "play_style": "As a rookie manager, his full style is emerging, but expected to bring a disciplined approach, strong emphasis on pitching and defense, and a well-structured offensive plan."
+  },
+  {
+    "team": "New York Yankees",
+    "head_coach": "Aaron Boone",
+    "age": "51 (as of July 16, 2025)",
+    "years_coaching": "Approx. 8 MLB seasons (started 2018)",
+    "accomplishments": [
+      "Led Yankees to multiple playoff appearances and division titles"
+    ],
+    "play_style": "Manages in a high-pressure market, known for his calm demeanor and willingness to make unconventional decisions. Embraces analytics and modern pitching strategies, often relying on power hitting."
+  },
+  {
+    "team": "Oakland Athletics",
+    "head_coach": "Mark Kotsay",
+    "age": "49 (as of July 16, 2025)",
+    "years_coaching": "Approx. 4 MLB seasons (started 2022)",
+    "accomplishments": [
+      "Guiding the team through a challenging rebuild and relocation"
+    ],
+    "play_style": "Focuses on player development and fundamentals, working with a young roster. Emphasizes patience at the plate and competitive pitching, often adapting to the team's strengths."
+  },
+  {
+    "team": "Philadelphia Phillies",
+    "head_coach": "Rob Thomson",
+    "age": "60 (as of July 16, 2025)",
+    "years_coaching": "Approx. 3 MLB seasons (started 2022 as interim, then permanent)",
+    "accomplishments": [
+      "2022 National League Champion",
+      "Led Phillies to World Series and NLCS appearances"
+    ],
+    "play_style": "Known for his calm, steady presence and strong communication. Empowers players and coaches, emphasizes fundamental baseball, and makes smart in-game decisions, often letting the offense dictate."
+  },
+  {
+    "team": "Pittsburgh Pirates",
+    "head_coach": "Don Kelly (Interim)",
+    "age": "45 (as of July 16, 2025)",
+    "years_coaching": "1 MLB season (interim role)",
+    "accomplishments": [
+      "Previously a bench coach for the Pirates"
+    ],
+    "play_style": "As an interim, likely maintains the team's focus on developing young talent and playing aggressive, energetic baseball."
+  },
+  {
+    "team": "San Diego Padres",
+    "head_coach": "Mike Shildt",
+    "age": "56 (as of July 16, 2025)",
+    "years_coaching": "Approx. 7 MLB seasons (started 2018)",
+    "accomplishments": [
+      "2019 NL Manager of the Year",
+      "Led Cardinals to multiple playoff appearances"
+    ],
+    "play_style": "Focuses on traditional baseball fundamentals, strong defensive play, and disciplined at-bats. Known for his motivational skills and connecting with players, building a strong clubhouse culture."
+  },
+  {
+    "team": "San Francisco Giants",
+    "head_coach": "Bob Melvin",
+    "age": "63 (as of July 16, 2025)",
+    "years_coaching": "Approx. 21 MLB seasons (started 2003)",
+    "accomplishments": [
+      "3x Manager of the Year (2x AL, 1x NL)",
+      "Led Athletics and Padres to multiple playoff appearances"
+    ],
+    "play_style": "Veteran manager with a strong focus on pitching and defense. Known for his calm demeanor, strategic decision-making, and ability to maximize the roster given the situation."
+  },
+  {
+    "team": "Seattle Mariners",
+    "head_coach": "Dan Wilson (Interim)",
+    "age": "55 (as of July 16, 2025)",
+    "years_coaching": "1 MLB season (interim role)",
+    "accomplishments": [
+      "Long-time Mariners catcher and respected member of the organization"
+    ],
+    "play_style": "As an interim, will likely continue the team's strong focus on pitching, defense, and leveraging the power hitters in the lineup."
+  },
+  {
+    "team": "St. Louis Cardinals",
+    "head_coach": "Oliver Marmol",
+    "age": "38 (as of July 16, 2025)",
+    "years_coaching": "Approx. 4 MLB seasons (started 2022)",
+    "accomplishments": [
+      "Led Cardinals to NL Central title in his first season"
+    ],
+    "play_style": "Young, analytically-driven manager, known for in-game strategy and aggressive decision-making. Emphasizes modern pitching principles and an adaptable offensive approach."
+  },
+  {
+    "team": "Tampa Bay Rays",
+    "head_coach": "Kevin Cash",
+    "age": "47 (as of July 16, 2025)",
+    "years_coaching": "Approx. 11 MLB seasons (started 2015)",
+    "accomplishments": [
+      "2x AL Manager of the Year (2020, 2021)",
+      "Led Rays to World Series appearance and multiple playoff berths"
+    ],
+    "play_style": "Highly analytical and progressive, known for innovative bullpen usage, creative platoons, and maximizing player versatility. Prioritizes pitching and defense above all else."
+  },
+  {
+    "team": "Texas Rangers",
+    "head_coach": "Bruce Bochy",
+    "age": "69 (as of July 16, 2025)",
+    "years_coaching": "Approx. 28 MLB seasons (started 1995)",
+    "accomplishments": [
+      "4x World Series Champion (3 with Giants, 1 with Rangers)",
+      "One of the most respected and successful managers of his era"
+    ],
+    "play_style": "Old-school yet adaptable, known for his calm demeanor, strong clubhouse leadership, and ability to get the most out of his pitching staff. Prioritizes veteran leadership and clutch performance."
+  },
+  {
+    "team": "Toronto Blue Jays",
+    "head_coach": "John Schneider",
+    "age": "44 (as of July 16, 2025)",
+    "years_coaching": "Approx. 3 MLB seasons (started 2022 as interim, then permanent)",
+    "accomplishments": [
+      "Led Blue Jays to playoff appearances"
+    ],
+    "play_style": "Known for his energetic presence and strong communication with players. Embraces analytics and focuses on power hitting and modern pitching strategies, adapting to the team's strengths."
+  },
+  {
+    "team": "Washington Nationals",
+    "head_coach": "Miguel Cairo (Interim)",
+    "age": "50 (as of July 16, 2025)",
+    "years_coaching": "1 MLB season (interim role)",
+    "accomplishments": [
+      "Previously a bench coach for the Nationals and other teams"
+    ],
+    "play_style": "As an interim, likely focuses on maintaining stability and developing the team's young talent, emphasizing fundamentals and effort."
+  }
+]
