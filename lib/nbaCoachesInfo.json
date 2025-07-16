@@ -1,0 +1,328 @@
+[
+  {
+    "team": "Atlanta Hawks",
+    "head_coach": "Quin Snyder",
+    "age": "58 (as of July 15, 2025)",
+    "years_coaching": "Approx. 10 NBA seasons as head coach (started 2014-15 with Utah)",
+    "accomplishments": [
+      "Led Utah Jazz to multiple playoff appearances and a #1 seed (2020-21)",
+      "NBA Coach of the Year finalist"
+    ],
+    "play_style": "Known for a sophisticated offensive system with strong emphasis on ball movement, three-point shooting, and strong defensive principles, often utilizing versatile bigs."
+  },
+  {
+    "team": "Boston Celtics",
+    "head_coach": "Joe Mazzulla",
+    "age": "36 (as of July 15, 2025)",
+    "years_coaching": "Approx. 3 NBA seasons as head coach (started 2022-23 as interim, then permanent)",
+    "accomplishments": [
+      "2024 NBA Champion (as head coach)",
+      "Led Celtics to Eastern Conference Finals (2023)"
+    ],
+    "play_style": "Emphasizes a fast-paced offense, heavy three-point shooting, and aggressive, switchable defense. Focuses on player empowerment and decision-making within a structured system."
+  },
+  {
+    "team": "Brooklyn Nets",
+    "head_coach": "Jordi Fernández",
+    "age": "41 (as of July 15, 2025)",
+    "years_coaching": "1 NBA season as head coach (2024-25 will be his first full season)",
+    "accomplishments": [
+      "Extensive experience as a highly-regarded assistant coach with multiple NBA teams"
+    ],
+    "play_style": "As a first-time head coach, his full style is still emerging, but is expected to emphasize player development, strong defensive principles, and a modern, fluid offense given his background."
+  },
+  {
+    "team": "Charlotte Hornets",
+    "head_coach": "Charles Lee",
+    "age": "40 (as of July 15, 2025)",
+    "years_coaching": "1 NBA season as head coach (2024-25 will be his first full season)",
+    "accomplishments": [
+      "NBA Champion as assistant coach (Milwaukee Bucks 2021, Boston Celtics 2024)"
+    ],
+    "play_style": "As a first-time head coach, his full style is TBD, but given his background, likely to emphasize strong defensive foundations, player development, and a modern offensive approach focusing on spacing and ball movement."
+  },
+  {
+    "team": "Chicago Bulls",
+    "head_coach": "Billy Donovan",
+    "age": "59 (as of July 15, 2025)",
+    "years_coaching": "Approx. 10 NBA seasons as head coach (started 2015-16 with OKC)",
+    "accomplishments": [
+      "2x NCAA National Champion (Florida Gators)",
+      "NBA Coach of the Year (2020 - co-recipient)"
+    ],
+    "play_style": "Focuses on player relationships and development, often adapting his offensive and defensive schemes to the strengths of his roster. Emphasizes disciplined defense and opportunistic offense, often featuring pick-and-roll action."
+  },
+  {
+    "team": "Cleveland Cavaliers",
+    "head_coach": "Kenny Atkinson",
+    "age": "58 (as of July 15, 2025)",
+    "years_coaching": "Approx. 4 NBA seasons as head coach (started 2016-17 with Brooklyn)",
+    "accomplishments": [
+      "Known for player development, especially with young rosters"
+    ],
+    "play_style": "Emphasizes an up-tempo offense with strong ball movement, three-point shooting, and aggressive, hard-nosed defense. Known for developing young talent."
+  },
+  {
+    "team": "Dallas Mavericks",
+    "head_coach": "Jason Kidd",
+    "age": "52 (as of July 15, 2025)",
+    "years_coaching": "Approx. 7 NBA seasons as head coach (started 2013-14 with Brooklyn)",
+    "accomplishments": [
+      "NBA Champion (Dallas Mavericks 2022 - as head coach)",
+      "Multiple playoff appearances"
+    ],
+    "play_style": "Primarily focused on a strong defensive identity, aiming to limit opponent scoring. Offensively, often relies on star players and emphasizes spacing and pick-and-roll."
+  },
+  {
+    "team": "Denver Nuggets",
+    "head_coach": "David Adelman",
+    "age": "44 (as of July 15, 2025)",
+    "years_coaching": "1 NBA season as head coach (2024-25 will be his first full season, served as interim previously)",
+    "accomplishments": [
+      "NBA Champion as assistant coach (Denver Nuggets 2023)"
+    ],
+    "play_style": "As a first-time full head coach, his philosophy will build on his assistant coaching experience under Michael Malone. Expect a focus on disciplined team defense, unselfish offense, and leveraging the strengths of his star players, particularly Nikola Jokic."
+  },
+  {
+    "team": "Detroit Pistons",
+    "head_coach": "J.B. Bickerstaff",
+    "age": "46 (as of July 15, 2025)",
+    "years_coaching": "Approx. 8 NBA seasons as head coach (started 2015-16 with Houston as interim)",
+    "accomplishments": [
+      "Led Cleveland Cavaliers to playoff appearances"
+    ],
+    "play_style": "Known for focusing on defensive intensity and effort. Offensively, often seeks to play through big men and utilize pick-and-roll, emphasizing execution and toughness."
+  },
+  {
+    "team": "Golden State Warriors",
+    "head_coach": "Steve Kerr",
+    "age": "59 (as of July 15, 2025)",
+    "years_coaching": "Approx. 11 NBA seasons as head coach (started 2014-15)",
+    "accomplishments": [
+      "4x NBA Champion (Golden State Warriors - as head coach)",
+      "NBA Coach of the Year (2016)",
+      "Guided Warriors to multiple NBA Finals appearances"
+    ],
+    "play_style": "Emphasizes ball movement, player movement, high-level passing, and three-point shooting (known as 'Strength in Numbers'). Promotes a culture of unselfishness and defensive versatility."
+  },
+  {
+    "team": "Houston Rockets",
+    "head_coach": "Ime Udoka",
+    "age": "47 (as of July 15, 2025)",
+    "years_coaching": "Approx. 3 NBA seasons as head coach (started 2021-22 with Boston)",
+    "accomplishments": [
+      "Led Boston Celtics to NBA Finals (2022)"
+    ],
+    "play_style": "Known for instilling a strong defensive identity, emphasizing physicality, communication, and disciplined schemes. Offensively, he promotes ball movement and taking advantage of mismatches."
+  },
+  {
+    "team": "Indiana Pacers",
+    "head_coach": "Rick Carlisle",
+    "age": "65 (as of July 15, 2025)",
+    "years_coaching": "Approx. 23 NBA seasons as head coach (started 2001-02 with Detroit)",
+    "accomplishments": [
+      "NBA Champion (Dallas Mavericks 2011 - as head coach)",
+      "NBA Coach of the Year (2002)"
+    ],
+    "play_style": "Highly organized and strategic coach, known for complex offensive sets and in-game adjustments. Adapts his system to his personnel, often utilizing strong guard play and pick-and-roll."
+  },
+  {
+    "team": "Los Angeles Clippers",
+    "head_coach": "Tyronn Lue",
+    "age": "47 (as of July 15, 2025)",
+    "years_coaching": "Approx. 9 NBA seasons as head coach (started 2015-16 with Cleveland)",
+    "accomplishments": [
+      "NBA Champion (Cleveland Cavaliers 2016 - as head coach)",
+      "Known for his ability to coach star players and make effective in-game adjustments"
+    ],
+    "play_style": "Flexible and adaptable, known for his tactical adjustments during games and series. Emphasizes offensive freedom for stars while demanding strong, versatile team defense."
+  },
+  {
+    "team": "Los Angeles Lakers",
+    "head_coach": "JJ Redick",
+    "age": "40 (as of July 15, 2025)",
+    "years_coaching": "1 NBA season as head coach (2024-25 will be his first full season)",
+    "accomplishments": [
+      "Highly respected former player with deep basketball IQ and strong communication skills"
+    ],
+    "play_style": "As a first-time head coach, his style is yet to be fully defined, but is expected to incorporate modern offensive principles (spacing, shooting, ball movement) and a focus on player development, drawing from his playing career and media insights."
+  },
+  {
+    "team": "Memphis Grizzlies",
+    "head_coach": "Tuomas Iisalo",
+    "age": "42 (as of July 15, 2025)",
+    "years_coaching": "1 NBA season as head coach (2024-25 will be his first full season)",
+    "accomplishments": [
+      "Highly successful European coach (e.g., FIBA Champions League, German BBL titles)",
+      "Known for innovative offensive and defensive schemes"
+    ],
+    "play_style": "Coming from a European background, expected to bring a highly disciplined, systematic approach to both offense and defense, potentially with a focus on fluid ball movement and aggressive defensive rotations."
+  },
+  {
+    "team": "Miami Heat",
+    "head_coach": "Erik Spoelstra",
+    "age": "54 (as of July 15, 2025)",
+    "years_coaching": "Approx. 17 NBA seasons as head coach (started 2008-09)",
+    "accomplishments": [
+      "3x NBA Champion (Miami Heat 2012, 2013, 2024 - as head coach)",
+      "Multiple NBA Finals appearances",
+      "One of the longest-tenured and most respected coaches in the NBA"
+    ],
+    "play_style": "Demands high effort, discipline, and versatility on defense. Offensively, often utilizes motion, cutting, and adaptability to personnel, with a strong emphasis on culture and player development."
+  },
+  {
+    "team": "Milwaukee Bucks",
+    "head_coach": "Doc Rivers",
+    "age": "63 (as of July 15, 2025)",
+    "years_coaching": "Approx. 26 NBA seasons as head coach (started 1999-00 with Orlando)",
+    "accomplishments": [
+      "NBA Champion (Boston Celtics 2008 - as head coach)",
+      "NBA Coach of the Year (2000)",
+      "Extensive playoff experience and success"
+    ],
+    "play_style": "Known for strong defensive schemes, veteran leadership, and an emphasis on communication. Offensively, often builds around his star players while incorporating structured sets."
+  },
+  {
+    "team": "Minnesota Timberwolves",
+    "head_coach": "Chris Finch",
+    "age": "55 (as of July 15, 2025)",
+    "years_coaching": "Approx. 4 NBA seasons as head coach (started 2020-21)",
+    "accomplishments": [
+      "NBA All-Star Game head coach (2024)",
+      "NBA G-League Champion (2010)"
+    ],
+    "play_style": "Emphasizes offensive spacing and flow, often utilizing multiple bigs in unique ways. Defensively, focuses on length and disrupting opponents, though this can be a work in progress at times."
+  },
+  {
+    "team": "New Orleans Pelicans",
+    "head_coach": "Willie Green",
+    "age": "43 (as of July 15, 2025)",
+    "years_coaching": "Approx. 4 NBA seasons as head coach (started 2021-22)",
+    "accomplishments": [
+      "Led Pelicans to playoff contention and play-in success"
+    ],
+    "play_style": "Focuses on developing a strong team culture, defensive intensity, and a free-flowing offense that leverages his players' strengths, particularly in transition and pick-and-roll situations."
+  },
+  {
+    "team": "New York Knicks",
+    "head_coach": "Mike Brown",
+    "age": "54 (as of July 15, 2025)",
+    "years_coaching": "13 NBA seasons as head coach (with Lakers, Cavaliers, and Kings)",
+    "accomplishments": [
+      "NBA Coach of the Year (2009, 2023)",
+      "Led Sacramento Kings to playoff berth after long drought",
+      "NBA Champion (as assistant coach with Spurs, Warriors)"
+    ],
+    "play_style": "Known for his strong emphasis on defense, toughness, and accountability. Offensively, he typically runs structured sets designed to maximize efficiency and player strengths, often involving good ball movement."
+  },
+  {
+    "team": "Oklahoma City Thunder",
+    "head_coach": "Mark Daigneault",
+    "age": "40 (as of July 15, 2025)",
+    "years_coaching": "Approx. 5 NBA seasons as head coach (started 2020-21)",
+    "accomplishments": [
+      "NBA Coach of the Year (2024)",
+      "Led young Thunder team to top of Western Conference"
+    ],
+    "play_style": "Innovating and analytical, emphasizes versatility, spacing, and high basketball IQ. Promotes a positionless style of play with aggressive defense, frequent switching, and a modern, high-volume three-point offense."
+  },
+  {
+    "team": "Orlando Magic",
+    "head_coach": "Jamahl Mosley",
+    "age": "46 (as of July 15, 2025)",
+    "years_coaching": "Approx. 4 NBA seasons as head coach (started 2021-22)",
+    "accomplishments": [
+      "Guided young Magic team to significant improvement and playoff contention"
+    ],
+    "play_style": "Focuses on player development, defensive improvement, and building a strong team identity. Offensively, emphasizes ball movement, spacing, and capitalizing on athletic advantages, often through drives and cuts."
+  },
+  {
+    "team": "Philadelphia 76ers",
+    "head_coach": "Nick Nurse",
+    "age": "58 (as of July 15, 2025)",
+    "years_coaching": "Approx. 7 NBA seasons as head coach (started 2018-19 with Toronto)",
+    "accomplishments": [
+      "NBA Champion (Toronto Raptors 2019 - as head coach)",
+      "NBA Coach of the Year (2020)"
+    ],
+    "play_style": "Highly innovative and adaptable, known for his aggressive and unconventional defensive schemes (e.g., box-and-one, zone variations). Offensively, he prioritizes spacing, ball movement, and creative playmaking."
+  },
+  {
+    "team": "Phoenix Suns",
+    "head_coach": "Mike Budenholzer",
+    "age": "55 (as of July 15, 2025)",
+    "years_coaching": "Approx. 12 NBA seasons as head coach (started 2013-14 with Atlanta)",
+    "accomplishments": [
+      "NBA Champion (Milwaukee Bucks 2021 - as head coach)",
+      "2x NBA Coach of the Year (2015, 2019)",
+      "Led teams to multiple deep playoff runs"
+    ],
+    "play_style": "Emphasizes a strong defensive foundation with an aggressive, switching scheme. Offensively, focuses on spacing, three-point shooting, and free-flowing ball movement, often utilizing a pick-and-roll heavy attack."
+  },
+  {
+    "team": "Portland Trail Blazers",
+    "head_coach": "Chauncey Billups",
+    "age": "48 (as of July 15, 2025)",
+    "years_coaching": "Approx. 4 NBA seasons as head coach (started 2021-22)",
+    "accomplishments": [
+      "NBA Champion as a player (Detroit Pistons 2004)",
+      "Developing young talent in a rebuilding phase"
+    ],
+    "play_style": "Focuses on building a tough, defensive-minded team, drawing from his playing experience. Offensively, aims for disciplined execution and creating opportunities through good ball movement."
+  },
+  {
+    "team": "Sacramento Kings",
+    "head_coach": "Mike Brown",
+    "age": "54 (as of July 15, 2025)",
+    "years_coaching": "Approx. 13 NBA seasons as head coach (various stints since 2005-06)",
+    "accomplishments": [
+      "NBA Coach of the Year (2009, 2023)",
+      "Led Sacramento Kings to end long playoff drought",
+      "NBA Champion (as assistant coach with Spurs, Warriors)"
+    ],
+    "play_style": "Known for a strong emphasis on defense, toughness, and accountability. Offensively, he typically runs structured sets designed to maximize efficiency and player strengths, often involving good ball movement and pick-and-roll."
+  },
+  {
+    "team": "San Antonio Spurs",
+    "head_coach": "Gregg Popovich",
+    "age": "76 (as of July 15, 2025)",
+    "years_coaching": "Approx. 29 NBA seasons as head coach (started 1996-97)",
+    "accomplishments": [
+      "5x NBA Champion (San Antonio Spurs - as head coach)",
+      "3x NBA Coach of the Year (2003, 2012, 2014)",
+      "Winningest coach in NBA history",
+      "Olympic Gold Medal (Team USA Men's Basketball)"
+    ],
+    "play_style": "Highly adaptable, emphasizing fundamental basketball, unselfish play, ball movement, and strong team defense. Known for his direct communication, demanding nature, and ability to develop players and systems."
+  },
+  {
+    "team": "Toronto Raptors",
+    "head_coach": "Darko Rajaković",
+    "age": "46 (as of July 15, 2025)",
+    "years_coaching": "Approx. 2 NBA seasons as head coach (started 2023-24)",
+    "accomplishments": [
+      "Extensive experience as an assistant coach and G-League head coach (G-League Champion)"
+    ],
+    "play_style": "Known for an emphasis on offensive flow, ball movement, and making quick decisions. Focuses on player development and fostering a positive team environment, drawing from his international coaching background."
+  },
+  {
+    "team": "Utah Jazz",
+    "head_coach": "Will Hardy",
+    "age": "37 (as of July 15, 2025)",
+    "years_coaching": "Approx. 3 NBA seasons as head coach (started 2022-23)",
+    "accomplishments": [
+      "Quickly established a competitive team despite rebuilding"
+    ],
+    "play_style": "Emphasizes an unselfish, free-flowing offense with good spacing and ball movement. Defensively, he promotes disciplined schemes, versatility, and high effort. Known for strong communication and player relationships."
+  },
+  {
+    "team": "Washington Wizards",
+    "head_coach": "Brian Keefe",
+    "age": "49 (as of July 15, 2025)",
+    "years_coaching": "1 NBA season as head coach (took over interim 2023-24, named permanent for 2024-25)",
+    "accomplishments": [
+      "Known for defensive expertise and player development as an assistant coach"
+    ],
+    "play_style": "As a new full-time head coach, his style is still solidifying, but is expected to prioritize disciplined defense, fundamental play, and maximizing the potential of young talent, given his background."
+  }
+]

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'stadium_info_page.dart';
+import 'coaches_info_page.dart';
 
 class DiscoverPage extends StatefulWidget {
   const DiscoverPage({Key? key}) : super(key: key);
@@ -130,6 +131,13 @@ class _DiscoverPageState extends State<DiscoverPage> with TickerProviderStateMix
                         context,
                         MaterialPageRoute(
                           builder: (context) => const StadiumInfoPage(),
+                        ),
+                      );
+                    } else if (tool['name'] == 'Coaches') {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const CoachesInfoPage(),
                         ),
                       );
                     } else {
