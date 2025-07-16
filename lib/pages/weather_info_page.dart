@@ -38,7 +38,7 @@ class _WeatherInfoPageState extends State<WeatherInfoPage>
       'name': 'NFL',
       'icon': Icons.sports_football,
       'color': Colors.purple,
-      'available': false,
+      'available': true,
       'fileName': 'lib/nflStadiumInfo.json',
     },
     {

@@ -291,6 +291,7 @@ class WeatherService {
   /// 
   /// Converts locations like "Phoenix, AZ" to "Phoenix,AZ,US" for better results.
   /// Handles special cases like "Washington, D.C." and international locations.
+  /// Also maps NFL stadium suburbs to major cities for better geocoding.
   String _formatLocationForGeocoding(String location) {
     // Remove extra whitespace
     String formatted = location.trim();
@@ -303,6 +304,24 @@ class WeatherService {
     // If already contains "Canada", keep as is
     if (formatted.toLowerCase().contains('canada')) {
       return formatted.replaceAll(', ON, Canada', ',Ontario,CA');
+    }
+    
+    // Map NFL stadium locations to major cities for better geocoding
+    final nflLocationMap = {
+      'Orchard Park, NY': 'Buffalo,NY,US',
+      'Paradise, NV': 'Las Vegas,NV,US',
+      'Inglewood, CA': 'Los Angeles,CA,US',
+      'Miami Gardens, FL': 'Miami,FL,US',
+      'Foxborough, MA': 'Boston,MA,US',
+      'East Rutherford, NJ': 'New York,NY,US',
+      'Santa Clara, CA': 'San Francisco,CA,US',
+      'Landover, MD': 'Washington,DC,US',
+      'Glendale, AZ': 'Phoenix,AZ,US',
+    };
+    
+    // Check if this location has a mapping
+    if (nflLocationMap.containsKey(formatted)) {
+      return nflLocationMap[formatted]!;
     }
     
     // Check if it's a US location (contains state code pattern like ", XX")
