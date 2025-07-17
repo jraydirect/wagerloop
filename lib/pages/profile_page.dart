@@ -755,17 +755,28 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
     required VoidCallback onTap,
     Color color = Colors.grey,
   }) {
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 20, color: color),
-            const SizedBox(width: 4),
-            Text(label, style: TextStyle(color: color)),
-          ],
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 20, color: color),
+              const SizedBox(width: 6),
+              Text(
+                label, 
+                style: TextStyle(
+                  color: color,
+                  fontWeight: FontWeight.w500,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -931,7 +942,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
 
   Widget _buildPostsList() {
     if (_isLoadingPosts) {
-      return const Center(child: CircularProgressIndicator(color: Colors.green)); // Changed to green
+      return const Center(child: CircularProgressIndicator(color: Colors.green));
     }
 
     if (_userPosts.isEmpty) {
@@ -960,22 +971,62 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
         final isLiked = post is Post ? post.isLiked : (post as PickPost).isLiked;
         final isReposted = post is Post ? post.isReposted : (post as PickPost).isReposted;
         final postId = post is Post ? post.id : (post as PickPost).id;
+        final avatarUrl = post is Post ? post.avatarUrl : (post as PickPost).avatarUrl;
+        final username = post is Post ? post.username : (post as PickPost).username;
         
-        return Card(
-          color: Colors.grey[700], // Changed from grey[900] to grey[700]
-          margin: const EdgeInsets.only(bottom: 8),
+        return Container(
+          margin: const EdgeInsets.only(bottom: 16),
+          decoration: BoxDecoration(
+            color: Colors.grey[750],
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.green.withOpacity(0.3), width: 1),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                // Post header with delete button
+                // Header
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
+                    ProfileAvatar(
+                      avatarUrl: avatarUrl,
+                      username: username,
+                      radius: 24,
+                      backgroundColor: Colors.blue,
+                    ),
+                    const SizedBox(width: 12),
                     Expanded(
-                      child: Text(
-                        content,
-                        style: const TextStyle(color: Colors.white),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            username,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 16,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            timeago.format(timestamp),
+                            style: TextStyle(
+                              color: Colors.grey[400], 
+                              fontSize: 13,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     IconButton(
@@ -990,52 +1041,59 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
                     ),
                   ],
                 ),
+                const SizedBox(height: 16),
+                // Content
+                Text(
+                  content,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 15,
+                    height: 1.4,
+                  ),
+                ),
                 
                 // Show picks if this is a PickPost
                 if (post is PickPost && post.hasPicks) ...[
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 20),
                   PicksDisplayWidget(
                     picks: post.picks,
                     showParlayBadge: true,
-                    compact: true, // Use compact version for profile page
+                    compact: false,
                   ),
                 ],
                 
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Text(
-                      timeago.format(timestamp, locale: 'en'),
-                      style: TextStyle(color: Colors.grey[400], fontSize: 12),
-                    ),
-                    const Spacer(),
-                  ],
-                ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 16),
                 // Actions
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _buildActionButton(
-                      icon: isLiked ? Icons.favorite : Icons.favorite_border,
-                      label: likes.toString(),
-                      onTap: () => _toggleLike(post),
-                      color: isLiked ? Colors.red : Colors.grey,
-                    ),
-                    _buildActionButton(
-                      icon: Icons.comment_outlined,
-                      label: comments.length.toString(),
-                      onTap: () {
-                        // TODO: Implement comment functionality
-                      },
-                    ),
-                    _buildActionButton(
-                      icon: Icons.repeat,
-                      label: reposts.toString(),
-                      onTap: () => _toggleRepost(post),
-                      color: isReposted ? Colors.green : Colors.grey,
-                    ),
-                  ],
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[800]?.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _buildActionButton(
+                        icon: isLiked ? Icons.favorite : Icons.favorite_border,
+                        label: likes.toString(),
+                        onTap: () => _toggleLike(post),
+                        color: isLiked ? Colors.red : Colors.grey,
+                      ),
+                      _buildActionButton(
+                        icon: Icons.comment_outlined,
+                        label: comments.length.toString(),
+                        onTap: () {
+                          // TODO: Implement comment functionality
+                        },
+                      ),
+                      _buildActionButton(
+                        icon: Icons.repeat,
+                        label: reposts.toString(),
+                        onTap: () => _toggleRepost(post),
+                        color: isReposted ? Colors.green : Colors.grey,
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -1261,64 +1319,116 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
         final reposts = post is Post ? post.reposts : (post as PickPost).reposts;
         final isLiked = true;
         final isReposted = post is Post ? post.isReposted : (post as PickPost).isReposted;
-        return Card(
-          color: Colors.grey[700],
-          margin: const EdgeInsets.only(bottom: 8),
+        final avatarUrl = post is Post ? post.avatarUrl : (post as PickPost).avatarUrl;
+        final username = post is Post ? post.username : (post as PickPost).username;
+        
+        return Container(
+          margin: const EdgeInsets.only(bottom: 16),
+          decoration: BoxDecoration(
+            color: Colors.grey[750],
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.green.withOpacity(0.3), width: 1),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
+                // Header
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
+                    ProfileAvatar(
+                      avatarUrl: avatarUrl,
+                      username: username,
+                      radius: 24,
+                      backgroundColor: Colors.blue,
+                    ),
+                    const SizedBox(width: 12),
                     Expanded(
-                      child: Text(
-                        content,
-                        style: const TextStyle(color: Colors.white),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            username,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 16,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            timeago.format(timestamp),
+                            style: TextStyle(
+                              color: Colors.grey[400], 
+                              fontSize: 13,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
+                const SizedBox(height: 16),
+                // Content
+                Text(
+                  content,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 15,
+                    height: 1.4,
+                  ),
+                ),
+                
                 if (post is PickPost && post.hasPicks) ...[
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 20),
                   PicksDisplayWidget(
                     picks: post.picks,
                     showParlayBadge: true,
-                    compact: true,
+                    compact: false,
                   ),
                 ],
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Text(
-                      timeago.format(timestamp, locale: 'en'),
-                      style: TextStyle(color: Colors.grey[400], fontSize: 12),
-                    ),
-                    const Spacer(),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _buildActionButton(
-                      icon: Icons.favorite,
-                      label: likes.toString(),
-                      onTap: () {},
-                      color: Colors.red,
-                    ),
-                    _buildActionButton(
-                      icon: Icons.comment_outlined,
-                      label: comments.length.toString(),
-                      onTap: () {},
-                    ),
-                    _buildActionButton(
-                      icon: Icons.repeat,
-                      label: reposts.toString(),
-                      onTap: () {},
-                      color: isReposted ? Colors.green : Colors.grey,
-                    ),
-                  ],
+                
+                const SizedBox(height: 16),
+                // Actions
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[800]?.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _buildActionButton(
+                        icon: Icons.favorite,
+                        label: likes.toString(),
+                        onTap: () {},
+                        color: Colors.red,
+                      ),
+                      _buildActionButton(
+                        icon: Icons.comment_outlined,
+                        label: comments.length.toString(),
+                        onTap: () {},
+                      ),
+                      _buildActionButton(
+                        icon: Icons.repeat,
+                        label: reposts.toString(),
+                        onTap: () {},
+                        color: isReposted ? Colors.green : Colors.grey,
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -1347,11 +1457,22 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
       itemCount: _userComments.length,
       itemBuilder: (context, index) {
         final comment = _userComments[index];
-        return Card(
-          color: Colors.grey[700],
-          margin: const EdgeInsets.only(bottom: 8),
+        return Container(
+          margin: const EdgeInsets.only(bottom: 16),
+          decoration: BoxDecoration(
+            color: Colors.grey[750],
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.green.withOpacity(0.3), width: 1),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -1363,7 +1484,8 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
                         comment['content'],
                         style: const TextStyle(
                           color: Colors.white,
-                          fontSize: 16,
+                          fontSize: 15,
+                          height: 1.4,
                         ),
                       ),
                     ),
@@ -1379,13 +1501,14 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
                 // Original post info
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.grey[600],
-                    borderRadius: BorderRadius.circular(8),
+                    color: Colors.grey[800]?.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey[600]!.withOpacity(0.3), width: 1),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1395,29 +1518,41 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
                           ProfileAvatar(
                             avatarUrl: comment['post_author_avatar'],
                             username: comment['post_author'] ?? 'Anonymous',
-                            radius: 12,
+                            radius: 16,
                             backgroundColor: Colors.blue,
                           ),
-                          const SizedBox(width: 8),
-                          Text(
-                            comment['post_author'] ?? 'Anonymous',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  comment['post_author'] ?? 'Anonymous',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          const Spacer(),
                           Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
+                              horizontal: 10,
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
                               color: comment['post_type'] == 'pick' 
-                                  ? Colors.green.withOpacity(0.3)
-                                  : Colors.blue.withOpacity(0.3),
+                                  ? Colors.green.withOpacity(0.2)
+                                  : Colors.blue.withOpacity(0.2),
                               borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: comment['post_type'] == 'pick' 
+                                    ? Colors.green.withOpacity(0.5)
+                                    : Colors.blue.withOpacity(0.5),
+                                width: 1,
+                              ),
                             ),
                             child: Text(
                               comment['post_type'] == 'pick' ? 'PICK' : 'POST',
@@ -1425,19 +1560,20 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
                                 color: comment['post_type'] == 'pick' 
                                     ? Colors.green
                                     : Colors.blue,
-                                fontSize: 10,
+                                fontSize: 11,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 12),
                       Text(
                         comment['post_content'],
                         style: TextStyle(
                           color: Colors.grey[300],
                           fontSize: 14,
+                          height: 1.3,
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -1445,7 +1581,7 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
                     ],
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 12),
                 // Comment timestamp
                 Text(
                   timeago.format(DateTime.parse(comment['created_at'])),
@@ -1850,3 +1986,5 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
     super.dispose();
   }
 }
+
+

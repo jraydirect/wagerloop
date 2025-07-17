@@ -30,8 +30,12 @@ void main() async {
     FlutterError.presentError(details);
   };
 
-  // Load environment variables
-  await dotenv.load(fileName: "assets/.env");
+  // Load environment variables - handle missing .env file gracefully
+  try {
+    await dotenv.load(fileName: ".env");
+  } catch (e) {
+    print('Warning: .env file not found. Some features may not work without API keys.');
+  }
 
   await Supabase.initialize(
     url: dotenv.get('SUPABASE_URL') ?? SupabaseConfig.supaBaseURL,

@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'package:xml/xml.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:ui';
+import '../services/article_summary_service.dart';
 
 class NewsPage extends StatefulWidget {
   @override
@@ -636,6 +637,60 @@ class ArticleDetailModal extends StatefulWidget {
 }
 
 class _ArticleDetailModalState extends State<ArticleDetailModal> {
+  final _summaryService = ArticleSummaryService.instance;
+  String? _aiSummary;
+  bool _isLoadingSummary = false;
+  String? _summaryError;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeAndGenerateSummary();
+  }
+
+  void _initializeAndGenerateSummary() async {
+    try {
+      if (!_summaryService.isInitialized) {
+        _summaryService.initialize();
+      }
+      await _generateAISummary();
+    } catch (e) {
+      print('Error initializing summary service: $e');
+      setState(() {
+        _summaryError = 'AI summary temporarily unavailable';
+      });
+    }
+  }
+
+  Future<void> _generateAISummary() async {
+    setState(() {
+      _isLoadingSummary = true;
+      _summaryError = null;
+    });
+
+    try {
+      final articleUrl = widget.article['link'] ?? '';
+      final title = widget.article['title'] ?? '';
+      final description = widget.article['description'] ?? '';
+
+      final summary = await _summaryService.summarizeArticle(
+        articleUrl,
+        title,
+        description,
+      );
+
+      setState(() {
+        _aiSummary = summary;
+        _isLoadingSummary = false;
+      });
+    } catch (e) {
+      setState(() {
+        _summaryError = 'Failed to generate AI summary';
+        _isLoadingSummary = false;
+      });
+    }
+  }
+
   // Helper to format date, copied from NewsPage for self-containment
   String _formatDate(String dateString) {
     try {
@@ -745,361 +800,375 @@ class _ArticleDetailModalState extends State<ArticleDetailModal> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Enhanced Hero Image Section
+              // Hero Image Section (without text overlay)
               if (article['imageUrl'] != null)
                 Container(
-                  height: 280,
-                  margin: const EdgeInsets.only(bottom: 4),
-                  child: Stack(
-                    children: [
-                      // Main Image
-                      ClipRRect(
-                        borderRadius: const BorderRadius.vertical(
-                          bottom: Radius.circular(20),
-                        ),
-                        child: Image.network(
-                          article['imageUrl']!,
-                          height: 280,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
-                              height: 280,
-                              decoration: BoxDecoration(
-                                borderRadius: const BorderRadius.vertical(
-                                  bottom: Radius.circular(20),
-                                ),
-                                gradient: LinearGradient(
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                  colors: [
-                                    const Color(0xFF525252),
-                                    const Color(0xFF363636),
-                                  ],
-                                ),
-                              ),
-                              child: const Icon(
-                                CupertinoIcons.photo,
-                                size: 64,
-                                color: Color(0xFF4CAF50),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                      // Gradient Overlay
-                      Container(
-                        height: 280,
-                        decoration: BoxDecoration(
-                          borderRadius: const BorderRadius.vertical(
-                            bottom: Radius.circular(20),
-                          ),
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              Colors.transparent,
-                              Colors.transparent,
-                              Colors.black.withOpacity(0.6),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              // Premium Content Card
-              Container(
-                margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF2C2C2E),
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(
-                    color: const Color(0xFF4CAF50).withOpacity(0.12),
-                    width: 1,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.3),
-                      blurRadius: 20,
-                      offset: const Offset(0, 8),
+                  height: 250,
+                  margin: const EdgeInsets.only(bottom: 24),
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.vertical(
+                      bottom: Radius.circular(20),
                     ),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(24),
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                    child: Container(
-                      padding: const EdgeInsets.all(28),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF525252).withOpacity(0.8),
-                        borderRadius: BorderRadius.circular(24),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Enhanced Title with better typography
-                          Text(
-                            cleanTitle,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 28,
-                              fontWeight: FontWeight.w800,
-                              height: 1.2,
-                              letterSpacing: -0.5,
-                              decoration: TextDecoration.none,
+                    child: Image.network(
+                      article['imageUrl']!,
+                      height: 250,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          height: 250,
+                          decoration: BoxDecoration(
+                            borderRadius: const BorderRadius.vertical(
+                              bottom: Radius.circular(20),
                             ),
-                            textAlign: TextAlign.start,
-                            softWrap: true,
-                            maxLines: 4,
-                            overflow: TextOverflow.ellipsis,
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                const Color(0xFF525252),
+                                const Color(0xFF363636),
+                              ],
+                            ),
                           ),
-                          const SizedBox(height: 24),
-                          // Enhanced Description with beautiful styling
-                          if (cleanDescription.isNotEmpty)
-                            Container(
-                              padding: const EdgeInsets.all(20),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF424242),
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(
-                                  color: const Color(0xFF4CAF50).withOpacity(0.08),
-                                  width: 1,
-                                ),
-                              ),
-                              child: Text(
-                                cleanDescription,
-                                style: const TextStyle(
-                                  color: Color(0xFFE5E5E7),
-                                  fontSize: 17,
-                                  height: 1.6,
-                                  letterSpacing: -0.2,
-                                  decoration: TextDecoration.none,
-                                ),
-                                textAlign: TextAlign.start,
-                                softWrap: true,
-                                maxLines: 8,
-                                overflow: TextOverflow.ellipsis,
-                              ),
+                          child: const Center(
+                            child: Icon(
+                              CupertinoIcons.photo,
+                              size: 64,
+                              color: Color(0xFF4CAF50),
                             ),
-                          const SizedBox(height: 28),
-                          // Premium Metadata Section
-                          Container(
-                            padding: const EdgeInsets.all(24),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF424242),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: const Color(0xFF4CAF50).withOpacity(0.15),
-                                width: 1,
-                              ),
-                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              
+              // Article Content - moved below image
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Article Title
+                    Text(
+                      cleanTitle,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 32,
+                        fontWeight: FontWeight.w800,
+                        height: 1.1,
+                        letterSpacing: -0.5,
+                        decoration: TextDecoration.none,
+                      ),
+                      textAlign: TextAlign.start,
+                    ),
+                    
+                    const SizedBox(height: 24),
+                    
+                    // Author and Date Information
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF2C2C2E),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: const Color(0xFF4CAF50).withOpacity(0.2),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          // Author info
+                          Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                // Article Meta Header
-                                Row(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(8),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFF4CAF50).withOpacity(0.1),
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: const Icon(
-                                        CupertinoIcons.info_circle,
-                                        size: 16,
-                                        color: Color(0xFF4CAF50),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Text(
-                                      'Article Information',
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
-                                        decoration: TextDecoration.none,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 20),
-                                // Publication Date
-                                Container(
-                                  padding: const EdgeInsets.all(16),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFF525252),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.all(8),
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFF4CAF50).withOpacity(0.15),
-                                          borderRadius: BorderRadius.circular(10),
-                                        ),
-                                        child: const Icon(
-                                          CupertinoIcons.calendar_today,
-                                          size: 16,
-                                          color: Color(0xFF4CAF50),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              'Published',
-                                              style: const TextStyle(
-                                                color: Color(0xFF8E8E93),
-                                                fontSize: 13,
-                                                fontWeight: FontWeight.w500,
-                                                decoration: TextDecoration.none,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              _formatDate(article['pubDate'] ?? ''),
-                                              style: const TextStyle(
-                                                color: Color(0xFFE5E5E7),
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.w600,
-                                                decoration: TextDecoration.none,
-                                              ),
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
+                                Text(
+                                  'Author',
+                                  style: const TextStyle(
+                                    color: Color(0xFF8E8E93),
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w500,
+                                    decoration: TextDecoration.none,
                                   ),
                                 ),
-                                // Author Section
-                                if (article['creator'] != null)
-                                  Container(
-                                    margin: const EdgeInsets.only(top: 12),
-                                    padding: const EdgeInsets.all(16),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFF525252),
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        Container(
-                                          padding: const EdgeInsets.all(8),
-                                          decoration: BoxDecoration(
-                                            color: const Color(0xFF4CAF50).withOpacity(0.15),
-                                            borderRadius: BorderRadius.circular(10),
-                                          ),
-                                          child: const Icon(
-                                            CupertinoIcons.person_crop_circle_fill,
-                                            size: 16,
-                                            color: Color(0xFF4CAF50),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 12),
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                'Author',
-                                                style: const TextStyle(
-                                                  color: Color(0xFF8E8E93),
-                                                  fontSize: 13,
-                                                  fontWeight: FontWeight.w500,
-                                                  decoration: TextDecoration.none,
-                                                ),
-                                              ),
-                                              const SizedBox(height: 4),
-                                              Text(
-                                                article['creator'],
-                                                style: const TextStyle(
-                                                  color: Color(0xFF4CAF50),
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.w600,
-                                                  decoration: TextDecoration.none,
-                                                ),
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  article['creator'] ?? 'CBS Sports',
+                                  style: const TextStyle(
+                                    color: Color(0xFF4CAF50),
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    decoration: TextDecoration.none,
                                   ),
+                                ),
                               ],
                             ),
                           ),
-                          const SizedBox(height: 32),
-                          // Premium Action Button
-                          Container(
-                            width: double.infinity,
-                            height: 56,
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [
-                                  const Color(0xFF4CAF50),
-                                  const Color(0xFF45A049),
-                                ],
-                              ),
-                              borderRadius: BorderRadius.circular(16),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(0xFF4CAF50).withOpacity(0.3),
-                                  blurRadius: 12,
-                                  offset: const Offset(0, 4),
+                          const SizedBox(width: 20),
+                          // Publication date
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Published',
+                                  style: const TextStyle(
+                                    color: Color(0xFF8E8E93),
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w500,
+                                    decoration: TextDecoration.none,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  _formatDate(article['pubDate'] ?? ''),
+                                  style: const TextStyle(
+                                    color: Color(0xFFE5E5E7),
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    decoration: TextDecoration.none,
+                                  ),
                                 ),
                               ],
-                            ),
-                            child: CupertinoButton(
-                              padding: EdgeInsets.zero,
-                              borderRadius: BorderRadius.circular(16),
-                              onPressed: () {
-                                _openArticleExternal(article['link'], context);
-                              },
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(6),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white.withOpacity(0.2),
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: const Icon(
-                                      CupertinoIcons.arrow_up_right_square_fill,
-                                      size: 18,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  const Text(
-                                    'Read Full Article',
-                                    style: TextStyle(
-                                      fontSize: 17,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.white,
-                                      letterSpacing: -0.2,
-                                    ),
-                                  ),
-                                ],
-                              ),
                             ),
                           ),
                         ],
                       ),
                     ),
-                  ),
+                    
+                    const SizedBox(height: 24),
+                    
+                    // AI-Powered Article Summary
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF2C2C2E),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: const Color(0xFF4CAF50).withOpacity(0.12),
+                          width: 1,
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // AI Summary header
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      const Color(0xFF4CAF50),
+                                      const Color(0xFF45A049),
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Icon(
+                                  CupertinoIcons.sparkles,
+                                  size: 16,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'AI-Powered Summary',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w600,
+                                        decoration: TextDecoration.none,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Generated by Gemini AI',
+                                      style: const TextStyle(
+                                        color: Color(0xFF8E8E93),
+                                        fontSize: 12,
+                                        decoration: TextDecoration.none,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              if (_isLoadingSummary)
+                                const CupertinoActivityIndicator(
+                                  color: Color(0xFF4CAF50),
+                                  radius: 10,
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+                          // AI Summary content
+                          if (_isLoadingSummary)
+                            Container(
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF3C3C3E),
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Column(
+                                children: [
+                                  const CupertinoActivityIndicator(
+                                    color: Color(0xFF4CAF50),
+                                    radius: 16,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    'Our AI is reading the full article and generating a comprehensive summary...',
+                                    style: const TextStyle(
+                                      color: Color(0xFF8E8E93),
+                                      fontSize: 16,
+                                      decoration: TextDecoration.none,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ],
+                              ),
+                            )
+                          else if (_summaryError != null)
+                            Container(
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF3C3C3E),
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Column(
+                                children: [
+                                  Row(
+                                    children: [
+                                      const Icon(
+                                        CupertinoIcons.exclamationmark_triangle,
+                                        color: Colors.orange,
+                                        size: 20,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        _summaryError!,
+                                        style: const TextStyle(
+                                          color: Colors.orange,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                          decoration: TextDecoration.none,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  if (cleanDescription.isNotEmpty) ...[
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      cleanDescription,
+                                      style: const TextStyle(
+                                        color: Color(0xFFE5E5E7),
+                                        fontSize: 16,
+                                        height: 1.5,
+                                        decoration: TextDecoration.none,
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            )
+                          else if (_aiSummary != null)
+                            Text(
+                              _aiSummary!,
+                              style: const TextStyle(
+                                color: Color(0xFFE5E5E7),
+                                fontSize: 17,
+                                height: 1.6,
+                                letterSpacing: -0.2,
+                                decoration: TextDecoration.none,
+                              ),
+                              textAlign: TextAlign.start,
+                            )
+                          else if (cleanDescription.isNotEmpty)
+                            Text(
+                              cleanDescription,
+                              style: const TextStyle(
+                                color: Color(0xFFE5E5E7),
+                                fontSize: 17,
+                                height: 1.6,
+                                letterSpacing: -0.2,
+                                decoration: TextDecoration.none,
+                              ),
+                              textAlign: TextAlign.start,
+                            ),
+                        ],
+                      ),
+                    ),
+                    
+                    const SizedBox(height: 32),
+                    
+                    // Read Full Article Button
+                    Container(
+                      width: double.infinity,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            const Color(0xFF4CAF50),
+                            const Color(0xFF45A049),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF4CAF50).withOpacity(0.3),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: CupertinoButton(
+                        padding: EdgeInsets.zero,
+                        borderRadius: BorderRadius.circular(16),
+                        onPressed: () {
+                          _openArticleExternal(article['link'], context);
+                        },
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: const Icon(
+                                CupertinoIcons.arrow_up_right_square_fill,
+                                size: 18,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            const Text(
+                              'Read Full Article',
+                              style: TextStyle(
+                                fontSize: 17,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                                letterSpacing: -0.2,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    
+                    const SizedBox(height: 40),
+                  ],
                 ),
               ),
-              const SizedBox(height: 40),
             ],
           ),
         ),

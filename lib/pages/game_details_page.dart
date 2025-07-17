@@ -420,7 +420,7 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
 
   Widget _buildPremiumGameHeader() {
     return Container(
-      margin: const EdgeInsets.all(20),
+      margin: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: const Color(0xFF2C2C2E),
         borderRadius: BorderRadius.circular(24),
@@ -441,7 +441,7 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
           child: Container(
-            padding: const EdgeInsets.all(28),
+            padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: const Color(0xFF2C2C2E).withOpacity(0.8),
               borderRadius: BorderRadius.circular(24),
@@ -455,13 +455,17 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
                     gradient: LinearGradient(
                       colors: _isGameCompleted() 
                           ? [const Color(0xFF4CAF50), const Color(0xFF45A049)]
-                          : [const Color(0xFF2C2C2E), const Color(0xFF3C3C3E)],
+                          : _isGameInProgress()
+                              ? [const Color(0xFFFF5722), const Color(0xFFE64A19)]
+                              : [const Color(0xFF2C2C2E), const Color(0xFF3C3C3E)],
                     ),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
                       color: _isGameCompleted() 
                           ? const Color(0xFF4CAF50) 
-                          : const Color(0xFF4CAF50).withOpacity(0.3),
+                          : _isGameInProgress()
+                              ? const Color(0xFFFF5722)
+                              : const Color(0xFF4CAF50).withOpacity(0.3),
                       width: 1,
                     ),
                   ),
@@ -471,9 +475,11 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
                       Icon(
                         _isGameCompleted() 
                             ? CupertinoIcons.checkmark_circle_fill
-                            : CupertinoIcons.clock_fill,
+                            : _isGameInProgress()
+                                ? CupertinoIcons.play_circle_fill
+                                : CupertinoIcons.clock_fill,
                         size: 16,
-                        color: _isGameCompleted() 
+                        color: (_isGameCompleted() || _isGameInProgress()) 
                             ? Colors.white 
                             : const Color(0xFF4CAF50),
                       ),
@@ -481,7 +487,7 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
                       Text(
                         _formatGameStatus(),
                         style: TextStyle(
-                          color: _isGameCompleted() 
+                          color: (_isGameCompleted() || _isGameInProgress()) 
                               ? Colors.white 
                               : const Color(0xFF4CAF50),
                           fontSize: 14,
@@ -492,122 +498,109 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 24),
-                // Teams Section
+                const SizedBox(height: 32),
+                // Teams Section with improved layout
                 Row(
                   children: [
                     Expanded(
+                      flex: 2,
                       child: _buildPremiumTeamSection(false), // Away team
                     ),
-                    Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Column(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF1C1C1E),
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                color: const Color(0xFF4CAF50).withOpacity(0.2),
-                                width: 1,
-                              ),
-                            ),
-                            child: const Text(
-                              'VS',
-                              style: TextStyle(
-                                color: Color(0xFF4CAF50),
-                                fontSize: 18,
-                                fontWeight: FontWeight.w800,
-                                decoration: TextDecoration.none,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          if (gameDetails != null)
+                    Expanded(
+                      flex: 1,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 20),
+                        child: Column(
+                          children: [
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF1C1C1E),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: const Color(0xFF4CAF50).withOpacity(0.2),
+                                  width: 1,
+                                ),
+                              ),
+                              child: const Text(
+                                'VS',
+                                style: TextStyle(
+                                  color: Color(0xFF4CAF50),
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w800,
+                                  decoration: TextDecoration.none,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                               decoration: BoxDecoration(
                                 color: const Color(0xFF4CAF50).withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(
                                 _formatGameDate(),
                                 style: const TextStyle(
                                   color: Color(0xFF4CAF50),
-                                  fontSize: 12,
+                                  fontSize: 11,
                                   fontWeight: FontWeight.w500,
                                   decoration: TextDecoration.none,
                                 ),
                                 textAlign: TextAlign.center,
+                                maxLines: 2,
                               ),
                             ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                     Expanded(
+                      flex: 2,
                       child: _buildPremiumTeamSection(true), // Home team
                     ),
                   ],
                 ),
-                const SizedBox(height: 20),
-                // Venue Information
-                if (gameDetails != null)
+                // Add venue information if available
+                if (gameDetails != null && _getVenueInfo() != 'N/A') ...[
+                  const SizedBox(height: 20),
                   Container(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
                       color: const Color(0xFF1C1C1E),
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                         color: const Color(0xFF4CAF50).withOpacity(0.1),
                         width: 1,
                       ),
                     ),
                     child: Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF4CAF50).withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: const Icon(
-                            CupertinoIcons.location_solid,
-                            size: 16,
-                            color: Color(0xFF4CAF50),
-                          ),
+                        const Icon(
+                          CupertinoIcons.location,
+                          size: 14,
+                          color: Color(0xFF8E8E93),
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Venue',
-                                style: const TextStyle(
-                                  color: Color(0xFF8E8E93),
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w500,
-                                  decoration: TextDecoration.none,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                _getVenueInfo(),
-                                style: const TextStyle(
-                                  color: Color(0xFFE5E5E7),
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                  decoration: TextDecoration.none,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: Text(
+                            _getVenueInfo(),
+                            style: const TextStyle(
+                              color: Color(0xFF8E8E93),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              decoration: TextDecoration.none,
+                            ),
+                            textAlign: TextAlign.center,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],
                     ),
                   ),
+                ],
               ],
             ),
           ),
@@ -618,91 +611,93 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
 
   Widget _buildPremiumTeamSection(bool isHome) {
     final teamName = _getESPNTeamName(widget.game, isHome);
-    final logoPath = TeamLogoUtils.getTeamLogo(teamName);
+    final logoPath = _getTeamLogoWithDebug(teamName);
     final score = _getTeamScore(isHome);
     final isWinner = _isGameCompleted() && int.tryParse(score) != null && 
                      int.tryParse(_getTeamScore(!isHome)) != null &&
                      int.parse(score) > int.parse(_getTeamScore(!isHome));
     
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: const Color(0xFF1C1C1E),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: isWinner 
-              ? const Color(0xFF4CAF50).withOpacity(0.3)
+              ? const Color(0xFF4CAF50).withOpacity(0.4)
               : const Color(0xFF4CAF50).withOpacity(0.1),
-          width: 1,
+          width: isWinner ? 2 : 1,
         ),
+        boxShadow: isWinner ? [
+          BoxShadow(
+            color: const Color(0xFF4CAF50).withOpacity(0.2),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ] : null,
       ),
       child: Column(
         children: [
-          // Team Logo
-          if (logoPath != null && logoPath.isNotEmpty)
-            Container(
-              width: 64,
-              height: 64,
-              decoration: BoxDecoration(
-                color: const Color(0xFF2C2C2E),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: const Color(0xFF4CAF50).withOpacity(0.1),
-                  width: 1,
-                ),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: logoPath.endsWith('.svg')
-                      ? SvgPicture.asset(logoPath, fit: BoxFit.contain)
-                      : Image.asset(logoPath, fit: BoxFit.contain),
-                ),
-              ),
-            )
-          else
-            Container(
-              width: 64,
-              height: 64,
-              decoration: BoxDecoration(
-                color: const Color(0xFF2C2C2E),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: const Color(0xFF4CAF50).withOpacity(0.1),
-                  width: 1,
-                ),
-              ),
-              child: const Icon(
-                CupertinoIcons.sportscourt,
-                size: 32,
-                color: Color(0xFF4CAF50),
+          // Team Logo with better error handling
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              color: const Color(0xFF2C2C2E),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: const Color(0xFF4CAF50).withOpacity(0.1),
+                width: 1,
               ),
             ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: logoPath != null && logoPath.isNotEmpty
+                  ? Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: logoPath.endsWith('.svg')
+                          ? SvgPicture.asset(
+                              logoPath, 
+                              fit: BoxFit.contain,
+                              placeholderBuilder: (context) => _buildLogoFallback(),
+                            )
+                          : Image.asset(
+                              logoPath, 
+                              fit: BoxFit.contain,
+                              errorBuilder: (context, error, stackTrace) => _buildLogoFallback(),
+                            ),
+                    )
+                  : _buildLogoFallback(),
+            ),
+          ),
           const SizedBox(height: 16),
-          // Team Name
-          Text(
-            teamName,
-            style: TextStyle(
-              color: isWinner ? const Color(0xFF4CAF50) : Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              decoration: TextDecoration.none,
+          // Team Name with better layout
+          Container(
+            constraints: const BoxConstraints(minHeight: 40),
+            child: Text(
+              _formatTeamNameForDisplay(teamName),
+              style: TextStyle(
+                color: isWinner ? const Color(0xFF4CAF50) : Colors.white,
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                decoration: TextDecoration.none,
+                height: 1.2,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
           ),
           // Score (if game is completed or in progress)
           if (_isGameCompleted() || _isGameInProgress()) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
                 color: isWinner 
                     ? const Color(0xFF4CAF50).withOpacity(0.15)
                     : const Color(0xFF2C2C2E),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(16),
                 border: Border.all(
                   color: isWinner 
                       ? const Color(0xFF4CAF50).withOpacity(0.3)
@@ -714,8 +709,8 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
                 score,
                 style: TextStyle(
                   color: isWinner ? const Color(0xFF4CAF50) : const Color(0xFFE5E5E7),
-                  fontSize: 20,
-                  fontWeight: FontWeight.w800,
+                  fontSize: 24,
+                  fontWeight: FontWeight.w900,
                   decoration: TextDecoration.none,
                 ),
               ),
@@ -725,18 +720,26 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
           if (isWinner) ...[
             const SizedBox(height: 8),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
                 color: const Color(0xFF4CAF50),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF4CAF50).withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
               child: const Text(
                 'WINNER',
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: 10,
+                  fontSize: 11,
                   fontWeight: FontWeight.w700,
                   decoration: TextDecoration.none,
+                  letterSpacing: 0.5,
                 ),
               ),
             ),
@@ -1547,5 +1550,49 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
     if (price == null) return 'N/A';
     final odds = price is int ? price : int.tryParse(price.toString()) ?? 0;
     return odds > 0 ? '+$odds' : '$odds';
+  }
+
+  // Helper method to get team logo with debugging
+  String? _getTeamLogoWithDebug(String teamName) {
+    final logoPath = TeamLogoUtils.getTeamLogo(teamName);
+    print('Team: $teamName -> Logo: $logoPath'); // Debug logging
+    return logoPath;
+  }
+
+  // Helper method to build logo fallback
+  Widget _buildLogoFallback() {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            const Color(0xFF4CAF50).withOpacity(0.1),
+            const Color(0xFF4CAF50).withOpacity(0.05),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: const Icon(
+        CupertinoIcons.sportscourt,
+        size: 32,
+        color: Color(0xFF4CAF50),
+      ),
+    );
+  }
+
+  // Helper method to format team names for better display
+  String _formatTeamNameForDisplay(String teamName) {
+    if (teamName.isEmpty) return 'Team';
+    
+    // Handle common abbreviations and formatting
+    if (teamName.length > 20) {
+      // For very long names, try to use a shorter version
+      final parts = teamName.split(' ');
+      if (parts.length > 2) {
+        return '${parts.first} ${parts.last}';
+      }
+    }
+    
+    return teamName;
   }
 } 

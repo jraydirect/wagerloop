@@ -42,6 +42,92 @@ class _ScoresPageState extends State<ScoresPage> {
     return leagueLogos[sportKey] ?? '';
   }
 
+  // Helper method to build league logo widget
+  Widget _buildLeagueLogo(String sport, bool hasGames) {
+    final logoPath = getLeagueLogoPath(sport);
+    
+    // Force explicit logo paths to ensure they work
+    final Map<String, String> forceLogoPaths = {
+      'football/nfl': 'assets/leagueLogos/nfl.png',
+      'basketball/nba': 'assets/leagueLogos/nba.png',
+      'basketball/nba-summer-las-vegas': 'assets/leagueLogos/nba.png',
+      'baseball/mlb': 'assets/leagueLogos/mlb.png',
+      'hockey/nhl': 'assets/leagueLogos/nhl.png',
+      'mma/ufc': 'assets/leagueLogos/UFC_Logo.svg',
+    };
+    
+    final finalLogoPath = forceLogoPaths[sport] ?? logoPath;
+    
+    // If no logo path, return fallback icon
+    if (finalLogoPath.isEmpty) {
+      return Container(
+        height: 28,
+        width: 28,
+        decoration: BoxDecoration(
+          color: Colors.grey.withOpacity(0.3),
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: const Icon(
+          CupertinoIcons.sportscourt,
+          size: 16,
+          color: Colors.grey,
+        ),
+      );
+    }
+
+    // Build logo widget with proper error handling and forced loading
+    try {
+      if (finalLogoPath.endsWith('.svg')) {
+        return SvgPicture.asset(
+          finalLogoPath,
+          height: 28,
+          width: 28,
+          fit: BoxFit.contain,
+          colorFilter: hasGames ? null : const ColorFilter.mode(Colors.grey, BlendMode.srcIn),
+        );
+      } else {
+        return Image.asset(
+          finalLogoPath,
+          height: 28,
+          width: 28,
+          fit: BoxFit.contain,
+          color: hasGames ? null : Colors.grey,
+          errorBuilder: (context, error, stackTrace) {
+            // Fallback to generic icon if image fails to load
+            return Container(
+              height: 28,
+              width: 28,
+              decoration: BoxDecoration(
+                color: Colors.grey.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: const Icon(
+                CupertinoIcons.sportscourt,
+                size: 16,
+                color: Colors.grey,
+              ),
+            );
+          },
+        );
+      }
+    } catch (e) {
+      // Fallback to generic icon if anything fails
+      return Container(
+        height: 28,
+        width: 28,
+        decoration: BoxDecoration(
+          color: Colors.grey.withOpacity(0.3),
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: const Icon(
+          CupertinoIcons.sportscourt,
+          size: 16,
+          color: Colors.grey,
+        ),
+      );
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -532,35 +618,7 @@ class _ScoresPageState extends State<ScoresPage> {
               padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
-                  getLeagueLogoPath(sport).isNotEmpty
-                      ? (getLeagueLogoPath(sport).endsWith('.svg')
-                          ? SvgPicture.asset(
-                              getLeagueLogoPath(sport),
-                              height: 28,
-                              width: 28,
-                              fit: BoxFit.contain,
-                              colorFilter: hasGames ? null : const ColorFilter.mode(Colors.grey, BlendMode.srcIn),
-                            )
-                          : Image.asset(
-                              getLeagueLogoPath(sport),
-                              height: 28,
-                              width: 28,
-                              fit: BoxFit.contain,
-                              color: hasGames ? null : Colors.grey,
-                            ))
-                      : Container(
-                          height: 28,
-                          width: 28,
-                          decoration: BoxDecoration(
-                            color: Colors.grey.withOpacity(0.3),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: const Icon(
-                            CupertinoIcons.sportscourt,
-                            size: 16,
-                            color: Colors.grey,
-                          ),
-                        ),
+                  _buildLeagueLogo(sport, hasGames),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(

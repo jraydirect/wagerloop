@@ -128,13 +128,46 @@ class TeamLogoUtils {
     'Knicks': 'assets/nbaLogos/new-york-knicks.svg',
     'Magic': 'assets/nbaLogos/orlando-magic.svg',
     '76ers': 'assets/nbaLogos/philidephia-76ers.svg',
+    'Sixers': 'assets/nbaLogos/philidephia-76ers.svg',
     'Suns': 'assets/nbaLogos/phoenix-suns.svg',
     'Trail Blazers': 'assets/nbaLogos/portland-trail-blazers.svg',
+    'Blazers': 'assets/nbaLogos/portland-trail-blazers.svg',
     'Kings': 'assets/nbaLogos/sacramento-kings.svg',
     'Spurs': 'assets/nbaLogos/san-antonio-spurs.svg',
     'Raptors': 'assets/nbaLogos/toronto-raptors.svg',
     'Jazz': 'assets/nbaLogos/utah-jazz.svg',
     'Wizards': 'assets/nbaLogos/washington-wizards.svg',
+    
+    // Common ESPN variations and abbreviations
+    'Boston': 'assets/nbaLogos/boston-celtics.svg',
+    'BOS': 'assets/nbaLogos/boston-celtics.svg',
+    'Chicago': 'assets/nflLogos/bears.png', // Default to Bears for Chicago
+    'CHI': 'assets/nflLogos/bears.png',
+    'Los Angeles': 'assets/nbaLogos/los-angeles-lakers.svg', // Default to Lakers
+    'LA': 'assets/nbaLogos/los-angeles-lakers.svg',
+    'New York': 'assets/nflLogos/giants.png', // Default to Giants
+    'NY': 'assets/nflLogos/giants.png',
+    'Dallas': 'assets/nflLogos/cowboys.png',
+    'DAL': 'assets/nflLogos/cowboys.png',
+    'Miami': 'assets/nbaLogos/miami-heat.svg',
+    'MIA': 'assets/nbaLogos/miami-heat.svg',
+    'Denver': 'assets/nflLogos/broncos.png',
+    'DEN': 'assets/nflLogos/broncos.png',
+    'Seattle': 'assets/nflLogos/seahawks.png',
+    'SEA': 'assets/nflLogos/seahawks.png',
+    'San Francisco': 'assets/nflLogos/49ers.png',
+    'SF': 'assets/nflLogos/49ers.png',
+    'Philadelphia': 'assets/nflLogos/eagles.png',
+    'PHI': 'assets/nflLogos/eagles.png',
+    
+    // Sport-specific city defaults
+    'Chicago Bulls': 'assets/nbaLogos/chicago-bulls.svg',
+    'Chicago Bears': 'assets/nflLogos/bears.png',
+    'Chicago Cubs': 'assets/mlbLogos/cubs.png',
+    'Chicago White Sox': 'assets/mlbLogos/whiteSox.png',
+    'Boston Celtics': 'assets/nbaLogos/boston-celtics.svg',
+    'Boston Red Sox': 'assets/mlbLogos/redSox.png',
+    'Boston Bruins': 'assets/nhlLogos/bos_l.svg',
     
     // MLB Teams - mapping to actual asset files
     'Los Angeles Angels': 'assets/mlbLogos/angels.png',
@@ -280,19 +313,81 @@ class TeamLogoUtils {
   /// Returns:
   ///   String? containing the asset path or null if team not found
   static String? getTeamLogo(String teamName) {
+    if (teamName.isEmpty) return null;
+    
     // First try exact match
     String? logo = _teamLogos[teamName];
-    if (logo != null) return logo;
+    if (logo != null) {
+      print('TeamLogoUtils: Exact match found for "$teamName" -> $logo');
+      return logo;
+    }
     
-    // If no exact match, try fuzzy matching for common variations
+    // Try common ESPN abbreviations and formats
+    final normalizedName = _normalizeTeamName(teamName);
     for (String key in _teamLogos.keys) {
-      if (key.toLowerCase().contains(teamName.toLowerCase()) ||
-          teamName.toLowerCase().contains(key.toLowerCase())) {
+      if (_normalizeTeamName(key) == normalizedName) {
+        print('TeamLogoUtils: Normalized match found for "$teamName" -> "$key" -> ${_teamLogos[key]}');
         return _teamLogos[key];
       }
     }
     
+    // Try fuzzy matching for partial matches
+    for (String key in _teamLogos.keys) {
+      if (_isTeamMatch(teamName, key)) {
+        print('TeamLogoUtils: Fuzzy match found for "$teamName" -> "$key" -> ${_teamLogos[key]}');
+        return _teamLogos[key];
+      }
+    }
+    
+    print('TeamLogoUtils: No match found for "$teamName"');
     return null;
+  }
+  
+  /// Normalizes team names for better matching
+  static String _normalizeTeamName(String teamName) {
+    return teamName
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9]'), '') // Remove special characters
+        .replaceAll('losangeles', 'la')
+        .replaceAll('newyork', 'ny')
+        .replaceAll('sanfrancisco', 'sf')
+        .replaceAll('goldenstate', 'gs')
+        .replaceAll('newengland', 'ne')
+        .replaceAll('neworleans', 'no')
+        .replaceAll('tampabay', 'tb')
+        .replaceAll('greenbay', 'gb')
+        .replaceAll('kansascity', 'kc')
+        .replaceAll('lasvegas', 'lv');
+  }
+  
+  /// Enhanced team matching logic
+  static bool _isTeamMatch(String espnName, String mappedName) {
+    final espnNorm = _normalizeTeamName(espnName);
+    final mappedNorm = _normalizeTeamName(mappedName);
+    
+    // Check if one contains the other
+    if (espnNorm.contains(mappedNorm) || mappedNorm.contains(espnNorm)) {
+      return true;
+    }
+    
+    // Check for common team name patterns
+    final espnWords = espnName.toLowerCase().split(' ');
+    final mappedWords = mappedName.toLowerCase().split(' ');
+    
+    // Match by city or team name
+    for (String espnWord in espnWords) {
+      for (String mappedWord in mappedWords) {
+        if (espnWord.length > 3 && mappedWord.length > 3) {
+          if (espnWord == mappedWord || 
+              espnWord.contains(mappedWord) || 
+              mappedWord.contains(espnWord)) {
+            return true;
+          }
+        }
+      }
+    }
+    
+    return false;
   }
 
   /// Retrieves the sport-specific logo for league branding.

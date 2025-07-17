@@ -39,6 +39,10 @@
 	<string>454829996179-4g3cv5eiadbmf3tom9m5r1ae3n919j5r.apps.googleusercontent.com</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>WagerLoop needs access to your camera to scan betting slips and create picks automatically from photos.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>WagerLoop needs access to your photo library to upload profile pictures and scan betting slips from your saved photos.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>
