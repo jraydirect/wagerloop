@@ -6,6 +6,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../models/sports/sportsbook.dart';
 import '../models/sports/odds.dart';
 import 'sports_api_service.dart';
+import 'espn_odds_service.dart';
 
 /// Manages sports betting odds data for WagerLoop.
 /// 
@@ -23,6 +24,9 @@ class SportsOddsService {
   // The Odds API - get API key from environment variables
   final String _baseUrl = 'api.the-odds-api.com';
   String? get _apiKey => dotenv.env['THE_ODDS_API_KEY'];
+
+  // ESPN Odds Service for fallback
+  final ESPNOddsService _espnOddsService = ESPNOddsService();
 
   // Cache for odds data to avoid frequent API calls
   final Map<String, List<dynamic>> _oddsCache = {};
@@ -122,8 +126,8 @@ class SportsOddsService {
   ///   - Exception: If API key is missing or API request fails
   Future<Map<String, OddsData>> fetchOddsForGame(String gameId, String sport, {List<String>? sportsbooks}) async {
     if (_apiKey == null || _apiKey!.isEmpty) {
-      print('Warning: THE_ODDS_API_KEY not found. Please add it to your .env file to get real odds data.');
-      return _getMockOddsForGame(gameId, sport);
+      print('Warning: THE_ODDS_API_KEY not found. Falling back to ESPN odds data.');
+      return await _getESPNOddsAsFallback(gameId, sport);
     }
 
     final sportApiCode = _getSportApiCode(sport);
@@ -180,7 +184,8 @@ class SportsOddsService {
         return {};
       }
     } else {
-      return {};
+      print('The Odds API failed with status ${response.statusCode}. Falling back to ESPN odds.');
+      return await _getESPNOddsAsFallback(gameId, sport);
     }
   }
 
@@ -431,6 +436,90 @@ class SportsOddsService {
     } catch (e) {
       return null;
     }
+  }
+
+  /// Get ESPN odds as fallback when The Odds API is unavailable
+  /// 
+  /// Converts ESPN odds data to OddsData format for consistency
+  Future<Map<String, OddsData>> _getESPNOddsAsFallback(String gameId, String sport) async {
+    try {
+      final espnData = await _espnOddsService.fetchGameOdds(gameId, sport);
+      final odds = espnData['odds'] as Map<String, dynamic>? ?? {};
+      
+      if (odds.isEmpty) {
+        print('No ESPN odds available for game $gameId. Using mock data.');
+        return _getMockOddsForGame(gameId, sport);
+      }
+
+      final Map<String, OddsData> result = {};
+      
+      // Convert each ESPN sportsbook to OddsData format
+      odds.forEach((providerName, providerData) {
+        final sportsbook = Sportsbook(
+          id: providerName.toLowerCase().replaceAll(' ', '_'),
+          name: providerName,
+          isEnabled: true,
+        );
+
+        final oddsData = OddsData(
+          sportsbook: sportsbook,
+          moneyline: _convertESPNMoneyline(providerData['moneyline']),
+          spread: _convertESPNSpread(providerData['spread']),
+          total: _convertESPNTotal(providerData['total']),
+          lastUpdated: DateTime.tryParse(providerData['lastUpdated'] ?? '') ?? DateTime.now(),
+        );
+
+        result[providerName] = oddsData;
+      });
+
+      return result;
+    } catch (e) {
+      print('Error fetching ESPN odds as fallback: $e');
+      return _getMockOddsForGame(gameId, sport);
+    }
+  }
+
+  /// Convert ESPN moneyline format to OddsData format
+  Map<String, dynamic>? _convertESPNMoneyline(Map<String, dynamic>? moneyline) {
+    if (moneyline == null) return null;
+    
+    return {
+      'home': moneyline['home'],
+      'away': moneyline['away'],
+      if (moneyline['draw'] != null) 'draw': moneyline['draw'],
+    };
+  }
+
+  /// Convert ESPN spread format to OddsData format
+  Map<String, dynamic>? _convertESPNSpread(Map<String, dynamic>? spread) {
+    if (spread == null) return null;
+    
+    return {
+      'home': {
+        'point': spread['home']?['point'],
+        'price': spread['home']?['price'],
+      },
+      'away': {
+        'point': spread['away']?['point'],
+        'price': spread['away']?['price'],
+      },
+    };
+  }
+
+  /// Convert ESPN total format to OddsData format
+  Map<String, dynamic>? _convertESPNTotal(Map<String, dynamic>? total) {
+    if (total == null) return null;
+    
+    return {
+      'over': {
+        'point': total['over']?['point'],
+        'price': total['over']?['price'],
+      },
+      'under': {
+        'point': total['under']?['point'],
+        'price': total['under']?['price'],
+      },
+    };
   }
 
   /// Compare odds across sportsbooks

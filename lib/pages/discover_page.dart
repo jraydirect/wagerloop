@@ -4,6 +4,7 @@ import 'coaches_info_page.dart';
 import 'referees_info_page.dart';
 import 'wager_gpt_page.dart';
 import 'weather_info_page.dart';
+import 'communities_page.dart';
 
 class DiscoverPage extends StatefulWidget {
   const DiscoverPage({Key? key}) : super(key: key);
@@ -302,6 +303,13 @@ class _DiscoverPageState extends State<DiscoverPage> with TickerProviderStateMix
                           context,
                           MaterialPageRoute(
                             builder: (context) => const WagerGPTPage(),
+                          ),
+                        );
+                      } else if (feature['name'] == 'Communities') {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const CommunitiesPage(),
                           ),
                         );
                       } else {

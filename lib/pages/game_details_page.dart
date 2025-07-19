@@ -5,6 +5,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:convert';
 import 'dart:ui';
 import '../utils/team_logo_utils.dart';
+import '../widgets/espn_odds_display_widget.dart';
 
 class GameDetailsPage extends StatefulWidget {
   final dynamic game; // ESPN game object
@@ -18,7 +19,6 @@ class GameDetailsPage extends StatefulWidget {
 
 class _GameDetailsPageState extends State<GameDetailsPage> {
   Map<String, dynamic>? gameDetails;
-  Map<String, dynamic>? fanDuelOdds;
   Map<String, List<Map<String, dynamic>>>? teamRosters; // Store both teams' rosters
   bool isLoading = true;
   bool isLoadingRosters = false;
@@ -37,15 +37,11 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
         error = null;
       });
 
-      // Load ESPN game details and FanDuel odds in parallel
-      final results = await Future.wait([
-        _fetchESPNGameDetails(),
-        _fetchFanDuelOdds(),
-      ]);
+      // Load only ESPN game details (remove FanDuel odds that's causing the error)
+      final details = await _fetchESPNGameDetails();
       
       setState(() {
-        gameDetails = results[0];
-        fanDuelOdds = results[1];
+        gameDetails = details;
         isLoading = false;
       });
 
@@ -166,6 +162,18 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         print('ESPN Game Details: Found data for event $eventId');
+        
+        // Check if odds data is available in the summary response
+        if (data['predictor'] != null) {
+          print('ESPN Predictor data found: ${data['predictor'].keys.toList()}');
+        }
+        if (data['odds'] != null) {
+          print('ESPN Odds data found: ${data['odds'].keys.toList()}');
+        }
+        if (data['winprobability'] != null) {
+          print('ESPN Win probability data found');
+        }
+        
         return data;
       }
       print('ESPN API Error: ${response.statusCode}');
@@ -176,70 +184,17 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
     }
   }
 
-  Future<Map<String, dynamic>?> _fetchFanDuelOdds() async {
-    try {
-      // Convert sport path to Odds API format
-      final oddsApiSport = _convertToOddsApiSport(widget.sport);
-      
-      // Get game date for filtering
-      final gameDate = DateTime.parse(widget.game['date']);
-      final now = DateTime.now();
-      
-      // Only fetch odds for upcoming games (not past games)
-      if (gameDate.isBefore(now.subtract(const Duration(hours: 2)))) {
-        print('FanDuel Odds: Game is in the past, odds not available');
-        return null;
-      }
-      
-      final dateStart = DateTime(gameDate.year, gameDate.month, gameDate.day);
-      final dateEnd = dateStart.add(const Duration(days: 1));
-      
-      final commenceTimeFrom = dateStart.toUtc().toIso8601String();
-      final commenceTimeTo = dateEnd.toUtc().toIso8601String();
-      
-      print('FanDuel Odds: Fetching odds for $oddsApiSport from $commenceTimeFrom to $commenceTimeTo');
-      
-      final response = await http.get(Uri.parse(
-        'https://api.the-odds-api.com/v4/sports/$oddsApiSport/odds?apiKey=37a6ab2abd9938d21be970bb794eb6a3&regions=us&markets=h2h,spreads,totals&bookmakers=fanduel&commenceTimeFrom=$commenceTimeFrom&commenceTimeTo=$commenceTimeTo'
-      ));
-      
-      if (response.statusCode == 200) {
-        final oddsData = json.decode(response.body);
-        
-        // Match game by team names
-        final homeTeam = _getESPNTeamName(widget.game, true);
-        final awayTeam = _getESPNTeamName(widget.game, false);
-        
-        final matchedGame = oddsData.firstWhere(
-          (game) => _teamsMatch(game['home_team'], game['away_team'], homeTeam, awayTeam),
-          orElse: () => null,
-        );
-        
-        if (matchedGame != null) {
-          print('FanDuel Odds: Found match for $homeTeam vs $awayTeam');
-        } else {
-          print('FanDuel Odds: No match found for $homeTeam vs $awayTeam');
-        }
-        
-        return matchedGame;
-      }
-      print('Odds API Error: ${response.statusCode}');
-      return null;
-    } catch (e) {
-      print('Odds API Error: $e');
-      return null;
-    }
-  }
-
-  String _convertToOddsApiSport(String espnSport) {
-    final Map<String, String> sportMapping = {
-      'football/nfl': 'americanfootball_nfl',
-      'basketball/nba': 'basketball_nba',
-      'baseball/mlb': 'baseball_mlb',
-      'hockey/nhl': 'icehockey_nhl',
-      'mma/ufc': 'mma_mixed_martial_arts',
+  String _convertSportForESPN(String sport) {
+    // Convert ESPN scoreboard sport format to our ESPN odds service format
+    const sportMapping = {
+      'football/nfl': 'NFL',
+      'basketball/nba': 'NBA',
+      'basketball/nba-summer-las-vegas': 'NBA',
+      'baseball/mlb': 'MLB',
+      'hockey/nhl': 'NHL',
+      'mma/ufc': 'UFC',
     };
-    return sportMapping[espnSport] ?? 'americanfootball_nfl';
+    return sportMapping[sport] ?? 'NFL';
   }
 
   String _getESPNTeamName(dynamic game, bool isHome) {
@@ -261,22 +216,6 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
 
     final teamInfo = team['team'] ?? team['athlete'] ?? {};
     return teamInfo['displayName'] ?? teamInfo['name'] ?? teamInfo['shortName'] ?? '';
-  }
-
-  bool _teamsMatch(String oddsHome, String oddsAway, String espnHome, String espnAway) {
-    return _normalizeTeamName(oddsHome) == _normalizeTeamName(espnHome) &&
-           _normalizeTeamName(oddsAway) == _normalizeTeamName(espnAway);
-  }
-
-  String _normalizeTeamName(String teamName) {
-    // Basic team name normalization
-    return teamName
-        .toLowerCase()
-        .replaceAll('los angeles', 'la')
-        .replaceAll('new york', 'ny')
-        .replaceAll('san francisco', 'sf')
-        .replaceAll('golden state', 'gs')
-        .replaceAll(' ', '');
   }
 
   @override
@@ -408,6 +347,7 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
                         _buildPremiumGameHeader(),
                         _buildPremiumGameScore(),
                         _buildPremiumOddsSection(),
+                        _buildESPNOddsSection(),
                         _buildGameStats(),
                         _buildTeamRosters(),
                         const SizedBox(height: 32),
@@ -920,6 +860,26 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
     );
   }
 
+  Widget _buildESPNOddsSection() {
+    // Debug logging for ESPN odds
+    final eventId = widget.game['id']?.toString() ?? '';
+    final sport = widget.sport; // Use original sport path like 'baseball/mlb'
+    print('ESPN Odds Debug - Event ID: $eventId, Sport: $sport');
+    print('ESPN Odds Debug - Full Game Object Keys: ${widget.game.keys.toList()}');
+    
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: ESPNOddsDisplayWidget(
+        eventId: eventId,
+        sport: sport,
+        compact: false,
+        showProbabilities: true,
+        showPredictor: true,
+        preferredProviders: const [2000, 38, 31, 36, 25], // Bet365, Caesars, William Hill, Unibet, Westgate
+      ),
+    );
+  }
+
   Widget _buildPremiumOddsSection() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
@@ -968,7 +928,7 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
                     ),
                     const SizedBox(width: 12),
                     const Text(
-                      'Betting Odds',
+                      'ESPN Betting Odds',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 20,
@@ -979,11 +939,15 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
                   ],
                 ),
                 const SizedBox(height: 24),
-                // Odds Content
-                if (fanDuelOdds != null)
-                  _buildFanDuelOddsContent()
-                else
-                  _buildNoOddsAvailable(),
+                // Use ESPN Odds Widget instead of FanDuel
+                ESPNOddsDisplayWidget(
+                  eventId: widget.game['id']?.toString() ?? '',
+                  sport: _convertSportForESPN(widget.sport),
+                  compact: true,
+                  showProbabilities: false,
+                  showPredictor: false,
+                  preferredProviders: const [2000, 38, 31],
+                ),
               ],
             ),
           ),
@@ -992,26 +956,7 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
     );
   }
 
-  Widget _buildFanDuelOddsContent() {
-    final bookmaker = fanDuelOdds!['bookmakers']?.firstWhere(
-      (book) => book['key'] == 'fanduel',
-      orElse: () => null,
-    );
 
-    if (bookmaker == null) {
-      return _buildNoOddsAvailable();
-    }
-
-    return Column(
-      children: [
-        _buildPremiumOddsMarket(bookmaker, 'h2h', 'Moneyline', CupertinoIcons.money_dollar_circle),
-        const SizedBox(height: 16),
-        _buildPremiumOddsMarket(bookmaker, 'spreads', 'Point Spread', CupertinoIcons.chart_bar),
-        const SizedBox(height: 16),
-        _buildPremiumOddsMarket(bookmaker, 'totals', 'Over/Under', CupertinoIcons.arrow_up_arrow_down),
-      ],
-    );
-  }
 
   Widget _buildNoOddsAvailable() {
     return Container(

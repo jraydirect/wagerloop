@@ -1,329 +1,210 @@
-Key Characteristics of ESPN's Undocumented APIs
-Unofficial and Unstable: ESPN does not provide public support or documentation for these APIs. Endpoints, parameters, and response structures can change unexpectedly, potentially breaking applications that rely on them.
-
-Discovery through Reverse-Engineering: Most endpoints have been identified by monitoring network requests made by ESPN's own platforms (e.g., espn.com).
-
-Multiple Base URLs: ESPN uses several API subdomains, each likely serving different types of data or backend services. Examples include site.api.espn.com (general site data), sports.core.api.espn.com (core sports data), and fantasy.espn.com (fantasy sports data).
-
-Common Parameters and Headers:
-
-Path Parameters: Used within the URL path to specify resources (e.g., {sport}, {league}, {team_id}, {athlete_id}, {game_id}, {year}).
-
-Query Parameters: Appended to the URL for filtering, pagination, or modifying requests (e.g., limit, dates, season, seasontype, week, view, enable, active=true, xhr=1, query).
-
-HTTP Headers: X-Fantasy-Filter (for complex filtering in Fantasy API) and Accept: application/json are notable. Authentication cookies (espn_s2, SWID) are required for private fantasy leagues.
-
-Fantasy API Specifics: The Fantasy API, primarily under fantasy.espn.com, heavily uses the view query parameter and X-Fantasy-Filter header for data manipulation. It's often less intuitive due to its design for ESPN's internal application needs, leading many developers to use community-developed wrapper libraries.
-
-Overview of Identified API Endpoints
-ESPN's APIs are broadly categorized into General & Cross-Sport Endpoints and Sport-Specific Endpoints.
-
-General & Cross-Sport Endpoints
-These endpoints provide foundational information applicable across multiple sports.
-
-Function
-
-Base URL
-
-Path
-
-Key Parameters
-
-Example / Notes
-
-List All Sports
-
-site.api.espn.com
-
-/apis/site/v2/sports
-
--
-
-http://site.api.espn.com/apis/site/v2/sports
-
-List Leagues (Sport)
-
-site.api.espn.com
-/apis/site/v2/sports/{sport}
-
-{sport}
-
-https://site.api.espn.com/apis/site/v2/sports/football
-
-General Search (v3)
-
-site.web.api.espn.com
-
-/apis/common/v3/search
-
-query, limit, mode
-
-.../search?query=nfl&limit=5&mode=prefix
-
-Calendar - Ondays
-
-sports.core.api.espn.com
-
-/v2/sports/{sport}/leagues/{league}/calendar/ondays
-
-{sport}, {league}
-
-.../football/leagues/nfl/calendar/ondays
-
-List Venues
-
-sports.core.api.espn.com
-
-/v2/sports/{sport}/leagues/{league}/venues
-
-{sport}, {league}, limit
-
-.../football/leagues/nfl/venues?limit=700
-
-List Seasons
-
-sports.core.api.espn.com
-
-/v2/sports/{sport}/leagues/{league}/seasons
-
-{sport}, {league}, limit
-
-.../football/leagues/nfl/seasons?limit=100
-
-List Events (Games)
-
-sports.core.api.espn.com
-
-/v2/sports/{sport}/leagues/{league}/events
-
-{sport}, {league}, dates, limit
-
-.../football/leagues/nfl/events?dates=2023
-
-List News (League)
-
-site.api.espn.com
-
-/apis/site/v2/sports/{sport}/{league}/news
-
-{sport}, {league}, limit
-
-.../football/nfl/news?limit=50
-
-
-Export to Sheets
-Sport-Specific Endpoints
-These endpoints are tailored for individual sports, often sharing similar structures but with sport-specific nuances.
-
-Football (NFL)
-Function
-
-Base URL
-
-Path
-
-Key Parameters
-
-Notes / Example
-
-Scoreboard (Site API)
-
-site.api.espn.com
-
-/apis/site/v2/sports/football/nfl/scoreboard
-
-dates, week, seasontype
-
-...?dates=2023&seasontype=2&week=1
-
-Scoreboard (CDN)
-
-cdn.espn.com
-
-/core/nfl/scoreboard
-
-xhr=1, limit
-
-...?xhr=1&limit=50 (Live updates)
-
-Standings (Site API)
-
-site.api.espn.com
-
-/apis/site/v2/sports/football/nfl/standings
-
-season
-
-...?season=2023
-
-List Teams (Site API)
-
-site.api.espn.com
-
-/apis/site/v2/sports/football/nfl/teams
-
--
-
-Provides list with IDs, names, logos
-
-Get Team (Site API)
-
-site.api.espn.com
-
-/apis/site/v2/sports/football/nfl/teams/{team_id}
-
-{team_id}
-
-.../teams/1 (Team ID or Abbreviation sometimes works)
-
-Team Roster (Site API)
-
-site.api.espn.com
-
-/apis/site/v2/sports/football/nfl/teams/{team_id}/roster
-
-{team_id}, enable
-
-...?enable=roster,projection,stats for detailed view
-
-Athlete Overview
-
-site.web.api.espn.com
-
-/apis/common/v3/sports/football/nfl/athletes/{ath_id}/overview
-
-{ath_id}
-
-Comprehensive player overview
-
-Game Summary (Site API)
-
-site.api.espn.com
-
-/apis/site/v2/sports/football/nfl/summary
-
-event={event_id}
-
-Key game details, box score info
-
-Game Play-by-Play (CDN)
-
-cdn.espn.com
-
-/core/nfl/playbyplay
-
-xhr=1, gameId={event_id}
-
-Detailed play list
-
-
-Export to Sheets
-Football (College)
-Similar to NFL, but with features like rankings and conference filtering.
-
-Scoreboard: site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard?dates={date}&groups={id}&week={week}
-
-Rankings: site.api.espn.com/apis/site/v2/sports/football/college-football/rankings
-
-List Teams: site.api.espn.com/apis/site/v2/sports/football/college-football/teams
-
-Game Summary: site.api.espn.com/apis/site/v2/sports/football/college-football/summary?event={gameId}
-
-Basketball (NBA, WNBA, College)
-Follows common structures, with distinct paths for men's/women's college basketball.
-
-NBA Scoreboard: site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=YYYYMMDD
-
-WNBA Scores: http://site.api.espn.com/apis/site/v2/sports/basketball/wnba/scoreboard
-
-Men's College Basketball Scores: http://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/scoreboard
-
-Teams (NBA): site.api.espn.com/apis/site/v2/sports/basketball/nba/teams
-
-Player Stats (NBA): site.api.espn.com/apis/site/v2/sports/basketball/nba/statistics/players
-
-Baseball (MLB, College)
-Standard endpoints for scores, teams, and news.
-
-MLB Scoreboard: site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard?dates=YYYYMMDD
-
-MLB Player Details: site.web.api.espn.com/apis/common/v3/sports/baseball/mlb/athletes/{ath_id}
-
-College Baseball Scores: https://site.api.espn.com/apis/site/v2/sports/baseball/college-baseball/scoreboard
-
-Hockey (NHL)
-Standard endpoints for scores, teams, and players.
-
-NHL Scores: http://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard
-
-NHL Players: https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/players
-
-Soccer
-Requires specific league abbreviations in the path.
-
-Scoreboard / Schedule: site.api.espn.com/apis/site/v2/sports/soccer/{league}/scoreboard?dates={date} (e.g., {league}=eng.1 for Premier League)
-
-Standings: site.api.espn.com/apis/site/v2/sports/soccer/{league}/standings?season=YYYY
-
-List Leagues: site.api.espn.com/apis/site/v2/sports/soccer
-
-Other Sports (Golf, Racing, Tennis, etc.)
-While less documented, these sports likely follow similar structural patterns based on base URLs and known league abbreviations.
-
-Tennis Players: https://site.api.espn.com/apis/site/v2/sports/tennis/{tour}/players (e.g., {tour}=atp, wta)
-
-Fantasy Sports API Endpoints
-ESPN's Fantasy API is distinct, with access to private league data requiring authentication cookies. It heavily uses the view parameter and X-Fantasy-Filter header for data manipulation.
-
-Function
-
-Base URL Pattern
-
-Path/Query Structure
-
-Key Parameters/Headers
-
-Notes
-
-League Data (Current >2018)
-
-fantasy.espn.com
-
-/apis/v3/games/ffl/seasons/{yr}/segments/0/leagues/{id}
-
-view={view_name}, X-Fantasy-Filter
-
-Base endpoint for recent seasons.
-
-League Data (Historical <2018)
-
-fantasy.espn.com
-
-/apis/v3/games/ffl/leagueHistory/{id}?seasonId={yr}
-
-view={view_name}, X-Fantasy-Filter
-
-Separate endpoint for older seasons.
-
-Player Info List
-
-fantasy.espn.com
-
-/apis/v3/games/ffl/seasons/{yr}/players?view=players_wl
-
-view=players_wl, X-Fantasy-Filter
-
-Retrieves list of players available in the fantasy game for the season.
-
-Player Info Detailed
-
-fantasy.espn.com
-
-/apis/v3/games/ffl/seasons/{yr}/segments/0/leaguedefaults/{PPR_ID}?view=kona_player_info
-
-view=kona_player_info, X-Fantasy-Filter
-
-Provides rich player data including stats, projections. {PPR_ID} may vary.
-
-
-Export to Sheets
+4. General & Cross-Sport Endpoints
+These endpoints provide foundational information or functionality that spans multiple sports or leagues. They are often starting points for discovering available data or performing broad searches.
+
+Table 2: General API Endpoints
+
+Function	Base URL	Path	Key Parameters	Example / Notes	References
+List All Sports	site.api.espn.com	/apis/site/v2/sports	-	http://site.api.espn.com/apis/site/v2/sports	[2]
+List Leagues (Sport)	site.api.espn.com	/apis/site/v2/sports/{sport}	{sport}	https://site.api.espn.com/apis/site/v2/sports/football	[2]
+General Search (v3)	site.web.api.espn.com	/apis/common/v3/search	query, limit, mode	.../search?query=nfl&limit=5&mode=prefix	[3, 6]
+Search (v2)	site.web.api.espn.com	/apis/search/v2	query, limit	.../search/v2?limit=100&query=Tom+Brady	[6]
+Calendar - Ondays	sports.core.api.espn.com	/v2/sports/{sport}/leagues/{league}/calendar/ondays	{sport}, {league}	.../football/leagues/nfl/calendar/ondays	[6]
+Calendar - Offdays	sports.core.api.espn.com	/v2/sports/{sport}/leagues/{league}/calendar/offdays	{sport}, {league}	.../football/leagues/nfl/calendar/offdays	[6]
+Calendar - Whitelist	sports.core.api.espn.com	/v2/sports/{sport}/leagues/{league}/calendar/whitelist	{sport}, {league}	.../football/leagues/nfl/calendar/whitelist	[6, 10]
+Calendar - Blacklist	sports.core.api.espn.com	/v2/sports/{sport}/leagues/{league}/calendar/blacklist	{sport}, {league}	.../football/leagues/nfl/calendar/blacklist	[6, 10]
+List Venues	sports.core.api.espn.com	/v2/sports/{sport}/leagues/{league}/venues	{sport}, {league}, limit	.../football/leagues/nfl/venues?limit=700	[6]
+List Franchises	sports.core.api.espn.com	/v2/sports/{sport}/leagues/{league}/franchises	{sport}, {league}, limit	.../football/leagues/nfl/franchises?limit=50	[4, 6]
+List Seasons	sports.core.api.espn.com	/v2/sports/{sport}/leagues/{league}/seasons	{sport}, {league}, limit	.../football/leagues/nfl/seasons?limit=100	[4, 6, 8]
+Get Season Details	sports.core.api.espn.com	/v2/sports/{sport}/leagues/{league}/seasons/{year}	{sport}, {league}, {year}	.../football/leagues/nfl/seasons/2023	[4, 6, 8, 10]
+List Weeks for Season	sports.core.api.espn.com	/v2/sports/{sport}/leagues/{league}/seasons/{year}/types/{st}/weeks	{sport}, {league}, {year}, {st}	.../nfl/seasons/2023/types/2/weeks (st = seasontype)	[4, 6, 8, 10]
+Get Week Details	sports.core.api.espn.com	/v2/sports/{sport}/leagues/{league}/seasons/{year}/types/{st}/weeks/{wn}	{sport..wn}	.../nfl/seasons/2023/types/2/weeks/1 (wn = weeknum)	[6, 8, 10]
+List Events (Games)	sports.core.api.espn.com	/v2/sports/{sport}/leagues/{league}/events	{sport}, {league}, dates, limit	.../football/leagues/nfl/events?dates=2023	[4, 6, 8, 10]
+List Events by Week	sports.core.api.espn.com	/v2/sports/{sport}/leagues/{league}/seasons/{year}/types/{st}/weeks/{wk}/events	{sport..wk}	.../nfl/seasons/2023/types/2/weeks/1/events	[4, 6, 8, 10]
+List News (League)	site.api.espn.com	/apis/site/v2/sports/{sport}/{league}/news	{sport}, {league}, limit	.../football/nfl/news?limit=50	[3, 4, 5, 6, 2, 7, 9, 16]
+News Feed (Now)	now.core.api.espn.com	/v1/sports/news	sport, limit	.../news?limit=1000&sport=football (Provides links to events)	[6]
+Scoreboard Header	site.web.api.espn.com	/apis/v2/scoreboard/header	sport, league	.../header?sport=football&league=nfl	[3, 6]
+5. Sport-Specific Endpoints
+While many API structures are similar across sports, specific endpoints, parameters, and data availability can vary. The following sections detail endpoints discovered for major sports leagues. The general pattern often follows /{base_url}/apis/{version}/{domain}/{sport}/{league}/{resource}.[5, 2, 7, 9, 23, 16, 18] However, variations exist, such as the use of league abbreviations in soccer paths [5, 2, 9] or team abbreviations in some college sports endpoints [5, 7, 9], requiring careful attention to the specific sport being queried.
+
+5.1. Football (NFL)
+The NFL is extensively covered in the discovered API endpoints, reflecting its popularity. Data spans scores, schedules, team information, player statistics, game details, news, and draft information. Many examples across the different base URLs (site.api, sports.core.api, site.web.api, cdn.espn) relate to the NFL.[3, 4, 5, 6, 2, 7, 8, 9, 10, 13, 15, 23, 16]
+
+Table 3: Selected NFL API Endpoints
+
+Function	Base URL	Path	Key Parameters	Notes / Example	References
+Scoreboard (Site API)	site.api.espn.com	/apis/site/v2/sports/football/nfl/scoreboard	dates, week, seasontype	...?dates=2023&seasontype=2&week=1	[3, 5, 6, 2, 7, 9, 13, 23, 16]
+Scoreboard (CDN)	cdn.espn.com	/core/nfl/scoreboard	xhr=1, limit	...?xhr=1&limit=50 (Live updates)	[6]
+Schedule (CDN)	cdn.espn.com	/core/nfl/schedule	xhr=1, year, week	...?xhr=1&year=2023&week=1	[6]
+Standings (Site API)	site.api.espn.com	/apis/site/v2/sports/football/nfl/standings	season	...?season=2023	[2]
+Standings (CDN)	cdn.espn.com	/core/nfl/standings	xhr=1	...?xhr=1	[6]
+Conference Standings	sports.core.api.espn.com	/v2/sports/football/leagues/nfl/seasons/{yr}/types/{st}/groups/{id}/standings	{yr}, {st}, {id}	{id}=7 (NFC), 8 (AFC)	[6, 10]
+List Teams (Site API)	site.api.espn.com	/apis/site/v2/sports/football/nfl/teams	-	Provides list with IDs, names, logos	[5, 6, 2, 7, 9, 16]
+Get Team (Site API)	site.api.espn.com	/apis/site/v2/sports/football/nfl/teams/{team_id}	{team_id}	.../teams/1 (Team ID or Abbreviation sometimes works)	[5, 6, 7, 9, 10, 16]
+Get Team (Core API)	sports.core.api.espn.com	/v2/sports/football/leagues/nfl/seasons/{yr}/teams/{team_id}	{yr}, {team_id}	Provides core team data for a season	[3, 4, 6]
+Team Roster (Site API)	site.api.espn.com	/apis/site/v2/sports/football/nfl/teams/{team_id}/roster	{team_id}, enable	...?enable=roster,projection,stats for detailed view	[3, 4, 6, 2]
+Team Schedule (Site API)	site.api.espn.com	/apis/site/v2/sports/football/nfl/teams/{team_id}/schedule	{team_id}, season	...?season=2023	[3, 4, 6, 2]
+Team Injuries	sports.core.api.espn.com	/v2/sports/football/leagues/nfl/teams/{team_id}/injuries	{team_id}		[6, 10]
+Team Depth Chart	sports.core.api.espn.com	/v2/sports/football/leagues/nfl/seasons/{yr}/teams/{team_id}/depthcharts	{yr}, {team_id}		[3, 4, 6]
+List Athletes (Core API)	sports.core.api.espn.com	/v3/sports/football/nfl/athletes	limit, active=true, page	...?limit=20000&active=true (v3 endpoint)	[6]
+Athlete Overview	site.web.api.espn.com	/apis/common/v3/sports/football/nfl/athletes/{ath_id}/overview	{ath_id}	Comprehensive player overview	[6]
+Athlete Gamelog	site.web.api.espn.com	/apis/common/v3/sports/football/nfl/athletes/{ath_id}/gamelog	{ath_id}	Player stats per game	[6, 10]
+Athlete Eventlog	sports.core.api.espn.com	/v2/sports/football/leagues/nfl/seasons/{yr}/athletes/{ath_id}/eventlog	{yr}, {ath_id}	Log of events/stats for a player in a season	[3, 6, 10]
+Athlete Splits	site.web.api.espn.com	/apis/common/v3/sports/football/nfl/athletes/{ath_id}/splits	{ath_id}	Player stats broken down by various conditions	[6, 10]
+Game Summary (Site API)	site.api.espn.com	/apis/site/v2/sports/football/nfl/summary	event={event_id}	Key game details, box score info	[4, 6, 2]
+Game Boxscore (CDN)	cdn.espn.com	/core/nfl/boxscore	xhr=1, gameId={event_id}	Detailed box score data	[6]
+Game Play-by-Play (CDN)	cdn.espn.com	/core/nfl/playbyplay	xhr=1, gameId={event_id}	Detailed play list	[6]
+Game Plays (Core API)	sports.core.api.espn.com	/v2/sports/football/leagues/nfl/events/{eid}/competitions/{eid}/plays	{eid}, limit	{eid}=event_id, limit=300+ recommended	[3, 6, 10]
+Game Drives (Core API)	sports.core.api.espn.com	/v2/sports/football/leagues/nfl/events/{eid}/competitions/{eid}/drives	{eid}	Drive summaries for the game	[6]
+Leaders (Site API v3)	site.api.espn.com	/apis/site/v3/sports/football/nfl/leaders	season, seasontype	League leaders for various stats	[3, 6, 10]
+Leaders (Core API)	sports.core.api.espn.com	/v2/sports/football/leagues/nfl/seasons/{yr}/types/{st}/leaders	{yr}, {st}	Season leaders	[6, 10]
+Draft	sports.core.api.espn.com	/v2/sports/football/leagues/nfl/seasons/{yr}/draft	{yr}	Draft results	[4, 6, 8, 10]
+News (Team Specific)	site.api.espn.com	/apis/site/v2/sports/football/nfl/news	team={team_id}	News filtered for a specific team	[6]
+Specific Nights	site.api.espn.com	/apis/site/v2/{night}nightfootball	-	{night} = monday, thursday, sunday	[6]
+5.2. Football (College)
+College football shares similarities with the NFL structure but includes unique elements like rankings and conference/group filtering. Some endpoints may also accept team abbreviations instead of numerical IDs.[5, 7, 9] A notable issue was reported where the query parameter group=ID returned default results, while groups=ID worked correctly for filtering scoreboards by conference.[15]
+
+Table 4: Selected College Football API Endpoints
+
+Function	Base URL	Path	Key Parameters	Notes / Example	References
+Scoreboard	site.api.espn.com	/apis/site/v2/sports/football/college-football/scoreboard	dates, groups, week	...?groups=8&week=5 (Group 8 = SEC)	[3, 5, 7, 9, 23]
+Rankings	site.api.espn.com	/apis/site/v2/sports/football/college-football/rankings	-	AP Top 25, Coaches Poll, CFP Rankings	[5, 7, 9]
+List Teams	site.api.espn.com	/apis/site/v2/sports/football/college-football/teams	-	List of college teams	[5, 7, 9]
+Get Team	site.api.espn.com	/apis/site/v2/sports/football/college-football/teams/:team	:team (abbreviation)	.../teams/gt (Georgia Tech)	[5, 7, 9]
+News	site.api.espn.com	/apis/site/v2/sports/football/college-football/news	-	Latest college football news	[5, 2, 7, 9]
+Game Summary	site.api.espn.com	/apis/site/v2/sports/football/college-football/summary	event={gameId}	...?event=400934572 (2017 Army-Navy)	[5, 7, 9]
+Season Info	site.api.espn.com	/apis/common/v3/sports/football/college-football/season	-	Provides season start/end dates, types (pre, regular, post)	[7]
+Core League Info	sports.core.api.espn.com	/v2/sports/football/leagues/college-football/	-	Root endpoint for core college football data	[15]
+5.3. Basketball (NBA)
+NBA endpoints follow the common structure observed for major professional leagues.[5, 2, 7, 9, 23, 16, 18]
+
+Table 5: Selected NBA API Endpoints
+
+Function	Base URL	Path	Key Parameters	Notes / Example	References
+Scoreboard	site.api.espn.com	/apis/site/v2/sports/basketball/nba/scoreboard	dates	...?dates=YYYYMMDD	[5, 7, 9, 23, 16]
+List Teams	site.api.espn.com	/apis/site/v2/sports/basketball/nba/teams	-		[5, 2, 7, 9, 16]
+Get Team	site.api.espn.com	/apis/site/v2/sports/basketball/nba/teams/:team	:team (ID or Abbrev)	.../teams/lal or .../teams/13 (Lakers)	[5, 7, 9, 16]
+Team Roster	site.api.espn.com	/apis/site/v2/sports/basketball/nba/{team}/roster	{team} (ID or Abbrev)		[2]
+Team Schedule	site.api.espn.com	/apis/site/v2/sports/basketball/nba/{team}/schedule	{team}, season		[2]
+List Players	site.api.espn.com	/apis/site/v2/sports/basketball/nba/players	-		[2]
+Player Stats	site.api.espn.com	/apis/site/v2/sports/basketball/nba/statistics/players	-	Aggregate player statistics	[2]
+News	site.api.espn.com	/apis/site/v2/sports/basketball/nba/news	-		[5, 7, 9, 16]
+5.4. Basketball (WNBA)
+Endpoints for the WNBA mirror the NBA structure.[5, 7, 9, 23, 18]
+
+Scores: http://site.api.espn.com/apis/site/v2/sports/basketball/wnba/scoreboard [5, 7, 9, 23]
+News: http://site.api.espn.com/apis/site/v2/sports/basketball/wnba/news [5, 7, 9]
+All Teams: http://site.api.espn.com/apis/site/v2/sports/basketball/wnba/teams [5, 7, 9]
+Specific Team: http://site.api.espn.com/apis/site/v2/sports/basketball/wnba/teams/:team [5, 7, 9]
+5.5. Basketball (College - Men's & Women's)
+Both Men's and Women's college basketball follow similar endpoint patterns, distinguished by mens-college-basketball or womens-college-basketball in the path.[5, 7, 9, 23, 18] Specific endpoints for bracketology have also been identified, although their reliability for recent years may be questionable.[8]
+
+Scores (Men's): http://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/scoreboard [5, 7, 9, 23]
+News (Men's): http://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/news [5, 7, 9]
+Teams (Men's): http://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/teams [5, 7, 9]
+Specific Team (Men's): http://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/teams/:team [5, 7, 9]
+Scores (Women's): http://site.api.espn.com/apis/site/v2/sports/basketball/womens-college-basketball/scoreboard [5, 7, 9, 23]
+News (Women's): http://site.api.espn.com/apis/site/v2/sports/basketball/womens-college-basketball/news [5, 7, 9]
+Teams (Women's): http://site.api.espn.com/apis/site/v2/sports/basketball/womens-college-basketball/teams [5, 7, 9]
+Specific Team (Women's): http://site.api.espn.com/apis/site/v2/sports/basketball/womens-college-basketball/teams/:team [5, 7, 9]
+Bracketology (Men's - Historical): http://sports.core.api.espn.com/v2/sports/basketball/leagues/mens-college-basketball/tournaments/22/seasons/${season}/bracketology (Reported working up to 2021) [8]
+Bracket Fastcast (Men's): https://fcast.espncdn.com/FastcastService/pubsub/profiles/12000/topic/bracket-basketball-mens-college-basketball-22-en/message/24624/checkpoint (Observed endpoint) [8]
+5.6. Baseball (MLB)
+MLB endpoints are available for standard data types like scores, teams, players, and news.[5, 2, 7, 9, 23, 16, 18]
+
+Table 6: Selected MLB API Endpoints
+
+Function	Base URL	Path	Key Parameters	Notes / Example	References
+Scoreboard	site.api.espn.com	/apis/site/v2/sports/baseball/mlb/scoreboard	dates	...?dates=YYYYMMDD	[5, 7, 9, 23, 16]
+List Teams	site.api.espn.com	/apis/site/v2/sports/baseball/mlb/teams	-		[5, 2, 7, 9, 16]
+Get Team	site.api.espn.com	/apis/site/v2/sports/baseball/mlb/teams/:team	:team (ID or Abbrev)		[5, 7, 9, 16]
+List Players	site.api.espn.com	/apis/site/v2/sports/baseball/mlb/players	-		[2]
+Player Stats (Aggregate)	site.api.espn.com	/apis/site/v2/sports/baseball/mlb/statistics/players	-		[2]
+Player Details	site.web.api.espn.com	/apis/common/v3/sports/baseball/mlb/athletes/{ath_id}	{ath_id}	.../athletes/5883 (Zack Greinke)	[16]
+News	site.api.espn.com	/apis/site/v2/sports/baseball/mlb/news	-		[5, 7, 9, 16]
+5.7. Baseball (College)
+Endpoints for college baseball include scores and season information.[5, 7, 9, 23, 18]
+
+Scores: https://site.api.espn.com/apis/site/v2/sports/baseball/college-baseball/scoreboard [5, 9, 23, 18]
+Season Info: http://site.api.espn.com/apis/common/v3/sports/baseball/college-baseball/season [7]
+5.8. Hockey (NHL)
+Standard endpoints exist for the NHL.[5, 2, 7, 9, 23, 18]
+
+Scores: http://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard [5, 7, 9, 23]
+News: http://site.api.espn.com/apis/site/v2/sports/hockey/nhl/news [5, 7, 9]
+All Teams: http://site.api.espn.com/apis/site/v2/sports/hockey/nhl/teams [5, 7, 9]
+Specific Team: http://site.api.espn.com/apis/site/v2/sports/hockey/nhl/teams/:team [5, 7, 9]
+Players: https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/players [2]
+Player Stats: https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/statistics/players [2]
+
+7. Betting & Odds Endpoints
+A significant number of endpoints, primarily hosted on sports.core.api.espn.com, are dedicated to betting odds and related data.[3, 4, 6, 8, 10] These endpoints provide access to win probabilities, point spreads, moneylines, futures, and historical odds data from various sportsbooks.
+
+The level of detail available, including endpoints for specific betting providers (identified by bet_provider_id), odds movement tracking, head-to-head odds, and team performance against the spread (ATS), suggests a system designed to aggregate and display comprehensive betting information, likely reflecting the data shown on ESPN's own platforms.[3, 6] This highlights the increasing integration between sports media and the sports betting industry.
+
+Known bet_provider_id values include: 38 (Caesars), 31 (William Hill), 41 (SugarHouse), 36 (Unibet), 2000 (Bet365), 25 (Westgate), 45 (William Hill NJ), 1001 (accuscore), 1004 (consensus), 1003 (numberfire), 1002 (teamrankings).[3, 6]
+
+Table 9: Selected Betting & Odds API Endpoints (NFL Example)
+
+Function	Base URL	Path	Key Parameters	Notes	References
+Win Probabilities	sports.core.api.espn.com	/v2/sports/football/leagues/nfl/events/{eid}/competitions/{eid}/probabilities	{eid}, limit	Game win probabilities, often updated live.	[3, 6, 10]
+Odds (List Providers)	sports.core.api.espn.com	/v2/sports/football/leagues/nfl/events/{eid}/competitions/{eid}/odds	{eid}	Lists available odds from multiple providers for a game.	[3, 6, 10]
+Odds (Specific Provider)	sports.core.api.espn.com	/v2/sports/football/leagues/nfl/events/{eid}/competitions/{eid}/odds/{prov_id}	{eid}, {prov_id}	Gets odds from a single specified provider.	[6, 10]
+Odds History/Movement	sports.core.api.espn.com	/v2/sports/football/leagues/nfl/events/{eid}/competitions/{eid}/odds/{prov_id}/history/0/movement	{eid}, {prov_id}, limit	Shows how odds from a provider have changed over time.	[6]
+Head-to-Head Odds	sports.core.api.espn.com	/v2/sports/football/leagues/nfl/events/{eid}/competitions/{eid}/odds/{prov_id}/head-to-heads	{eid}, {prov_id}	Specific head-to-head betting lines.	[3, 6]
+Futures	sports.core.api.espn.com	/v2/sports/football/leagues/nfl/seasons/{yr}/futures	{yr}	Season-long future bets (e.g., championship winner).	[3, 6, 10]
+Against-the-Spread (ATS) Records	sports.core.api.espn.com	/v2/sports/football/leagues/nfl/seasons/{yr}/types/{st}/teams/{team_id}/ats	{yr}, {st}, {team_id}	Team's performance record against the point spread.	[3, 6, 10]
+Odds Records	sports.core.api.espn.com	/v2/sports/football/leagues/nfl/seasons/{yr}/types/0/teams/{team_id}/odds-records	{yr}, {team_id}	Team's win/loss record based on betting odds (e.g., as favorite/underdog).	[3, 6]
+Team Past Performance (Odds)	sports.core.api.espn.com	/v2/sports/football/leagues/nfl/teams/{team_id}/odds/{prov_id}/past-performances	{team_id}, {prov_id}, limit	Historical performance relative to a provider's odds.	[3, 6]
+Predictor (Matchup Quality/Proj)	sports.core.api.espn.com	/v2/sports/football/leagues/nfl/events/{eid}/competitions/{eid}/predictor	{eid}	ESPN's internal prediction metrics for the game.	[6]
+Power Index	sports.core.api.espn.com	/v2/sports/football/leagues/nfl/events/{eid}/competitions/{eid}/powerindex/{team_id}	{eid}, {team_id}	ESPN's power index rating applied to the game matchup.	[6]
+
+8. Utility & Miscellaneous Endpoints
+This category includes endpoints providing supplementary data or functionalities that don't fit neatly into the primary sport, fantasy, or betting categories.
+
+Table 10: Miscellaneous API Endpoints (NFL Example)
+
+Function	Base URL	Path	Key Parameters	Notes	References
+List Positions	sports.core.api.espn.com	/v2/sports/football/leagues/nfl/positions	limit	Lists player positions (e.g., QB, WR, RB).	[3, 6, 10]
+List Transactions	sports.core.api.espn.com	/v2/sports/football/leagues/nfl/transactions	-	Player signings, trades, cuts, etc.	[6]
+List Talent Picks	sports.core.api.espn.com	/v2/sports/football/leagues/nfl/talentpicks	-	General ESPN talent predictions/picks.	[6, 10]
+Weekly Talent Picks	sports.core.api.espn.com	/v2/sports/football/leagues/nfl/seasons/{yr}/types/{st}/weeks/{wk}/talentpicks	{yr}, {st}, {wk}, limit	Week-specific talent picks.	[6, 10]
+List Coaches	sports.core.api.espn.com	/v2/sports/football/leagues/nfl/seasons/{yr}/coaches	{yr}, limit	Lists coaches for the specified season.	[6, 10]
+List Free Agents	sports.core.api.espn.com	/v2/sports/football/leagues/nfl/seasons/{yr}/freeagents	{yr}	Lists free agents for the specified season.	[6]
+Game Officials	sports.core.api.espn.com	/v2/sports/football/leagues/nfl/events/{eid}/competitions/{eid}/officials	{eid}	Lists referees and officials for a specific game.	[6]
+
+
+7. Betting & Odds Endpoints
+A significant number of endpoints, primarily hosted on sports.core.api.espn.com, are dedicated to betting odds and related data.[3, 4, 6, 8, 10] These endpoints provide access to win probabilities, point spreads, moneylines, futures, and historical odds data from various sportsbooks.
+
+The level of detail available, including endpoints for specific betting providers (identified by bet_provider_id), odds movement tracking, head-to-head odds, and team performance against the spread (ATS), suggests a system designed to aggregate and display comprehensive betting information, likely reflecting the data shown on ESPN's own platforms.[3, 6] This highlights the increasing integration between sports media and the sports betting industry.
+
+Known bet_provider_id values include: 38 (Caesars), 31 (William Hill), 41 (SugarHouse), 36 (Unibet), 2000 (Bet365), 25 (Westgate), 45 (William Hill NJ), 1001 (accuscore), 1004 (consensus), 1003 (numberfire), 1002 (teamrankings).[3, 6]
+
+Table 9: Selected Betting & Odds API Endpoints (NFL Example)
+
+Function	Base URL	Path	Key Parameters	Notes	References
+Win Probabilities	sports.core.api.espn.com	/v2/sports/football/leagues/nfl/events/{eid}/competitions/{eid}/probabilities	{eid}, limit	Game win probabilities, often updated live.	[3, 6, 10]
+Odds (List Providers)	sports.core.api.espn.com	/v2/sports/football/leagues/nfl/events/{eid}/competitions/{eid}/odds	{eid}	Lists available odds from multiple providers for a game.	[3, 6, 10]
+Odds (Specific Provider)	sports.core.api.espn.com	/v2/sports/football/leagues/nfl/events/{eid}/competitions/{eid}/odds/{prov_id}	{eid}, {prov_id}	Gets odds from a single specified provider.	[6, 10]
+Odds History/Movement	sports.core.api.espn.com	/v2/sports/football/leagues/nfl/events/{eid}/competitions/{eid}/odds/{prov_id}/history/0/movement	{eid}, {prov_id}, limit	Shows how odds from a provider have changed over time.	[6]
+Head-to-Head Odds	sports.core.api.espn.com	/v2/sports/football/leagues/nfl/events/{eid}/competitions/{eid}/odds/{prov_id}/head-to-heads	{eid}, {prov_id}	Specific head-to-head betting lines.	[3, 6]
+Futures	sports.core.api.espn.com	/v2/sports/football/leagues/nfl/seasons/{yr}/futures	{yr}	Season-long future bets (e.g., championship winner).	[3, 6, 10]
+Against-the-Spread (ATS) Records	sports.core.api.espn.com	/v2/sports/football/leagues/nfl/seasons/{yr}/types/{st}/teams/{team_id}/ats	{yr}, {st}, {team_id}	Team's performance record against the point spread.	[3, 6, 10]
+Odds Records	sports.core.api.espn.com	/v2/sports/football/leagues/nfl/seasons/{yr}/types/0/teams/{team_id}/odds-records	{yr}, {team_id}	Team's win/loss record based on betting odds (e.g., as favorite/underdog).	[3, 6]
+Team Past Performance (Odds)	sports.core.api.espn.com	/v2/sports/football/leagues/nfl/teams/{team_id}/odds/{prov_id}/past-performances	{team_id}, {prov_id}, limit	Historical performance relative to a provider's odds.	[3, 6]
+Predictor (Matchup Quality/Proj)	sports.core.api.espn.com	/v2/sports/football/leagues/nfl/events/{eid}/competitions/{eid}/predictor	{eid}	ESPN's internal prediction metrics for the game.	[6]
+Power Index	sports.core.api.espn.com	/v2/sports/football/leagues/nfl/events/{eid}/competitions/{eid}/powerindex/{team_id}	{eid}, {team_id}	ESPN's power index rating applied to the game matchup.	[6]
+8. Utility & Miscellaneous Endpoints
+This category includes endpoints providing supplementary data or functionalities that don't fit neatly into the primary sport, fantasy, or betting categories.
+
+Table 10: Miscellaneous API Endpoints (NFL Example)
+
+Function	Base URL	Path	Key Parameters	Notes	References
+List Positions	sports.core.api.espn.com	/v2/sports/football/leagues/nfl/positions	limit	Lists player positions (e.g., QB, WR, RB).	[3, 6, 10]
+List Transactions	sports.core.api.espn.com	/v2/sports/football/leagues/nfl/transactions	-	Player signings, trades, cuts, etc.	[6]
+List Talent Picks	sports.core.api.espn.com	/v2/sports/football/leagues/nfl/talentpicks	-	General ESPN talent predictions/picks.	[6, 10]
+Weekly Talent Picks	sports.core.api.espn.com	/v2/sports/football/leagues/nfl/seasons/{yr}/types/{st}/weeks/{wk}/talentpicks	{yr}, {st}, {wk}, limit	Week-specific talent picks.	[6, 10]
+List Coaches	sports.core.api.espn.com	/v2/sports/football/leagues/nfl/seasons/{yr}/coaches	{yr}, limit	Lists coaches for the specified season.	[6, 10]
+List Free Agents	sports.core.api.espn.com	/v2/sports/football/leagues/nfl/seasons/{yr}/freeagents	{yr}	Lists free agents for the specified season.	[6]
+Game Officials	sports.core.api.espn.com	/v2/sports/football/leagues/nfl/events/{eid}/competitions/{eid}/officials	{eid}	Lists referees and officials for a specific game.	[6]
+Athlete Statistics Log	sports.core.api.espn.com	/v2/sports/football/leagues/nfl/athletes/{ath_id}/statisticslog

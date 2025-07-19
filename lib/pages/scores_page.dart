@@ -5,6 +5,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:convert';
 import 'dart:ui';
 import '../utils/team_logo_utils.dart';
+import '../widgets/espn_odds_display_widget.dart';
 import 'game_details_page.dart';
 
 class ScoresPage extends StatefulWidget {
@@ -394,6 +395,19 @@ class _ScoresPageState extends State<ScoresPage> {
   }
 
 
+
+  String _convertSportForESPN(String sport) {
+    // Convert ESPN scoreboard sport format to our ESPN odds service format
+    const sportMapping = {
+      'football/nfl': 'NFL',
+      'basketball/nba': 'NBA',
+      'basketball/nba-summer-las-vegas': 'NBA',
+      'baseball/mlb': 'MLB',
+      'hockey/nhl': 'NHL',
+      'mma/ufc': 'UFC',
+    };
+    return sportMapping[sport] ?? 'NFL';
+  }
 
   String formatScore(dynamic game) {
     // First check if the game object exists
@@ -1039,6 +1053,16 @@ class _ScoresPageState extends State<ScoresPage> {
                   ),
                   _buildTeamInfoFromCompetition(game, false),
                 ],
+              ),
+              const SizedBox(height: 16),
+              // ESPN Odds Display
+              ESPNOddsDisplayWidget(
+                eventId: game['id']?.toString() ?? '',
+                sport: _convertSportForESPN(sport),
+                compact: true,
+                showProbabilities: false,
+                showPredictor: false,
+                preferredProviders: [2000, 38, 31], // Bet365, Caesars, William Hill
               ),
             ],
           ),

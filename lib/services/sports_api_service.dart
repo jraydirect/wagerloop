@@ -8,12 +8,16 @@ import '../models/sports/game.dart';
 import '../models/sports/odds.dart';
 import '../models/sports/player.dart';
 import 'sports_odds_service.dart';
+import 'espn_odds_service.dart';
 
 class SportsApiService {
   // Singleton pattern
   static final SportsApiService _instance = SportsApiService._internal();
   factory SportsApiService() => _instance;
   SportsApiService._internal();
+
+  // ESPN Odds Service instance for comprehensive betting data
+  final ESPNOddsService _espnOddsService = ESPNOddsService();
 
   // TextEditingController for caching search queries
   static TextEditingController? searchController;
@@ -41,6 +45,58 @@ class SportsApiService {
     'NCAAB': 'basketball/mens-college-basketball',
     'NCAAF': 'football/college-football',
   };
+
+  /// Fetch comprehensive ESPN odds for a specific game
+  /// 
+  /// Returns detailed odds data including multiple sportsbooks, win probabilities,
+  /// and ESPN predictor data for enhanced betting insights.
+  Future<Map<String, dynamic>> fetchComprehensiveESPNOdds(String gameId, String sport) async {
+    try {
+      return await _espnOddsService.fetchGameOdds(gameId, sport);
+    } catch (e) {
+      debugPrint('Error fetching comprehensive ESPN odds: $e');
+      return {};
+    }
+  }
+
+  /// Fetch team Against-The-Spread (ATS) record from ESPN
+  /// 
+  /// Provides valuable betting insights about how teams perform relative to spreads
+  Future<Map<String, dynamic>> fetchTeamATSRecord(String teamId, String sport, {int? year, int? seasonType}) async {
+    try {
+      final currentYear = year ?? DateTime.now().year;
+      final currentSeasonType = seasonType ?? 2; // Regular season
+      return await _espnOddsService.fetchTeamATSRecord(teamId, sport, currentYear, currentSeasonType);
+    } catch (e) {
+      debugPrint('Error fetching team ATS record: $e');
+      return {};
+    }
+  }
+
+  /// Fetch futures betting odds from ESPN
+  /// 
+  /// Returns season-long future bets like championship winners, division winners, etc.
+  Future<List<Map<String, dynamic>>> fetchFuturesBets(String sport, {int? year}) async {
+    try {
+      final currentYear = year ?? DateTime.now().year;
+      return await _espnOddsService.fetchFutures(sport, currentYear);
+    } catch (e) {
+      debugPrint('Error fetching futures bets: $e');
+      return [];
+    }
+  }
+
+  /// Fetch odds movement history for a specific sportsbook
+  /// 
+  /// Shows how odds have changed over time, useful for tracking line movement
+  Future<List<Map<String, dynamic>>> fetchOddsHistory(String gameId, String sport, int providerId) async {
+    try {
+      return await _espnOddsService.fetchOddsHistory(gameId, sport, providerId);
+    } catch (e) {
+      debugPrint('Error fetching odds history: $e');
+      return [];
+    }
+  }
 
   /// Search for games by team name or any keyword across all sports
   Future<List<Game>> searchGamesByTeam(String query, {Function(List<Game>)? onIncrementalResults}) async {
@@ -438,16 +494,16 @@ class SportsApiService {
             }
           }
           
-          // Get odds if available
-          Map<String, dynamic>? odds;
+          // Get basic odds from scoreboard if available
+          Map<String, dynamic>? basicOdds;
           final oddsData = competition['odds'] as List? ?? [];
           
           if (oddsData.isNotEmpty) {
             final oddDetails = oddsData[0] as Map<String, dynamic>? ?? {};
-            odds = _parseOddsFromESPN(oddDetails, sport);
+            basicOdds = _parseOddsFromESPN(oddDetails, sport);
           }
           
-          // Create game object
+          // Create game object with basic odds (comprehensive ESPN odds loaded separately)
           final game = Game(
             id: id,
             homeTeam: homeTeam,
@@ -458,7 +514,7 @@ class SportsApiService {
             sport: sport,
             league: _getLeagueFromSport(sport),
             status: _mapESPNStatusToApp(status),
-            odds: odds,
+            odds: basicOdds,
             homeScore: homeScore,
             awayScore: awayScore,
             period: period,
