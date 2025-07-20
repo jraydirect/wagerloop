@@ -2,6 +2,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'social_feed_service.dart';
 import 'community_service.dart';
+import 'community_posts_service.dart';
 
 class SupabaseConfig {
   static const String supaBaseURL = 'https://lbkvlemiuhosfrizrwcz.supabase.co';
@@ -10,6 +11,7 @@ class SupabaseConfig {
 
   static final socialFeedService = SocialFeedService(supabase);
   static final communityService = CommunityService(supabase);
+  static final communityPostsService = CommunityPostsService(supabase);
 
   static final supabase = Supabase.instance.client;
 

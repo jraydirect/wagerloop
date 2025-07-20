@@ -1,11 +1,17 @@
 // lib/pages/community_details_page.dart
 import 'package:flutter/material.dart';
 import '../models/community.dart';
+import '../models/community_post.dart';
+import '../models/community_post_comment.dart';
 import '../services/supabase_config.dart';
+import '../services/community_posts_service.dart';
+import '../services/auth_service.dart';
 import '../widgets/dice_loading_widget.dart';
 import '../widgets/profile_avatar.dart';
 import '../utils/loading_utils.dart';
 import 'package:timeago/timeago.dart' as timeago;
+import 'package:image_picker/image_picker.dart';
+import 'dart:typed_data';
 
 class CommunityDetailsPage extends StatefulWidget {
   final String communityId;
@@ -24,13 +30,25 @@ class _CommunityDetailsPageState extends State<CommunityDetailsPage>
   late Animation<double> _scaleAnimation;
 
   final _communityService = SupabaseConfig.communityService;
+  final _communityPostsService = CommunityPostsService(SupabaseConfig.supabase);
+  final _authService = AuthService();
+  final _imagePicker = ImagePicker();
   
   Community? _community;
   List<Map<String, dynamic>> _members = [];
+  List<CommunityPost> _posts = [];
   bool _isLoading = true;
   bool _isMembersLoading = false;
+  bool _isPostsLoading = false;
+  bool _isCreatingPost = false;
   String? _error;
   int _selectedTabIndex = 0;
+
+  // Post creation controllers
+  final _postContentController = TextEditingController();
+  CommunityPostType _selectedPostType = CommunityPostType.chat;
+  Uint8List? _selectedMediaBytes;
+  String? _selectedMediaMimeType;
 
   @override
   void initState() {
@@ -64,6 +82,7 @@ class _CommunityDetailsPageState extends State<CommunityDetailsPage>
   void dispose() {
     _fadeController.dispose();
     _scaleController.dispose();
+    _postContentController.dispose();
     super.dispose();
   }
 
@@ -81,8 +100,9 @@ class _CommunityDetailsPageState extends State<CommunityDetailsPage>
         _isLoading = false;
       });
 
-      // Load members after community details
+      // Load members and posts after community details
       _loadMembers();
+      _loadPosts();
     } catch (e) {
       setState(() {
         _error = e.toString();
@@ -113,6 +133,35 @@ class _CommunityDetailsPageState extends State<CommunityDetailsPage>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Failed to load members: ${e.toString()}'),
+          backgroundColor: Colors.orange,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  Future<void> _loadPosts() async {
+    setState(() {
+      _isPostsLoading = true;
+    });
+
+    try {
+      final posts = await _communityPostsService.fetchCommunityPosts(
+        communityId: widget.communityId,
+      );
+
+      setState(() {
+        _posts = posts;
+        _isPostsLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isPostsLoading = false;
+      });
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to load posts: ${e.toString()}'),
           backgroundColor: Colors.orange,
           behavior: SnackBarBehavior.floating,
         ),
@@ -487,7 +536,7 @@ class _CommunityDetailsPageState extends State<CommunityDetailsPage>
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Text(
-                  'Activity',
+                  'Posts',
                   style: TextStyle(
                     color: _selectedTabIndex == 1 ? Colors.white : Colors.grey[400],
                     fontSize: 14,
@@ -628,37 +677,602 @@ class _CommunityDetailsPageState extends State<CommunityDetailsPage>
     );
   }
 
-  Widget _buildActivityFeed() {
-    return Padding(
-      padding: const EdgeInsets.all(32),
-      child: Center(
-        child: Column(
-          children: [
-            Icon(
-              Icons.timeline,
-              size: 64,
-              color: Colors.grey[400],
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Activity Feed',
-              style: TextStyle(
-                color: Colors.grey[400],
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Coming soon!',
-              style: TextStyle(
-                color: Colors.grey[500],
-                fontSize: 14,
-              ),
-            ),
-          ],
+  Future<void> _selectMedia() async {
+    try {
+      final XFile? file = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1920,
+        maxHeight: 1080,
+        imageQuality: 80,
+      );
+
+      if (file != null) {
+        final bytes = await file.readAsBytes();
+        setState(() {
+          _selectedMediaBytes = bytes;
+          _selectedMediaMimeType = file.mimeType ?? 'image/jpeg';
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to select media: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _createPost() async {
+    if (_postContentController.text.trim().isEmpty && _selectedPostType == CommunityPostType.chat) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Chat posts must have content'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    if ((_selectedPostType == CommunityPostType.image || _selectedPostType == CommunityPostType.video) && 
+        _selectedMediaBytes == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${_selectedPostType == CommunityPostType.image ? 'Image' : 'Video'} posts must have media'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _isCreatingPost = true;
+    });
+
+    try {
+      CommunityPost newPost;
+
+      switch (_selectedPostType) {
+        case CommunityPostType.chat:
+          newPost = await _communityPostsService.createChatPost(
+            communityId: widget.communityId,
+            content: _postContentController.text.trim(),
+          );
+          break;
+        
+        case CommunityPostType.image:
+          newPost = await _communityPostsService.createImagePost(
+            communityId: widget.communityId,
+            content: _postContentController.text.trim(),
+            imageBytes: _selectedMediaBytes!,
+            mimeType: _selectedMediaMimeType!,
+          );
+          break;
+        
+        case CommunityPostType.video:
+          newPost = await _communityPostsService.createVideoPost(
+            communityId: widget.communityId,
+            content: _postContentController.text.trim(),
+            videoBytes: _selectedMediaBytes!,
+            mimeType: _selectedMediaMimeType!,
+          );
+          break;
+      }
+
+      // Add new post to the top of the list
+      setState(() {
+        _posts.insert(0, newPost);
+        _postContentController.clear();
+        _selectedMediaBytes = null;
+        _selectedMediaMimeType = null;
+        _selectedPostType = CommunityPostType.chat;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Post created successfully!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to create post: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      setState(() {
+        _isCreatingPost = false;
+      });
+    }
+  }
+
+  Widget _buildCreatePostSection() {
+    if (_community?.isJoined != true) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey[800]!.withOpacity(0.6),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.grey[600]!.withOpacity(0.3),
+          width: 1,
         ),
       ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Post type selector
+          Row(
+            children: [
+              Text(
+                'Post Type:',
+                style: TextStyle(
+                  color: Colors.grey[300],
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: DropdownButton<CommunityPostType>(
+                  value: _selectedPostType,
+                  dropdownColor: Colors.grey[800],
+                  style: const TextStyle(color: Colors.white),
+                  underline: Container(),
+                  items: [
+                    DropdownMenuItem(
+                      value: CommunityPostType.chat,
+                      child: Row(
+                        children: [
+                          Icon(Icons.chat, color: Colors.blue, size: 16),
+                          const SizedBox(width: 8),
+                          const Text('Chat'),
+                        ],
+                      ),
+                    ),
+                    DropdownMenuItem(
+                      value: CommunityPostType.image,
+                      child: Row(
+                        children: [
+                          Icon(Icons.image, color: Colors.green, size: 16),
+                          const SizedBox(width: 8),
+                          const Text('Image'),
+                        ],
+                      ),
+                    ),
+                    DropdownMenuItem(
+                      value: CommunityPostType.video,
+                      child: Row(
+                        children: [
+                          Icon(Icons.videocam, color: Colors.orange, size: 16),
+                          const SizedBox(width: 8),
+                          const Text('Video'),
+                        ],
+                      ),
+                    ),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() {
+                        _selectedPostType = value;
+                        if (value == CommunityPostType.chat) {
+                          _selectedMediaBytes = null;
+                          _selectedMediaMimeType = null;
+                        }
+                      });
+                    }
+                  },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // Content input
+          TextField(
+            controller: _postContentController,
+            style: const TextStyle(color: Colors.white),
+            maxLines: 3,
+            decoration: InputDecoration(
+              hintText: _selectedPostType == CommunityPostType.chat 
+                  ? 'What\'s on your mind?'
+                  : 'Add a caption (optional)...',
+              hintStyle: TextStyle(color: Colors.grey[400]),
+              filled: true,
+              fillColor: Colors.grey[700]!.withOpacity(0.6),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide.none,
+              ),
+              contentPadding: const EdgeInsets.all(12),
+            ),
+          ),
+
+          // Media selection for image/video posts
+          if (_selectedPostType != CommunityPostType.chat) ...[
+            const SizedBox(height: 16),
+            if (_selectedMediaBytes != null) ...[
+              Container(
+                height: 200,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey[600]!),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: _selectedPostType == CommunityPostType.image
+                      ? Image.memory(
+                          _selectedMediaBytes!,
+                          fit: BoxFit.cover,
+                        )
+                      : Container(
+                          color: Colors.grey[700],
+                          child: const Center(
+                            child: Icon(
+                              Icons.play_circle_fill,
+                              size: 64,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextButton.icon(
+                onPressed: () {
+                  setState(() {
+                    _selectedMediaBytes = null;
+                    _selectedMediaMimeType = null;
+                  });
+                },
+                icon: const Icon(Icons.delete, color: Colors.red, size: 16),
+                label: const Text('Remove', style: TextStyle(color: Colors.red)),
+              ),
+            ] else ...[
+              OutlinedButton.icon(
+                onPressed: _selectMedia,
+                style: OutlinedButton.styleFrom(
+                  side: BorderSide(color: Colors.grey[600]!),
+                  foregroundColor: Colors.white,
+                ),
+                icon: Icon(
+                  _selectedPostType == CommunityPostType.image 
+                      ? Icons.image 
+                      : Icons.videocam,
+                ),
+                label: Text('Select ${_selectedPostType == CommunityPostType.image ? 'Image' : 'Video'}'),
+              ),
+            ],
+          ],
+
+          const SizedBox(height: 16),
+
+          // Post button
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: _isCreatingPost ? null : _createPost,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.purple,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              icon: _isCreatingPost 
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.send),
+              label: Text(_isCreatingPost ? 'Posting...' : 'Post'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPostsList() {
+    if (_isPostsLoading) {
+      return const Padding(
+        padding: EdgeInsets.all(32),
+        child: Center(
+          child: DiceLoadingWidget(
+            message: 'Loading posts...',
+            size: 60,
+          ),
+        ),
+      );
+    }
+
+    if (_posts.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.all(32),
+        child: Center(
+          child: Column(
+            children: [
+              Icon(
+                Icons.forum_outlined,
+                size: 64,
+                color: Colors.grey[400],
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'No posts yet',
+                style: TextStyle(
+                  color: Colors.grey[400],
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                _community?.isJoined == true 
+                    ? 'Be the first to post in this community!'
+                    : 'Join the community to see posts',
+                style: TextStyle(
+                  color: Colors.grey[500],
+                  fontSize: 14,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: _posts.length,
+      itemBuilder: (context, index) => _buildPostItem(_posts[index]),
+    );
+  }
+
+  Widget _buildPostItem(CommunityPost post) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey[800]!.withOpacity(0.6),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.grey[600]!.withOpacity(0.3),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Post header
+          Row(
+            children: [
+              ProfileAvatar(
+                avatarUrl: post.userAvatarUrl,
+                username: post.username,
+                radius: 16,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          post.username,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: _getPostTypeColor(post.postType),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            _getPostTypeLabel(post.postType),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    Text(
+                      timeago.format(post.createdAt),
+                      style: TextStyle(
+                        color: Colors.grey[400],
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // Post content
+          if (post.content.isNotEmpty) ...[
+            Text(
+              post.content,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
+
+          // Media content
+          if (post.hasMedia) ...[
+            Container(
+              height: 200,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey[600]!),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: post.isImagePost
+                    ? Image.network(
+                        post.mediaUrl!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            color: Colors.grey[700],
+                            child: const Center(
+                              child: Icon(
+                                Icons.broken_image,
+                                color: Colors.grey,
+                                size: 48,
+                              ),
+                            ),
+                          );
+                        },
+                      )
+                    : Container(
+                        color: Colors.grey[700],
+                        child: const Center(
+                          child: Icon(
+                            Icons.play_circle_fill,
+                            size: 64,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
+
+          // Post actions
+          Row(
+            children: [
+              GestureDetector(
+                onTap: () => _togglePostLike(post),
+                child: Row(
+                  children: [
+                    Icon(
+                      post.isLiked ? Icons.favorite : Icons.favorite_border,
+                      color: post.isLiked ? Colors.red : Colors.grey[400],
+                      size: 20,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      post.likeCount.toString(),
+                      style: TextStyle(
+                        color: Colors.grey[400],
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 24),
+              Row(
+                children: [
+                  Icon(
+                    Icons.comment_outlined,
+                    color: Colors.grey[400],
+                    size: 20,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    post.commentCount.toString(),
+                    style: TextStyle(
+                      color: Colors.grey[400],
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+              const Spacer(),
+              if (post.hasMedia) ...[
+                Text(
+                  post.formattedFileSize,
+                  style: TextStyle(
+                    color: Colors.grey[500],
+                    fontSize: 10,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _togglePostLike(CommunityPost post) async {
+    try {
+      final newLikeStatus = await _communityPostsService.toggleLike(post.id);
+      
+      setState(() {
+        post.isLiked = newLikeStatus;
+        post.likeCount += newLikeStatus ? 1 : -1;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to toggle like: $e'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+    }
+  }
+
+  Color _getPostTypeColor(CommunityPostType type) {
+    switch (type) {
+      case CommunityPostType.chat:
+        return Colors.blue.withOpacity(0.8);
+      case CommunityPostType.image:
+        return Colors.green.withOpacity(0.8);
+      case CommunityPostType.video:
+        return Colors.orange.withOpacity(0.8);
+    }
+  }
+
+  String _getPostTypeLabel(CommunityPostType type) {
+    switch (type) {
+      case CommunityPostType.chat:
+        return 'CHAT';
+      case CommunityPostType.image:
+        return 'IMAGE';
+      case CommunityPostType.video:
+        return 'VIDEO';
+    }
+  }
+
+  Widget _buildActivityFeed() {
+    return Column(
+      children: [
+        _buildCreatePostSection(),
+        _buildPostsList(),
+      ],
     );
   }
 

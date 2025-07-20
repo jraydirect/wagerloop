@@ -4,6 +4,9 @@ import '../models/community.dart';
 import '../services/supabase_config.dart';
 import '../widgets/dice_loading_widget.dart';
 import '../utils/loading_utils.dart';
+import 'package:image_picker/image_picker.dart';
+import '../services/image_upload_service.dart';
+import 'dart:typed_data';
 
 class CreateCommunityPage extends StatefulWidget {
   const CreateCommunityPage({Key? key}) : super(key: key);
@@ -23,10 +26,16 @@ class _CreateCommunityPageState extends State<CreateCommunityPage>
   final _tagsController = TextEditingController();
   
   final _communityService = SupabaseConfig.communityService;
+  final _imagePicker = ImagePicker();
   
   bool _isPrivate = false;
   String? _selectedSport;
   bool _isSubmitting = false;
+  bool _isUploadingImage = false;
+  
+  // Image upload state
+  Uint8List? _selectedImageBytes;
+  String? _uploadedImageUrl;
 
   final List<String> _sports = [
     'NFL',
@@ -72,6 +81,151 @@ class _CreateCommunityPageState extends State<CreateCommunityPage>
     super.dispose();
   }
 
+  Future<void> _pickAndUploadImage() async {
+    try {
+      // First check if we have storage access
+      final hasAccess = await ImageUploadService.checkStorageAccess();
+      if (!hasAccess) {
+        throw 'Unable to access storage. Please check your connection and try again.';
+      }
+
+      final XFile? image = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 512,
+        maxHeight: 512,
+        imageQuality: 80,
+      );
+
+      if (image == null) return;
+
+      setState(() => _isUploadingImage = true);
+
+      final bytes = await image.readAsBytes();
+      
+      // Store the selected image bytes for later upload
+      setState(() {
+        _selectedImageBytes = bytes;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Image selected successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      print('Image selection error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error selecting image: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    } finally {
+      setState(() => _isUploadingImage = false);
+    }
+  }
+
+  Widget _buildImageUploadSection() {
+    return _buildFormField(
+      label: 'Community Picture (Optional)',
+      description: 'Choose a picture that represents your community',
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.grey[800]!.withOpacity(0.6),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey[600]!),
+        ),
+        child: Column(
+          children: [
+            // Image preview or placeholder
+            Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                color: Colors.grey[700],
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Colors.purple.withOpacity(0.3),
+                  width: 2,
+                ),
+              ),
+              child: _selectedImageBytes != null
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: Image.memory(
+                        _selectedImageBytes!,
+                        fit: BoxFit.cover,
+                        width: 120,
+                        height: 120,
+                      ),
+                    )
+                  : Icon(
+                      Icons.group,
+                      size: 48,
+                      color: Colors.grey[400],
+                    ),
+            ),
+            const SizedBox(height: 16),
+            
+            // Upload button
+            OutlinedButton.icon(
+              onPressed: _isUploadingImage ? null : _pickAndUploadImage,
+              style: OutlinedButton.styleFrom(
+                side: BorderSide(color: Colors.purple.withOpacity(0.7)),
+                foregroundColor: Colors.purple,
+                backgroundColor: Colors.purple.withOpacity(0.1),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              icon: _isUploadingImage
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.purple,
+                      ),
+                    )
+                  : const Icon(Icons.camera_alt, size: 18),
+              label: Text(
+                _isUploadingImage
+                    ? 'Selecting...'
+                    : (_selectedImageBytes != null ? 'Change Picture' : 'Choose Picture'),
+                style: const TextStyle(fontWeight: FontWeight.w500),
+              ),
+            ),
+            
+            if (_selectedImageBytes != null) ...[
+              const SizedBox(height: 8),
+              TextButton.icon(
+                onPressed: () {
+                  setState(() {
+                    _selectedImageBytes = null;
+                    _uploadedImageUrl = null;
+                  });
+                },
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.red,
+                ),
+                icon: const Icon(Icons.delete, size: 16),
+                label: const Text('Remove Picture'),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<void> _createCommunity() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -80,6 +234,20 @@ class _CreateCommunityPageState extends State<CreateCommunityPage>
     });
 
     try {
+      String? imageUrl;
+      
+      // Upload image if one was selected
+      if (_selectedImageBytes != null) {
+        try {
+          // Generate a unique ID for this community (we'll use timestamp for now)
+          final tempCommunityId = DateTime.now().millisecondsSinceEpoch.toString();
+          imageUrl = await ImageUploadService.uploadProfileImage(_selectedImageBytes!, tempCommunityId);
+        } catch (e) {
+          print('Image upload failed, continuing without image: $e');
+          // Don't fail community creation if image upload fails
+        }
+      }
+
       // Parse tags from comma-separated string
       final tags = _tagsController.text
           .split(',')
@@ -93,6 +261,7 @@ class _CreateCommunityPageState extends State<CreateCommunityPage>
         isPrivate: _isPrivate,
         sport: _selectedSport,
         tags: tags,
+        imageUrl: imageUrl, // Include the uploaded image URL
       );
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -393,6 +562,9 @@ class _CreateCommunityPageState extends State<CreateCommunityPage>
                               maxLength: 100,
                             ),
                           ),
+
+                          // Community Picture
+                          _buildImageUploadSection(),
 
                           // Privacy Settings
                           _buildFormField(
