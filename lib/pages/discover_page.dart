@@ -344,6 +344,16 @@ class _DiscoverPageState extends State<DiscoverPage> with TickerProviderStateMix
   Widget _buildHeader() {
     return Container(
       padding: const EdgeInsets.fromLTRB(24, 40, 24, 36),
+      decoration: BoxDecoration(
+        image: DecorationImage(
+          image: const AssetImage('assets/turfBackground.jpg'),
+          fit: BoxFit.cover,
+          colorFilter: ColorFilter.mode(
+            Colors.black.withOpacity(0.4),
+            BlendMode.darken,
+          ),
+        ),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -378,17 +388,77 @@ class _DiscoverPageState extends State<DiscoverPage> with TickerProviderStateMix
                 child: Container(
                   padding: const EdgeInsets.symmetric(vertical: 22, horizontal: 16),
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        const Color(0xFF1F2937).withOpacity(0.9),
-                        const Color(0xFF1A202C).withOpacity(0.8),
-                      ],
-                    ),
+                    // Special background images for specific buttons
+                    image: tool['route'] == 'weather' 
+                        ? DecorationImage(
+                            image: const AssetImage('assets/weatherbuttonBackground.jpg'),
+                            fit: BoxFit.cover,
+                            colorFilter: ColorFilter.mode(
+                              Colors.black.withOpacity(0.3),
+                              BlendMode.darken,
+                            ),
+                          )
+                        : tool['route'] == 'coaches'
+                            ? DecorationImage(
+                                image: const AssetImage('assets/coachesbuttonBackground.jpg'),
+                                fit: BoxFit.cover,
+                                colorFilter: ColorFilter.mode(
+                                  Colors.black.withOpacity(0.3),
+                                  BlendMode.darken,
+                                ),
+                              )
+                            : tool['route'] == 'stadium'
+                                ? DecorationImage(
+                                    image: const AssetImage('assets/stadiumbuttonBackground.jpg'),
+                                    fit: BoxFit.cover,
+                                    colorFilter: ColorFilter.mode(
+                                      Colors.black.withOpacity(0.3),
+                                      BlendMode.darken,
+                                    ),
+                                  )
+                                : tool['route'] == 'referees'
+                                    ? DecorationImage(
+                                        image: const AssetImage('assets/refereesbuttonBackground.jpg'),
+                                        fit: BoxFit.cover,
+                                        colorFilter: ColorFilter.mode(
+                                          Colors.black.withOpacity(0.3),
+                                          BlendMode.darken,
+                                        ),
+                                      )
+                                    : tool['name'] == 'News'
+                                        ? DecorationImage(
+                                            image: const AssetImage('assets/newsbuttonBackground.jpg'),
+                                            fit: BoxFit.cover,
+                                            colorFilter: ColorFilter.mode(
+                                              Colors.black.withOpacity(0.3),
+                                              BlendMode.darken,
+                                            ),
+                                          )
+                                        : tool['name'] == 'Analytics'
+                                            ? DecorationImage(
+                                                image: const AssetImage('assets/analyticsbuttonBackground.jpg'),
+                                                fit: BoxFit.cover,
+                                                colorFilter: ColorFilter.mode(
+                                                  Colors.black.withOpacity(0.3),
+                                                  BlendMode.darken,
+                                                ),
+                                              )
+                                            : null,
+                    gradient: tool['route'] != 'weather' && tool['route'] != 'coaches' && tool['route'] != 'stadium' && tool['route'] != 'referees' && tool['name'] != 'News' && tool['name'] != 'Analytics' 
+                        ? LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              const Color(0xFF1F2937).withOpacity(0.9),
+                              const Color(0xFF1A202C).withOpacity(0.8),
+                            ],
+                          )
+                        : null,
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: const Color(0xFF10B981).withOpacity(0.3),
+                      color: (tool['route'] == 'weather' || tool['route'] == 'coaches' || tool['route'] == 'stadium' || tool['route'] == 'referees' || tool['name'] == 'News' || tool['name'] == 'Analytics')
+                          ? Colors.white.withOpacity(0.3)
+                          : const Color(0xFF10B981).withOpacity(0.3),
                       width: 1.5,
                     ),
                     boxShadow: [
@@ -399,7 +469,19 @@ class _DiscoverPageState extends State<DiscoverPage> with TickerProviderStateMix
                         spreadRadius: 1,
                       ),
                       BoxShadow(
-                        color: const Color(0xFF10B981).withOpacity(0.08),
+                        color: tool['route'] == 'weather' 
+                            ? Colors.blue.withOpacity(0.15)
+                            : tool['route'] == 'coaches'
+                                ? Colors.purple.withOpacity(0.15)
+                                : tool['route'] == 'stadium'
+                                    ? Colors.red.withOpacity(0.15)
+                                    : tool['route'] == 'referees'
+                                        ? Colors.green.withOpacity(0.15)
+                                        : tool['name'] == 'News'
+                                            ? Colors.cyan.withOpacity(0.15)
+                                            : tool['name'] == 'Analytics'
+                                                ? Colors.orange.withOpacity(0.15)
+                                                : const Color(0xFF10B981).withOpacity(0.08),
                         blurRadius: 16,
                         offset: const Offset(0, 8),
                         spreadRadius: 2,
@@ -414,22 +496,35 @@ class _DiscoverPageState extends State<DiscoverPage> with TickerProviderStateMix
                         width: 50,
                         height: 50,
                         decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [
-                              tool['color'].withOpacity(0.15),
-                              tool['color'].withOpacity(0.08),
-                            ],
-                          ),
+                          gradient: (tool['route'] == 'weather' || tool['route'] == 'coaches' || tool['route'] == 'stadium' || tool['route'] == 'referees' || tool['name'] == 'News' || tool['name'] == 'Analytics')
+                              ? LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    Colors.white.withOpacity(0.25),
+                                    Colors.white.withOpacity(0.15),
+                                  ],
+                                )
+                              : LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    tool['color'].withOpacity(0.15),
+                                    tool['color'].withOpacity(0.08),
+                                  ],
+                                ),
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: tool['color'].withOpacity(0.2),
+                            color: (tool['route'] == 'weather' || tool['route'] == 'coaches' || tool['route'] == 'stadium' || tool['route'] == 'referees' || tool['name'] == 'News' || tool['name'] == 'Analytics')
+                                ? Colors.white.withOpacity(0.4)
+                                : tool['color'].withOpacity(0.2),
                             width: 1,
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: tool['color'].withOpacity(0.1),
+                              color: (tool['route'] == 'weather' || tool['route'] == 'coaches' || tool['route'] == 'stadium' || tool['route'] == 'referees' || tool['name'] == 'News' || tool['name'] == 'Analytics')
+                                  ? Colors.white.withOpacity(0.2)
+                                  : tool['color'].withOpacity(0.1),
                               blurRadius: 8,
                               spreadRadius: 1,
                             ),
@@ -437,8 +532,19 @@ class _DiscoverPageState extends State<DiscoverPage> with TickerProviderStateMix
                         ),
                         child: Icon(
                           tool['icon'],
-                          color: tool['color'],
+                          color: (tool['route'] == 'weather' || tool['route'] == 'coaches' || tool['route'] == 'stadium' || tool['route'] == 'referees' || tool['name'] == 'News' || tool['name'] == 'Analytics')
+                              ? Colors.white
+                              : tool['color'],
                           size: 26,
+                          shadows: (tool['route'] == 'weather' || tool['route'] == 'coaches' || tool['route'] == 'stadium' || tool['route'] == 'referees' || tool['name'] == 'News' || tool['name'] == 'Analytics')
+                              ? [
+                                  Shadow(
+                                    color: Colors.black.withOpacity(0.5),
+                                    blurRadius: 4,
+                                    offset: const Offset(1, 1),
+                                  ),
+                                ]
+                              : null,
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -451,6 +557,15 @@ class _DiscoverPageState extends State<DiscoverPage> with TickerProviderStateMix
                           fontWeight: FontWeight.w600,
                           height: 1.2,
                           letterSpacing: -0.2,
+                          shadows: (tool['route'] == 'weather' || tool['route'] == 'coaches' || tool['route'] == 'stadium' || tool['route'] == 'referees' || tool['name'] == 'News' || tool['name'] == 'Analytics')
+                              ? [
+                                  Shadow(
+                                    color: Colors.black.withOpacity(0.7),
+                                    blurRadius: 4,
+                                    offset: const Offset(1, 1),
+                                  ),
+                                ]
+                              : null,
                         ),
                         textAlign: TextAlign.center,
                         maxLines: 1,
