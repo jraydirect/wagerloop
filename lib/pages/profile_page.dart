@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'dart:math';
+import 'dart:ui';
 import '../services/auth_service.dart';
 import '../services/supabase_config.dart';
 import '../services/follow_notifier.dart';
@@ -29,6 +31,19 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
 
   // Tab controller for posts/comments/likes tabs
   late TabController _tabController;
+
+  // Animation controllers
+  late AnimationController _fadeController;
+  late AnimationController _scaleController;
+  late AnimationController _backgroundController;
+  late AnimationController _floatingController;
+  late AnimationController _cloudsController;
+
+  late Animation<double> _fadeAnimation;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _backgroundAnimation;
+  late Animation<double> _floatingAnimation;
+  late Animation<double> _cloudsAnimation;
 
   // User data
   Map<String, dynamic>? _userData;
@@ -106,7 +121,80 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
   @override
   void initState() {
     super.initState();
+    
+    // Initialize tab controller
     _tabController = TabController(length: 3, vsync: this);
+    
+    // Initialize animation controllers
+    _fadeController = AnimationController(
+      duration: const Duration(milliseconds: 1200),
+      vsync: this,
+    );
+    _scaleController = AnimationController(
+      duration: const Duration(milliseconds: 1000),
+      vsync: this,
+    );
+    _backgroundController = AnimationController(
+      duration: const Duration(seconds: 20),
+      vsync: this,
+    );
+    _floatingController = AnimationController(
+      duration: const Duration(seconds: 3),
+      vsync: this,
+    );
+    _cloudsController = AnimationController(
+      duration: const Duration(seconds: 8),
+      vsync: this,
+    );
+
+    // Initialize animations
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _fadeController,
+      curve: Curves.easeInOut,
+    ));
+
+    _scaleAnimation = Tween<double>(
+      begin: 0.8,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _scaleController,
+      curve: Curves.easeOutCubic,
+    ));
+
+    _backgroundAnimation = Tween<double>(
+      begin: 0.0,
+      end: 2 * pi,
+    ).animate(CurvedAnimation(
+      parent: _backgroundController,
+      curve: Curves.linear,
+    ));
+
+    _floatingAnimation = Tween<double>(
+      begin: -8.0,
+      end: 8.0,
+    ).animate(CurvedAnimation(
+      parent: _floatingController,
+      curve: Curves.easeInOut,
+    ));
+
+    _cloudsAnimation = Tween<double>(
+      begin: -30.0,
+      end: 30.0,
+    ).animate(CurvedAnimation(
+      parent: _cloudsController,
+      curve: Curves.easeInOut,
+    ));
+
+    // Start animations
+    _fadeController.forward();
+    _scaleController.forward();
+    _backgroundController.repeat();
+    _floatingController.repeat(reverse: true);
+    _cloudsController.repeat(reverse: true);
+    
     _loadUserProfile();
     _loadUserPosts();
     _loadFollowerCounts();
@@ -747,6 +835,103 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
       );
       print('Error toggling repost: $e');
     }
+  }
+
+  // Animated background methods
+  Widget _buildAnimatedBackground() {
+    return AnimatedBuilder(
+      animation: _backgroundAnimation,
+      builder: (context, child) {
+        return Stack(
+          children: [
+            _buildPrimaryOrbitalSystem(),
+            _buildSecondaryAmbientLayer(),
+            _buildTertiaryDetailLayer(),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildPrimaryOrbitalSystem() {
+    return Positioned.fill(
+      child: CustomPaint(
+        painter: OrbitalPainter(
+          animation: _backgroundAnimation.value,
+          color: Colors.green.withOpacity(0.03),
+          strokeWidth: 1.5,
+          radius: 120,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSecondaryAmbientLayer() {
+    return Positioned.fill(
+      child: CustomPaint(
+        painter: ParticlePainter(
+          animation: _backgroundAnimation.value,
+          particleCount: 25,
+          color: Colors.white.withOpacity(0.02),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTertiaryDetailLayer() {
+    return Positioned.fill(
+      child: CustomPaint(
+        painter: FlowingLinesPainter(
+          animation: _backgroundAnimation.value,
+          color: Colors.green.withOpacity(0.015),
+          lineCount: 3,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return SizedBox(
+      height: 120, // Fixed height to control the overlap
+      child: Stack(
+        children: [
+          // Turf background
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image: const AssetImage('assets/turfBackground.jpg'),
+                  fit: BoxFit.cover,
+                  colorFilter: ColorFilter.mode(
+                    Colors.black.withOpacity(0.4),
+                    BlendMode.darken,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          // Football laces bar positioned to overlap header turf bottom
+          Positioned(
+            bottom: 0, // Moved down just a tiny bit more
+            left: -10, // Extended slightly to the left
+            right: -10, // Extended slightly to the right
+            child: Opacity(
+              opacity: 0.65, // More transparent while still visible
+              child: Container(
+                height: 28, // Increased height slightly
+                decoration: BoxDecoration(
+                  image: DecorationImage(
+                    image: AssetImage('assets/lacesbar.png'),
+                    fit: BoxFit.fitWidth,
+                    repeat: ImageRepeat.repeatX,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildActionButton({
@@ -1602,81 +1787,69 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
   Widget build(BuildContext context) {
     if (_isLoading) {
       return Scaffold(
-        backgroundColor: Colors.grey[800], // Changed from black to gray
-        appBar: AppBar(
-          backgroundColor: Colors.grey[800], // Changed from black to gray
-          title: Image.asset(
-            'assets/9d514000-7637-4e02-bc87-df46fcb2fe36_removalai_preview.png',
-            height: 40,
-            fit: BoxFit.contain,
+        body: Container(
+          decoration: BoxDecoration(
+            image: DecorationImage(
+              image: const AssetImage('assets/turfBackground.jpg'),
+              fit: BoxFit.cover,
+              colorFilter: ColorFilter.mode(
+                Colors.black.withOpacity(0.6),
+                BlendMode.darken,
+              ),
+            ),
           ),
-          centerTitle: true,
+          child: const Center(
+            child: CircularProgressIndicator(color: Colors.green),
+          ),
         ),
-        body: Center(child: CircularProgressIndicator(color: Colors.green)), // Changed to green
       );
     }
 
     return Scaffold(
-      backgroundColor: Colors.grey[800], // Changed from black to gray
-      appBar: AppBar(
-        backgroundColor: Colors.grey[800], // Changed from black to gray
-        title: Image.asset(
-          'assets/9d514000-7637-4e02-bc87-df46fcb2fe36_removalai_preview.png',
-          height: 40,
-          fit: BoxFit.contain,
+      body: Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: const AssetImage('assets/turfBackground.jpg'),
+            fit: BoxFit.cover,
+            colorFilter: ColorFilter.mode(
+              Colors.black.withOpacity(0.6),
+              BlendMode.darken,
+            ),
+          ),
         ),
-        centerTitle: true,
-        actions: [
-          if (_isEditing) ...[
-            // Cancel button
-            IconButton(
-              icon: Icon(
-                Icons.close,
-                color: Colors.red,
-              ),
-              onPressed: () {
-                setState(() {
-                  _isEditing = false;
-                  // Reset form fields to original values
-                  _usernameController.text = _userData?['username'] ?? '';
-                  _fullNameController.text = _userData?['full_name'] ?? '';
-                  _bioController.text = _userData?['bio'] ?? '';
-                });
-              },
+        child: Stack(
+          children: [
+            // Animated background elements
+            Positioned.fill(
+              child: _buildAnimatedBackground(),
             ),
-            // Save button
-            IconButton(
-              icon: Icon(
-                Icons.check,
-                color: Colors.green,
-              ),
-              onPressed: _updateProfile,
-            ),
-          ] else ...[
-            // Edit button
-            IconButton(
-              icon: Icon(
-                Icons.edit,
-                color: Colors.green,
-              ),
-              onPressed: () {
-                setState(() => _isEditing = true);
-              },
-            ),
-          ],
-        ],
-      ),
-      body: RefreshIndicator(
-        onRefresh: _refreshProfile,
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          child: Form(
-          key: _formKey,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+            // Main content
+            AnimatedBuilder(
+              animation: _fadeAnimation,
+              builder: (context, child) {
+                return Transform.scale(
+                  scale: _scaleAnimation.value,
+                  child: Opacity(
+                    opacity: _fadeAnimation.value,
+                    child: RefreshIndicator(
+                      onRefresh: _refreshProfile,
+                      child: CustomScrollView(
+                        physics: const BouncingScrollPhysics(),
+                        slivers: [
+                          // Header
+                          SliverToBoxAdapter(
+                            child: _buildHeader(),
+                          ),
+                          
+                          // Profile content
+                          SliverToBoxAdapter(
+                            child: Form(
+                              key: _formKey,
+                              child: Padding(
+                                padding: const EdgeInsets.all(16),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
                 // Profile Header
                 Center(
                   child: Column(
@@ -1957,20 +2130,152 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
                   ),
                 ),
 
-                SizedBox(height: 32),
-                ElevatedButton(
-                  onPressed: _signOut,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    minimumSize: Size(double.infinity, 50),
+                                    SizedBox(height: 32),
+                                    ElevatedButton(
+                                      onPressed: _signOut,
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.red,
+                                        minimumSize: Size(double.infinity, 50),
+                                      ),
+                                      child: Text('Sign Out'),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          
+                          const SliverToBoxAdapter(child: SizedBox(height: 32)),
+                        ],
+                      ),
+                    ),
                   ),
-                  child: Text('Sign Out'),
-                ),
-              ],
+                );
+              },
             ),
-          ),
+            // Clouds positioned higher up with side-to-side animation
+            Positioned(
+              top: -40, // Moved up much higher
+              left: 0,
+              right: 0,
+              child: AnimatedBuilder(
+                animation: _cloudsAnimation,
+                builder: (context, child) {
+                  return Transform.translate(
+                    offset: Offset(_cloudsAnimation.value, 0),
+                    child: Opacity(
+                      opacity: 0.9, // Less transparent, more visible
+                      child: Image.asset(
+                        'assets/clouds.png',
+                        fit: BoxFit.cover,
+                        height: 120, // Increased height further to compensate
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            // WagerLoop logo floating above clouds with animation
+            Positioned(
+              top: 50, // Same position as in header
+              left: 24,
+              right: 24,
+              child: AnimatedBuilder(
+                animation: _floatingAnimation,
+                builder: (context, child) {
+                  return Transform.translate(
+                    offset: Offset(0, _floatingAnimation.value),
+                    child: Center(
+                      child: Image.asset(
+                        'assets/9d514000-7637-4e02-bc87-df46fcb2fe36_removalai_preview.png',
+                        height: 44,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            // Floating edit/save buttons
+            Positioned(
+              top: 50,
+              right: 16,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (_isEditing) ...[
+                    // Cancel button
+                    Container(
+                      margin: const EdgeInsets.only(right: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withOpacity(0.9),
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: IconButton(
+                        icon: const Icon(Icons.close, color: Colors.white),
+                        onPressed: () {
+                          setState(() {
+                            _isEditing = false;
+                            // Reset form fields to original values
+                            _usernameController.text = _userData?['username'] ?? '';
+                            _fullNameController.text = _userData?['full_name'] ?? '';
+                            _bioController.text = _userData?['bio'] ?? '';
+                          });
+                        },
+                      ),
+                    ),
+                    // Save button
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.green.withOpacity(0.9),
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: IconButton(
+                        icon: const Icon(Icons.check, color: Colors.white),
+                        onPressed: _updateProfile,
+                      ),
+                    ),
+                  ] else ...[
+                    // Edit button
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.green.withOpacity(0.9),
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: IconButton(
+                        icon: const Icon(Icons.edit, color: Colors.white),
+                        onPressed: () {
+                          setState(() => _isEditing = true);
+                        },
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
         ),
-      ),
       ),
     );
   }
@@ -1983,8 +2288,134 @@ class _ProfilePageState extends State<ProfilePage> with TickerProviderStateMixin
     _fullNameController.dispose();
     _bioController.dispose();
     _emailController.dispose();
+    
+    // Dispose animation controllers
+    _fadeController.dispose();
+    _scaleController.dispose();
+    _backgroundController.dispose();
+    _floatingController.dispose();
+    _cloudsController.dispose();
+    
     super.dispose();
   }
+}
+
+// Custom Painters for animated background
+class OrbitalPainter extends CustomPainter {
+  final double animation;
+  final Color color;
+  final double strokeWidth;
+  final double radius;
+
+  OrbitalPainter({
+    required this.animation,
+    required this.color,
+    required this.strokeWidth,
+    required this.radius,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke;
+
+    final center = Offset(size.width / 2, size.height / 2);
+    
+    // Draw orbital circles
+    for (int i = 0; i < 3; i++) {
+      final orbitalRadius = radius + (i * 80);
+      canvas.drawCircle(center, orbitalRadius, paint);
+      
+      // Draw orbiting dots
+      final angle = animation + (i * pi / 2);
+      final dotX = center.dx + cos(angle) * orbitalRadius;
+      final dotY = center.dy + sin(angle) * orbitalRadius;
+      
+      canvas.drawCircle(
+        Offset(dotX, dotY),
+        4,
+        Paint()..color = color.withOpacity(0.8),
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(OrbitalPainter oldDelegate) => animation != oldDelegate.animation;
+}
+
+class ParticlePainter extends CustomPainter {
+  final double animation;
+  final int particleCount;
+  final Color color;
+
+  ParticlePainter({
+    required this.animation,
+    required this.particleCount,
+    required this.color,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..color = color;
+    final random = Random(42); // Fixed seed for consistent particles
+
+    for (int i = 0; i < particleCount; i++) {
+      final x = random.nextDouble() * size.width;
+      final y = random.nextDouble() * size.height;
+      
+      // Add floating motion
+      final floatX = x + sin(animation + i) * 20;
+      final floatY = y + cos(animation + i * 0.7) * 15;
+      
+      canvas.drawCircle(
+        Offset(floatX, floatY),
+        random.nextDouble() * 3 + 1,
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(ParticlePainter oldDelegate) => animation != oldDelegate.animation;
+}
+
+class FlowingLinesPainter extends CustomPainter {
+  final double animation;
+  final Color color;
+  final int lineCount;
+
+  FlowingLinesPainter({
+    required this.animation,
+    required this.color,
+    required this.lineCount,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 2
+      ..style = PaintingStyle.stroke;
+
+    for (int i = 0; i < lineCount; i++) {
+      final path = Path();
+      final startY = (size.height / lineCount) * i + 50;
+      
+      path.moveTo(-50, startY);
+      
+      for (double x = -50; x < size.width + 50; x += 20) {
+        final y = startY + sin((x / 100) + animation + (i * pi / 3)) * 30;
+        path.lineTo(x, y);
+      }
+      
+      canvas.drawPath(path, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(FlowingLinesPainter oldDelegate) => animation != oldDelegate.animation;
 }
 
 

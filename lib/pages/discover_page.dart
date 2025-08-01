@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
+import 'dart:ui';
 import 'stadium_info_page.dart';
 import 'coaches_info_page.dart';
 import 'referees_info_page.dart';
@@ -18,9 +19,13 @@ class _DiscoverPageState extends State<DiscoverPage> with TickerProviderStateMix
   late AnimationController _fadeController;
   late AnimationController _scaleController;
   late AnimationController _backgroundController;
+  late AnimationController _floatingController;
+  late AnimationController _cloudsController;
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
   late Animation<double> _backgroundAnimation;
+  late Animation<double> _floatingAnimation;
+  late Animation<double> _cloudsAnimation;
 
   @override
   void initState() {
@@ -38,6 +43,16 @@ class _DiscoverPageState extends State<DiscoverPage> with TickerProviderStateMix
       vsync: this,
     )..repeat(); // Continuous endless animation
     
+    _floatingController = AnimationController(
+      duration: const Duration(seconds: 3), // 3 second floating cycle
+      vsync: this,
+    )..repeat(reverse: true); // Smooth up-down motion
+    
+    _cloudsController = AnimationController(
+      duration: const Duration(seconds: 8), // 8 second side-to-side cycle
+      vsync: this,
+    )..repeat(reverse: true); // Smooth side-to-side motion
+    
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _fadeController, curve: Curves.easeOutCubic),
     );
@@ -46,6 +61,12 @@ class _DiscoverPageState extends State<DiscoverPage> with TickerProviderStateMix
     );
     _backgroundAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _backgroundController, curve: Curves.linear),
+    );
+    _floatingAnimation = Tween<double>(begin: -8.0, end: 8.0).animate(
+      CurvedAnimation(parent: _floatingController, curve: Curves.easeInOut),
+    );
+    _cloudsAnimation = Tween<double>(begin: -30.0, end: 30.0).animate(
+      CurvedAnimation(parent: _cloudsController, curve: Curves.easeInOut),
     );
     
     _fadeController.forward();
@@ -292,6 +313,8 @@ class _DiscoverPageState extends State<DiscoverPage> with TickerProviderStateMix
     _fadeController.dispose();
     _scaleController.dispose();
     _backgroundController.dispose();
+    _floatingController.dispose();
+    _cloudsController.dispose();
     super.dispose();
   }
 
@@ -331,38 +354,45 @@ class _DiscoverPageState extends State<DiscoverPage> with TickerProviderStateMix
       'route': null,
       'tag': 'Live',
     },
-    {
-      'title': 'Expert Predictions',
-      'subtitle': 'Professional Insights',
-      'icon': Icons.verified_outlined,
-      'gradient': [const Color(0xFFF59E0B), const Color(0xFFEAB308)],
-      'route': null,
-      'tag': 'Pro',
-    },
   ];
 
   Widget _buildHeader() {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(24, 40, 24, 36),
-      decoration: BoxDecoration(
-        image: DecorationImage(
-          image: const AssetImage('assets/turfBackground.jpg'),
-          fit: BoxFit.cover,
-          colorFilter: ColorFilter.mode(
-            Colors.black.withOpacity(0.4),
-            BlendMode.darken,
-          ),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
+    return SizedBox(
+      height: 120, // Fixed height to control the overlap
+      child: Stack(
         children: [
-          // Centered WagerLoop Logo
-          Center(
-            child: Image.asset(
-              'assets/9d514000-7637-4e02-bc87-df46fcb2fe36_removalai_preview.png',
-              height: 44,
-              fit: BoxFit.contain,
+          // Turf background
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image: const AssetImage('assets/turfBackground.jpg'),
+                  fit: BoxFit.cover,
+                  colorFilter: ColorFilter.mode(
+                    Colors.black.withOpacity(0.4),
+                    BlendMode.darken,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          // Football laces bar positioned to overlap header turf bottom
+          Positioned(
+            bottom: 0, // Moved down just a tiny bit more
+            left: -10, // Extended slightly to the left
+            right: -10, // Extended slightly to the right
+            child: Opacity(
+              opacity: 0.65, // More transparent while still visible
+              child: Container(
+                height: 28, // Increased height slightly
+                decoration: BoxDecoration(
+                  image: DecorationImage(
+                    image: AssetImage('assets/lacesbar.png'),
+                    fit: BoxFit.fitWidth,
+                    repeat: ImageRepeat.repeatX,
+                  ),
+                ),
+              ),
             ),
           ),
         ],
@@ -446,12 +476,12 @@ class _DiscoverPageState extends State<DiscoverPage> with TickerProviderStateMix
                                             : null,
                     gradient: tool['route'] != 'weather' && tool['route'] != 'coaches' && tool['route'] != 'stadium' && tool['route'] != 'referees' && tool['name'] != 'News' && tool['name'] != 'Analytics' 
                         ? LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [
-                              const Color(0xFF1F2937).withOpacity(0.9),
-                              const Color(0xFF1A202C).withOpacity(0.8),
-                            ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        const Color(0xFF1F2937).withOpacity(0.9),
+                        const Color(0xFF1A202C).withOpacity(0.8),
+                      ],
                           )
                         : null,
                     borderRadius: BorderRadius.circular(20),
@@ -506,13 +536,13 @@ class _DiscoverPageState extends State<DiscoverPage> with TickerProviderStateMix
                                   ],
                                 )
                               : LinearGradient(
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                  colors: [
-                                    tool['color'].withOpacity(0.15),
-                                    tool['color'].withOpacity(0.08),
-                                  ],
-                                ),
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              tool['color'].withOpacity(0.15),
+                              tool['color'].withOpacity(0.08),
+                            ],
+                          ),
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
                             color: (tool['route'] == 'weather' || tool['route'] == 'coaches' || tool['route'] == 'stadium' || tool['route'] == 'referees' || tool['name'] == 'News' || tool['name'] == 'Analytics')
@@ -587,6 +617,21 @@ class _DiscoverPageState extends State<DiscoverPage> with TickerProviderStateMix
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
         children: [
+          // Blur effect above top row buttons
+          Container(
+            height: 20,
+            margin: const EdgeInsets.only(bottom: 8),
+            child: ClipRect(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 2.0, sigmaY: 2.0),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.05),
+                  ),
+                ),
+              ),
+            ),
+          ),
           // Top row - first 3 tools
           Row(
             children: [
@@ -637,7 +682,40 @@ class _DiscoverPageState extends State<DiscoverPage> with TickerProviderStateMix
                   child: Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF1F2937).withOpacity(0.9),
+                      color: service['title'] != 'WagerGPT' && service['title'] != 'Communities' && service['title'] != 'Live Analysis'
+                          ? const Color(0xFF1F2937).withOpacity(0.9)
+                          : null,
+                      image: service['title'] == 'WagerGPT'
+                          ? DecorationImage(
+                              image: AssetImage('assets/wagergpt.jpg'),
+                              fit: BoxFit.cover,
+                              alignment: Alignment.centerLeft,
+                              colorFilter: ColorFilter.mode(
+                                Colors.black.withOpacity(0.4),
+                                BlendMode.darken,
+                              ),
+                            )
+                          : service['title'] == 'Communities'
+                              ? DecorationImage(
+                                  image: AssetImage('assets/communities.jpg'),
+                                  fit: BoxFit.cover,
+                                  alignment: Alignment.centerLeft,
+                                  colorFilter: ColorFilter.mode(
+                                    Colors.black.withOpacity(0.4),
+                                    BlendMode.darken,
+                                  ),
+                                )
+                              : service['title'] == 'Live Analysis'
+                                  ? DecorationImage(
+                                      image: AssetImage('assets/liveanalysis.jpg'),
+                                      fit: BoxFit.cover,
+                                      alignment: Alignment.centerLeft,
+                                      colorFilter: ColorFilter.mode(
+                                        Colors.black.withOpacity(0.4),
+                                        BlendMode.darken,
+                                      ),
+                                    )
+                                  : null,
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
                         color: Colors.green.withOpacity(0.5), // Green trim
@@ -820,15 +898,13 @@ class _DiscoverPageState extends State<DiscoverPage> with TickerProviderStateMix
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              const Color(0xFF0F172A), // Premium dark slate at top
-              const Color(0xFF0C1220), // Deep midnight in middle
-              const Color(0xFF0B1018), // Rich black at bottom
-            ],
-            stops: const [0.0, 0.65, 1.0],
+          image: DecorationImage(
+            image: const AssetImage('assets/turfBackground.jpg'),
+            fit: BoxFit.cover,
+            colorFilter: ColorFilter.mode(
+              Colors.black.withOpacity(0.6),
+              BlendMode.darken,
+            ),
           ),
         ),
         child: Stack(
@@ -853,131 +929,14 @@ class _DiscoverPageState extends State<DiscoverPage> with TickerProviderStateMix
                           child: _buildHeader(),
                         ),
 
-                        // Quick Access Section
+
+
+                        // Quick Tools Grid (without header)
                         SliverToBoxAdapter(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 24),
-                                child: Row(
-                                  children: [
-                                    Text(
-                                      'Quick Access',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 22,
-                                        fontWeight: FontWeight.w800,
-                                        letterSpacing: -0.6,
-                                        height: 1.2,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Container(
-                                      width: 40,
-                                      height: 2,
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          colors: [
-                                            const Color(0xFF10B981),
-                                            const Color(0xFF10B981).withOpacity(0.3),
-                                          ],
-                                        ),
-                                        borderRadius: BorderRadius.circular(1),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: 18),
-                              _buildQuickToolsGrid(),
-                            ],
-                          ),
+                          child: _buildQuickToolsGrid(),
                         ),
 
-                        const SliverToBoxAdapter(child: SizedBox(height: 44)),
-
-                        // Featured Services Header
-                        SliverToBoxAdapter(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 24),
-                            child: Row(
-                              children: [
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Text(
-                                          'Featured Services',
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 22,
-                                            fontWeight: FontWeight.w800,
-                                            letterSpacing: -0.6,
-                                            height: 1.2,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 12),
-                                        Container(
-                                          width: 40,
-                                          height: 2,
-                                          decoration: BoxDecoration(
-                                            gradient: LinearGradient(
-                                              colors: [
-                                                const Color(0xFF8B5CF6),
-                                                const Color(0xFF8B5CF6).withOpacity(0.3),
-                                              ],
-                                            ),
-                                            borderRadius: BorderRadius.circular(1),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      'Premium tools and integrations',
-                                      style: TextStyle(
-                                        color: Colors.grey[400],
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w400,
-                                        letterSpacing: -0.1,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const Spacer(),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        Colors.grey[800]!.withOpacity(0.6),
-                                        Colors.grey[900]!.withOpacity(0.4),
-                                      ],
-                                    ),
-                                    borderRadius: BorderRadius.circular(16),
-                                    border: Border.all(
-                                      color: Colors.grey[600]!.withOpacity(0.3),
-                                      width: 1,
-                                    ),
-                                  ),
-                                  child: Text(
-                                    'See All',
-                                    style: TextStyle(
-                                      color: Colors.grey[300],
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w600,
-                                      letterSpacing: -0.1,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-
-                        const SliverToBoxAdapter(child: SizedBox(height: 16)),
+                        const SliverToBoxAdapter(child: SizedBox(height: 24)),
 
                         // Featured Services List
                         SliverPadding(
@@ -996,6 +955,49 @@ class _DiscoverPageState extends State<DiscoverPage> with TickerProviderStateMix
                   ),
                 );
               },
+            ),
+            // Clouds positioned higher up with side-to-side animation
+            Positioned(
+              top: -40, // Moved up much higher
+              left: 0,
+              right: 0,
+              child: AnimatedBuilder(
+                animation: _cloudsAnimation,
+                builder: (context, child) {
+                  return Transform.translate(
+                    offset: Offset(_cloudsAnimation.value, 0),
+                    child: Opacity(
+                      opacity: 0.9, // Less transparent, more visible
+                      child: Image.asset(
+                        'assets/clouds.png',
+                        fit: BoxFit.cover,
+                        height: 120, // Increased height further to compensate
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            // WagerLoop logo floating above clouds with animation
+            Positioned(
+              top: 50, // Same position as in header
+              left: 24,
+              right: 24,
+              child: AnimatedBuilder(
+                animation: _floatingAnimation,
+                builder: (context, child) {
+                  return Transform.translate(
+                    offset: Offset(0, _floatingAnimation.value),
+                    child: Center(
+                      child: Image.asset(
+                        'assets/9d514000-7637-4e02-bc87-df46fcb2fe36_removalai_preview.png',
+                        height: 44,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                  );
+                },
+              ),
             ),
           ],
         ),

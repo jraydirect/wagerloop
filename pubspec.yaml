@@ -96,6 +96,12 @@ flutter:
     - assets/newsbuttonBackground.jpg
     - assets/analyticsbuttonBackground.jpg
     - assets/turfBackground.jpg
+    - assets/checkerstripe.png
+    - assets/lacesbar.png
+    - assets/wagergpt.jpg
+    - assets/communities.jpg
+    - assets/liveanalysis.jpg
+    - assets/clouds.png
     - lib/mlbBallparkInfo.json
     - lib/nflStadiumInfo.json
     - lib/nbaStadiumInfo.json

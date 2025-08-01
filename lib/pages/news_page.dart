@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:xml/xml.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'dart:math';
+import 'dart:ui';
 import '../services/article_summary_service.dart';
 
 class NewsPage extends StatefulWidget {
@@ -10,7 +12,17 @@ class NewsPage extends StatefulWidget {
   _NewsPageState createState() => _NewsPageState();
 }
 
-class _NewsPageState extends State<NewsPage> {
+class _NewsPageState extends State<NewsPage> with TickerProviderStateMixin {
+  late AnimationController _fadeController;
+  late AnimationController _scaleController;
+  late AnimationController _backgroundController;
+  late AnimationController _floatingController;
+  late AnimationController _cloudsController;
+  late Animation<double> _fadeAnimation;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _backgroundAnimation;
+  late Animation<double> _floatingAnimation;
+  late Animation<double> _cloudsAnimation;
   List<Map<String, dynamic>> newsArticles = [];
   bool isLoading = true;
   String error = '';
@@ -40,7 +52,340 @@ class _NewsPageState extends State<NewsPage> {
   @override
   void initState() {
     super.initState();
+    
+    // Initialize animation controllers
+    _fadeController = AnimationController(
+      duration: const Duration(milliseconds: 1200),
+      vsync: this,
+    );
+    _scaleController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+    _backgroundController = AnimationController(
+      duration: const Duration(seconds: 20), // Slower for more elegant movement
+      vsync: this,
+    )..repeat(); // Continuous endless animation
+    
+    _floatingController = AnimationController(
+      duration: const Duration(seconds: 3), // 3 second floating cycle
+      vsync: this,
+    )..repeat(reverse: true); // Smooth up-down motion
+    
+    _cloudsController = AnimationController(
+      duration: const Duration(seconds: 8), // 8 second side-to-side cycle
+      vsync: this,
+    )..repeat(reverse: true); // Smooth side-to-side motion
+    
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _fadeController, curve: Curves.easeOutCubic),
+    );
+    _scaleAnimation = Tween<double>(begin: 0.98, end: 1.0).animate(
+      CurvedAnimation(parent: _scaleController, curve: Curves.easeOutCubic),
+    );
+    _backgroundAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _backgroundController, curve: Curves.linear),
+    );
+    _floatingAnimation = Tween<double>(begin: -8.0, end: 8.0).animate(
+      CurvedAnimation(parent: _floatingController, curve: Curves.easeInOut),
+    );
+    _cloudsAnimation = Tween<double>(begin: -30.0, end: 30.0).animate(
+      CurvedAnimation(parent: _cloudsController, curve: Curves.easeInOut),
+    );
+    
+    _fadeController.forward();
+    _scaleController.forward();
+    
     fetchNews();
+  }
+
+  @override
+  void dispose() {
+    _fadeController.dispose();
+    _scaleController.dispose();
+    _backgroundController.dispose();
+    _floatingController.dispose();
+    _cloudsController.dispose();
+    super.dispose();
+  }
+
+  Widget _buildAnimatedBackground() {
+    return AnimatedBuilder(
+      animation: _backgroundAnimation,
+      builder: (context, child) {
+        final progress = _backgroundAnimation.value;
+        
+        return Stack(
+          children: [
+            // Primary orbital system - Large elegant circles
+            ..._buildPrimaryOrbitalSystem(progress),
+            
+            // Secondary ambient layer - Floating elements
+            ..._buildSecondaryAmbientLayer(progress),
+            
+            // Tertiary detail layer - Subtle accents
+            ..._buildTertiaryDetailLayer(progress),
+          ],
+        );
+      },
+    );
+  }
+
+  List<Widget> _buildPrimaryOrbitalSystem(double progress) {
+    return [
+      // Main orbital center - Large green presence
+      Positioned(
+        top: MediaQuery.of(context).size.height * 0.15 + (80 * sin(progress * 2 * pi)),
+        right: MediaQuery.of(context).size.width * 0.25 + (120 * cos(progress * 2 * pi)),
+        child: Transform.scale(
+          scale: 1.0 + (0.15 * sin(progress * 2 * pi)),
+          child: Container(
+            width: 200,
+            height: 200,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: RadialGradient(
+                colors: [
+                  const Color(0xFF10B981).withOpacity(0.25),
+                  const Color(0xFF10B981).withOpacity(0.15),
+                  const Color(0xFF10B981).withOpacity(0.08),
+                  const Color(0xFF10B981).withOpacity(0.02),
+                  Colors.transparent,
+                ],
+                stops: const [0.0, 0.2, 0.5, 0.8, 1.0],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF10B981).withOpacity(0.1),
+                  blurRadius: 40,
+                  spreadRadius: 5,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      
+      // Secondary orbital - Blue accent
+      Positioned(
+        top: MediaQuery.of(context).size.height * 0.45 + (100 * sin(progress * 1.5 * pi + pi/3)),
+        left: MediaQuery.of(context).size.width * 0.1 + (100 * cos(progress * 1.5 * pi + pi/3)),
+        child: Transform.scale(
+          scale: 0.8 + (0.2 * cos(progress * 1.8 * pi)),
+          child: Container(
+            width: 150,
+            height: 150,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: RadialGradient(
+                colors: [
+                  const Color(0xFF3B82F6).withOpacity(0.2),
+                  const Color(0xFF3B82F6).withOpacity(0.12),
+                  const Color(0xFF3B82F6).withOpacity(0.06),
+                  const Color(0xFF3B82F6).withOpacity(0.02),
+                  Colors.transparent,
+                ],
+                stops: const [0.0, 0.25, 0.55, 0.8, 1.0],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF3B82F6).withOpacity(0.08),
+                  blurRadius: 30,
+                  spreadRadius: 3,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      
+      // Tertiary orbital - Purple elegance
+      Positioned(
+        bottom: MediaQuery.of(context).size.height * 0.2 + (70 * sin(progress * 1.2 * pi + pi)),
+        right: MediaQuery.of(context).size.width * 0.15 + (90 * cos(progress * 1.2 * pi + pi)),
+        child: Transform.scale(
+          scale: 0.9 + (0.1 * sin(progress * 2.2 * pi)),
+          child: Container(
+            width: 120,
+            height: 120,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: RadialGradient(
+                colors: [
+                  const Color(0xFF8B5CF6).withOpacity(0.18),
+                  const Color(0xFF8B5CF6).withOpacity(0.1),
+                  const Color(0xFF8B5CF6).withOpacity(0.05),
+                  const Color(0xFF8B5CF6).withOpacity(0.02),
+                  Colors.transparent,
+                ],
+                stops: const [0.0, 0.3, 0.6, 0.85, 1.0],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF8B5CF6).withOpacity(0.06),
+                  blurRadius: 25,
+                  spreadRadius: 2,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    ];
+  }
+
+  List<Widget> _buildSecondaryAmbientLayer(double progress) {
+    return List.generate(8, (index) {
+      final offset = index * 0.4;
+      final phase = progress + offset;
+      final colors = [
+        const Color(0xFF10B981),
+        const Color(0xFF3B82F6),
+        const Color(0xFF8B5CF6),
+        const Color(0xFF06B6D4),
+      ];
+      final color = colors[index % colors.length];
+      
+      return Positioned(
+        top: 100 + (index * 80) + (50 * sin(phase * 2 * pi)),
+        left: (index.isEven ? 50 : MediaQuery.of(context).size.width - 100) + 
+              (60 * cos(phase * 1.5 * pi)),
+        child: Transform.scale(
+          scale: (0.7 + 0.3 * sin(phase * 3 * pi)).clamp(0.4, 1.2),
+          child: Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: RadialGradient(
+                colors: [
+                  color.withOpacity(0.15),
+                  color.withOpacity(0.08),
+                  color.withOpacity(0.03),
+                  Colors.transparent,
+                ],
+                stops: const [0.0, 0.4, 0.7, 1.0],
+              ),
+            ),
+          ),
+        ),
+      );
+    });
+  }
+
+  List<Widget> _buildTertiaryDetailLayer(double progress) {
+    return [
+      // Elegant flowing lines
+      ...List.generate(3, (index) {
+        final offset = index * 0.33;
+        final lineProgress = (progress + offset) % 1.0;
+        
+        return Positioned(
+          top: 200 + (index * 200),
+          left: -100 + (MediaQuery.of(context).size.width + 200) * lineProgress,
+          child: Transform.rotate(
+            angle: progress * 0.5 * pi,
+            child: Container(
+              width: 120,
+              height: 1.5,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(1),
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.transparent,
+                    const Color(0xFF10B981).withOpacity(0.4),
+                    const Color(0xFF10B981).withOpacity(0.8),
+                    const Color(0xFF10B981).withOpacity(0.4),
+                    Colors.transparent,
+                  ],
+                  stops: const [0.0, 0.2, 0.5, 0.8, 1.0],
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF10B981).withOpacity(0.3),
+                    blurRadius: 8,
+                    spreadRadius: 1,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      }),
+      
+      // Subtle particle field
+      ...List.generate(15, (index) {
+        final offset = index * 0.2;
+        final particlePhase = progress + offset;
+        
+        return Positioned(
+          top: 50 + (index * 45) + (30 * sin(particlePhase * 2 * pi)),
+          left: 30 + (index * 20) + (40 * cos(particlePhase * 1.8 * pi)),
+          child: Transform.scale(
+            scale: (0.3 + 0.4 * sin(particlePhase * 4 * pi)).clamp(0.1, 0.8),
+            child: Container(
+              width: 3,
+              height: 3,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withOpacity(0.6),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.white.withOpacity(0.4),
+                    blurRadius: 6,
+                    spreadRadius: 1,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      }),
+    ];
+  }
+
+  Widget _buildHeader() {
+    return SizedBox(
+      height: 120, // Fixed height to control the overlap
+      child: Stack(
+        children: [
+          // Turf background
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image: const AssetImage('assets/turfBackground.jpg'),
+                  fit: BoxFit.cover,
+                  colorFilter: ColorFilter.mode(
+                    Colors.black.withOpacity(0.4),
+                    BlendMode.darken,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          // Football laces bar positioned to overlap header turf bottom
+          Positioned(
+            bottom: 0,
+            left: -10,
+            right: -10,
+            child: Opacity(
+              opacity: 0.65,
+              child: Container(
+                height: 28,
+                decoration: BoxDecoration(
+                  image: DecorationImage(
+                    image: AssetImage('assets/lacesbar.png'),
+                    fit: BoxFit.fitWidth,
+                    repeat: ImageRepeat.repeatX,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> fetchNews() async {
@@ -139,321 +484,301 @@ class _NewsPageState extends State<NewsPage> {
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              const Color(0xFF111827), // Dark blue-gray at top
-              const Color(0xFF0F172A), // Darker slate in middle
-              const Color(0xFF0C1220), // Even darker at bottom
-            ],
-            stops: const [0.0, 0.6, 1.0],
+          image: DecorationImage(
+            image: const AssetImage('assets/turfBackground.jpg'),
+            fit: BoxFit.cover,
+            colorFilter: ColorFilter.mode(
+              Colors.black.withOpacity(0.6),
+              BlendMode.darken,
+            ),
           ),
         ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              // Header with app logo
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                child: Row(
-                  children: [
-                    Text(
-                      'News',
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                        letterSpacing: -0.8,
-                        height: 1.1,
-                      ),
-                    ),
-                    const Spacer(),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF10B981).withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: const Color(0xFF10B981).withOpacity(0.4)),
-                      ),
-                      child: Text(
-                        'LIVE',
-                        style: TextStyle(
-                          color: const Color(0xFF10B981),
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 0.8,
+        child: Stack(
+          children: [
+            // Animated background elements
+            Positioned.fill(
+              child: _buildAnimatedBackground(),
+            ),
+            // Main content
+            AnimatedBuilder(
+              animation: _fadeAnimation,
+              builder: (context, child) {
+                return Transform.scale(
+                  scale: _scaleAnimation.value,
+                  child: Opacity(
+                    opacity: _fadeAnimation.value,
+                    child: CustomScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      slivers: [
+                        // Header
+                        SliverToBoxAdapter(
+                          child: _buildHeader(),
                         ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              
-              // League Filter - Enhanced with modern styling
-              Container(
-                margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1F2937).withOpacity(0.8),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: Colors.green.withOpacity(0.5),
-                    width: 1.2,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.08),
-                      blurRadius: 16,
-                      offset: const Offset(0, 4),
-                    ),
-                    BoxShadow(
-                      color: Colors.green.withOpacity(0.1),
-                      blurRadius: 12,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
-                ),
-                child: Container(
-                  height: 70,
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    physics: const BouncingScrollPhysics(),
-                    itemCount: leagues.length,
-                    itemBuilder: (context, index) {
-                      final league = leagues[index];
-                      final isSelected = league == selectedLeague;
+                        
 
-                      return Padding(
-                        padding: EdgeInsets.only(
-                          left: index == 0 ? 8 : 0,
-                          right: index == leagues.length - 1 ? 8 : 12
-                        ),
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: () {
-                              setState(() {
-                                selectedLeague = league;
-                                fetchNews();
-                              });
-                            },
-                            borderRadius: BorderRadius.circular(16),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                              decoration: BoxDecoration(
-                                color: isSelected
-                                    ? Colors.green
-                                    : const Color(0xFF374151),
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(
-                                  color: isSelected
-                                      ? Colors.green
-                                      : Colors.green.withOpacity(0.3),
-                                  width: 1,
-                                ),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Image.asset(
-                                    getLeagueLogoPath(league),
-                                    height: 20,
-                                    width: 20,
-                                    fit: BoxFit.contain,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    league,
-                                    style: TextStyle(
-                                      color: isSelected
-                                          ? Colors.white
-                                          : Colors.green,
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 15,
-                                      letterSpacing: -0.2,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ),
-
-              // News List with enhanced styling
-              Expanded(
-                child: isLoading
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            width: 60,
-                            height: 60,
-                            decoration: BoxDecoration(
-                              color: Colors.green.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                            child: const Center(
-                              child: CircularProgressIndicator(
-                                color: Colors.green,
-                                strokeWidth: 3,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Loading $selectedLeague news...',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                  : error.isNotEmpty
-                      ? Center(
+                        
+                        // League Filter
+                        SliverToBoxAdapter(
                           child: Container(
-                            margin: const EdgeInsets.all(20),
-                            padding: const EdgeInsets.all(28),
+                            margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF1F2937).withOpacity(0.9),
+                              color: const Color(0xFF1F2937).withOpacity(0.8),
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
-                                color: Colors.red.withOpacity(0.3),
-                                width: 1,
+                                color: Colors.green.withOpacity(0.5),
+                                width: 1.2,
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.2),
-                                  blurRadius: 12,
+                                  color: Colors.black.withOpacity(0.08),
+                                  blurRadius: 16,
                                   offset: const Offset(0, 4),
+                                ),
+                                BoxShadow(
+                                  color: Colors.green.withOpacity(0.1),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 6),
                                 ),
                               ],
                             ),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(
-                                  Icons.error_outline,
-                                  size: 48,
-                                  color: Colors.red,
-                                ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  'Unable to load news',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  error,
-                                  style: const TextStyle(
-                                    color: Colors.grey,
-                                    fontSize: 14,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                                const SizedBox(height: 16),
-                                Material(
-                                  color: Colors.transparent,
-                                  child: InkWell(
-                                    onTap: fetchNews,
-                                    borderRadius: BorderRadius.circular(14),
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                                      decoration: BoxDecoration(
-                                        color: Colors.green,
-                                        borderRadius: BorderRadius.circular(14),
-                                      ),
-                                      child: const Text(
-                                        'Try Again',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 16,
-                                          color: Colors.white,
+                            child: Container(
+                              height: 70,
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                              child: ListView.builder(
+                                scrollDirection: Axis.horizontal,
+                                physics: const BouncingScrollPhysics(),
+                                itemCount: leagues.length,
+                                itemBuilder: (context, index) {
+                                  final league = leagues[index];
+                                  final isSelected = league == selectedLeague;
+
+                                  return Padding(
+                                    padding: EdgeInsets.only(
+                                      left: index == 0 ? 8 : 0,
+                                      right: index == leagues.length - 1 ? 8 : 12
+                                    ),
+                                    child: Material(
+                                      color: Colors.transparent,
+                                      child: InkWell(
+                                        onTap: () {
+                                          setState(() {
+                                            selectedLeague = league;
+                                            fetchNews();
+                                          });
+                                        },
+                                        borderRadius: BorderRadius.circular(16),
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                                          decoration: BoxDecoration(
+                                            color: isSelected
+                                                ? Colors.green
+                                                : const Color(0xFF374151),
+                                            borderRadius: BorderRadius.circular(16),
+                                            border: Border.all(
+                                              color: isSelected
+                                                  ? Colors.green
+                                                  : Colors.green.withOpacity(0.3),
+                                              width: 1,
+                                            ),
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Image.asset(
+                                                getLeagueLogoPath(league),
+                                                height: 20,
+                                                width: 20,
+                                                fit: BoxFit.contain,
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Text(
+                                                league,
+                                                style: TextStyle(
+                                                  color: isSelected
+                                                      ? Colors.white
+                                                      : Colors.green,
+                                                  fontWeight: FontWeight.w700,
+                                                  fontSize: 15,
+                                                  letterSpacing: -0.2,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       ),
                                     ),
-                                  ),
-                                ),
-                              ],
+                                  );
+                                },
+                              ),
                             ),
                           ),
-                        )
-                      : CustomScrollView(
-                          physics: const BouncingScrollPhysics(),
-                          slivers: [
-                            newsArticles.isEmpty
+                        ),
+                        
+                        // News List Content
+                        isLoading
+                            ? SliverFillRemaining(
+                                child: Center(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Container(
+                                        width: 60,
+                                        height: 60,
+                                        decoration: BoxDecoration(
+                                          color: Colors.green.withOpacity(0.1),
+                                          borderRadius: BorderRadius.circular(30),
+                                        ),
+                                        child: const Center(
+                                          child: CircularProgressIndicator(
+                                            color: Colors.green,
+                                            strokeWidth: 3,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 16),
+                                      Text(
+                                        'Loading news...',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              )
+                            : error.isNotEmpty
                                 ? SliverFillRemaining(
                                     child: Center(
                                       child: Column(
                                         mainAxisAlignment: MainAxisAlignment.center,
                                         children: [
-                                          Container(
-                                            width: 80,
-                                            height: 80,
-                                            decoration: BoxDecoration(
-                                              color: Colors.green.withOpacity(0.1),
-                                              borderRadius: BorderRadius.circular(40),
-                                            ),
-                                            child: Icon(
-                                              Icons.article_outlined,
-                                              size: 40,
-                                              color: Colors.green.withOpacity(0.7),
-                                            ),
+                                          const Icon(
+                                            Icons.error_outline,
+                                            size: 48,
+                                            color: Colors.red,
                                           ),
                                           const SizedBox(height: 16),
                                           Text(
-                                            'No news found',
+                                            'Error loading news',
                                             style: const TextStyle(
                                               color: Colors.white,
-                                              fontSize: 20,
+                                              fontSize: 18,
                                               fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 8),
-                                          Text(
-                                            'No $selectedLeague news available right now',
-                                            style: const TextStyle(
-                                              color: Colors.grey,
-                                              fontSize: 16,
                                             ),
                                           ),
                                         ],
                                       ),
                                     ),
                                   )
-                                : SliverPadding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                                    sliver: SliverList(
-                                      delegate: SliverChildBuilderDelegate(
-                                        (context, index) {
-                                          final article = newsArticles[index];
-                                          return Padding(
-                                            padding: const EdgeInsets.only(bottom: 16),
-                                            child: _buildNewsCard(article),
-                                          );
-                                        },
-                                        childCount: newsArticles.length,
+                                : newsArticles.isEmpty
+                                    ? SliverFillRemaining(
+                                        child: Center(
+                                          child: Column(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              Container(
+                                                width: 80,
+                                                height: 80,
+                                                decoration: BoxDecoration(
+                                                  color: Colors.green.withOpacity(0.1),
+                                                  borderRadius: BorderRadius.circular(40),
+                                                ),
+                                                child: Icon(
+                                                  Icons.article_outlined,
+                                                  size: 40,
+                                                  color: Colors.green.withOpacity(0.7),
+                                                ),
+                                              ),
+                                              const SizedBox(height: 16),
+                                              Text(
+                                                'No news found',
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 20,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 8),
+                                              Text(
+                                                'No $selectedLeague news available right now',
+                                                style: const TextStyle(
+                                                  color: Colors.grey,
+                                                  fontSize: 16,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      )
+                                    : SliverPadding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                        sliver: SliverList(
+                                          delegate: SliverChildBuilderDelegate(
+                                            (context, index) {
+                                              final article = newsArticles[index];
+                                              return Padding(
+                                                padding: const EdgeInsets.only(bottom: 16),
+                                                child: _buildNewsCard(article),
+                                              );
+                                            },
+                                            childCount: newsArticles.length,
+                                          ),
+                                        ),
                                       ),
-                                    ),
-                                  ),
-                          ],
-                        ),
-                ),
-            ],
-          ),
+                                      
+                        const SliverToBoxAdapter(child: SizedBox(height: 32)),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+            // Clouds positioned higher up with side-to-side animation
+            Positioned(
+              top: -40, // Moved up much higher
+              left: 0,
+              right: 0,
+              child: AnimatedBuilder(
+                animation: _cloudsAnimation,
+                builder: (context, child) {
+                  return Transform.translate(
+                    offset: Offset(_cloudsAnimation.value, 0),
+                    child: Opacity(
+                      opacity: 0.9, // Less transparent, more visible
+                      child: Image.asset(
+                        'assets/clouds.png',
+                        fit: BoxFit.cover,
+                        height: 120, // Increased height further to compensate
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            // WagerLoop logo floating above clouds with animation
+            Positioned(
+              top: 50, // Same position as in header
+              left: 24,
+              right: 24,
+              child: AnimatedBuilder(
+                animation: _floatingAnimation,
+                builder: (context, child) {
+                  return Transform.translate(
+                    offset: Offset(0, _floatingAnimation.value),
+                    child: Center(
+                      child: Image.asset(
+                        'assets/9d514000-7637-4e02-bc87-df46fcb2fe36_removalai_preview.png',
+                        height: 44,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );
