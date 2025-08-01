@@ -1,11 +1,15 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:convert';
 import 'dart:ui';
+import 'dart:async';
 import '../utils/team_logo_utils.dart';
 import '../widgets/espn_odds_display_widget.dart';
+import '../widgets/baseball_games_widget.dart';
 import 'game_details_page.dart';
 
 class ScoresPage extends StatefulWidget {
@@ -176,26 +180,89 @@ class _ScoresPageState extends State<ScoresPage> {
       final yesterdayFormatted = yesterday.toIso8601String().split('T')[0].replaceAll('-', '');
       final tomorrowFormatted = tomorrow.toIso8601String().split('T')[0].replaceAll('-', '');
       
-      final response = await http.get(Uri.parse(
-          'https://site.api.espn.com/apis/site/v2/sports/$sport/scoreboard?dates=$yesterdayFormatted-$tomorrowFormatted'));
+      // Use CORS proxy for web platform to avoid CORS issues
+      Uri uri;
+      Map<String, String> headers = {};
+      
+      http.Response? response;
+      
+      if (kIsWeb) {
+        // Use a CORS proxy for web platform
+        final targetUrl = 'https://site.api.espn.com/apis/site/v2/sports/$sport/scoreboard?dates=$yesterdayFormatted-$tomorrowFormatted';
+        // Try different CORS proxy services
+        final proxyUrls = [
+          'https://api.allorigins.win/raw?url=${Uri.encodeComponent(targetUrl)}',
+          'https://corsproxy.io/?${Uri.encodeComponent(targetUrl)}',
+          'https://thingproxy.freeboard.io/fetch/${Uri.encodeComponent(targetUrl)}',
+        ];
+        
+        // Try each proxy until one works
+        bool proxyFound = false;
+        
+        for (final proxyUrl in proxyUrls) {
+          try {
+            print('Trying proxy: $proxyUrl');
+            final testUri = Uri.parse(proxyUrl);
+            response = await http.get(testUri, headers: headers).timeout(
+              const Duration(seconds: 10),
+              onTimeout: () {
+                throw TimeoutException('Proxy timeout');
+              },
+            );
+            if (response.statusCode == 200) {
+              print('Working proxy found: $proxyUrl');
+              proxyFound = true;
+              break;
+            }
+          } catch (e) {
+            print('Proxy failed: $e');
+            continue;
+          }
+        }
+        
+        if (!proxyFound) {
+          throw Exception('All CORS proxies failed');
+        }
+      } else {
+        uri = Uri.parse('https://site.api.espn.com/apis/site/v2/sports/$sport/scoreboard?dates=$yesterdayFormatted-$tomorrowFormatted');
+        print('Mobile platform: Direct API call for $sport');
+        print('Making HTTP request to: $uri');
+        response = await http.get(uri, headers: headers).timeout(
+          const Duration(seconds: 30),
+          onTimeout: () {
+            throw TimeoutException('Request timed out after 30 seconds');
+          },
+        );
+      }
+      
+      // Check if response is null (shouldn't happen, but safety check)
+      if (response == null) {
+        throw Exception('No response received');
+      }
+      print('Response status code: ${response.statusCode}');
+      print('Response body length: ${response.body.length}');
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         final events = data['events'] ?? [];
+        print('Successfully loaded ${events.length} events for $sport');
         
         setState(() {
           allScores[sport] = events;
           sportLoading[sport] = false;
         });
       } else {
+        print('HTTP error for $sport: ${response?.statusCode}');
+        print('Response body: ${response?.body}');
         setState(() {
-          sportErrors[sport] = 'Failed to load scores';
+          sportErrors[sport] = 'Failed to load scores (${response?.statusCode ?? 'Unknown'})';
           sportLoading[sport] = false;
         });
       }
     } catch (e) {
+      print('Exception for $sport: $e');
       setState(() {
-        sportErrors[sport] = 'Error connecting to server';
+        sportErrors[sport] = 'Error connecting to server: $e';
         sportLoading[sport] = false;
       });
     }
@@ -243,11 +310,19 @@ class _ScoresPageState extends State<ScoresPage> {
   }
 
   bool hasAnyGames(String sport) {
+    // Always return true for MLB since we want to show the baseball widget
+    if (sport == 'baseball/mlb') {
+      return true;
+    }
     final games = allScores[sport] ?? [];
     return games.isNotEmpty;
   }
 
   bool hasLiveGames(String sport) {
+    // Always return true for MLB since the widget will show live games
+    if (sport == 'baseball/mlb') {
+      return true;
+    }
     return getLiveGames(sport).isNotEmpty;
   }
 
@@ -613,10 +688,10 @@ class _ScoresPageState extends State<ScoresPage> {
         color: const Color(0xFF525252).withOpacity(0.6),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: hasLiveGames(sport)
+          color: hasLiveGames(sport) || sport == 'baseball/mlb'
               ? const Color(0xFFFF5722).withOpacity(0.3)
               : const Color(0xFF4CAF50).withOpacity(0.1),
-          width: hasLiveGames(sport) ? 2 : 1,
+          width: hasLiveGames(sport) || sport == 'baseball/mlb' ? 2 : 1,
         ),
       ),
       child: Column(
@@ -650,7 +725,9 @@ class _ScoresPageState extends State<ScoresPage> {
                         ),
                         if (hasGames)
                           Text(
-                            '${getFilteredGames(sport).length} ${sport.contains('ufc') ? 'fights' : 'games'} available',
+                            sport == 'baseball/mlb' 
+                              ? 'Live baseball widget' 
+                              : '${getFilteredGames(sport).length} ${sport.contains('ufc') ? 'fights' : 'games'} available',
                             style: TextStyle(
                               color: Colors.grey[400],
                               fontSize: 12,
@@ -661,7 +738,7 @@ class _ScoresPageState extends State<ScoresPage> {
                       ],
                     ),
                   ),
-                  if (hasLiveGames(sport))
+                  if (hasLiveGames(sport) || sport == 'baseball/mlb')
                     Flexible(
                       child: Container(
                         margin: const EdgeInsets.only(right: 8),
@@ -680,7 +757,7 @@ class _ScoresPageState extends State<ScoresPage> {
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              '${liveGames.length}',
+                              sport == 'baseball/mlb' ? 'LIVE' : '${liveGames.length}',
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 10,
@@ -708,8 +785,8 @@ class _ScoresPageState extends State<ScoresPage> {
               color: const Color(0xFF4CAF50).withOpacity(0.1),
             ),
             
-            // Filter Tabs
-            if (hasGames) _buildFilterTabs(sport),
+            // Filter Tabs (hide for MLB since baseball widget has its own toolbar)
+            if (hasGames && sport != 'baseball/mlb') _buildFilterTabs(sport),
             
             // Games Content
             Container(
@@ -822,6 +899,11 @@ class _ScoresPageState extends State<ScoresPage> {
   }
 
   Widget _buildGamesContent(String sport, bool isLoading, String? error, bool hasGames) {
+    // Check if this is MLB and we should use the baseball widget
+    if (sport == 'baseball/mlb') {
+      return _buildBaseballWidget();
+    }
+    
     if (isLoading) {
       return const Center(
         child: CupertinoActivityIndicator(
@@ -917,6 +999,80 @@ class _ScoresPageState extends State<ScoresPage> {
         padding: const EdgeInsets.only(bottom: 8),
         child: _buildScoreCard(game, sport),
       )).toList(),
+    );
+  }
+
+  Widget _buildBaseballWidget() {
+    // Get API key from environment variables
+    final String apiKey = dotenv.env['BASEBALL_API_KEY'] ?? 'YOUR_RAPIDAPI_KEY_HERE';
+    
+    // Debug: Print what's being loaded
+    print('DEBUG: BASEBALL_API_KEY value: "$apiKey"');
+    print('DEBUG: API key length: ${apiKey.length}');
+    print('DEBUG: Is placeholder? ${apiKey == 'YOUR_RAPIDAPI_KEY_HERE'}');
+    print('DEBUG: All env keys: ${dotenv.env.keys.toList()}');
+    print('DEBUG: Sample env values:');
+    dotenv.env.forEach((key, value) {
+      if (key.contains('API') || key.contains('KEY')) {
+        print('  $key: ${value != null ? '${value.substring(0, value.length > 10 ? 10 : value.length)}...' : 'null'}');
+      }
+    });
+    
+    // Check if API key is configured
+    if (apiKey == 'YOUR_RAPIDAPI_KEY_HERE') {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFF424242),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: CupertinoColors.destructiveRed.withOpacity(0.3),
+          ),
+        ),
+        child: Column(
+          children: [
+            const Icon(
+              CupertinoIcons.exclamationmark_triangle,
+              color: CupertinoColors.destructiveRed,
+              size: 24,
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Baseball API key not configured',
+              style: TextStyle(
+                color: Color(0xFFBDBDBD),
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'Please set BASEBALL_API_KEY in your .env file',
+              style: TextStyle(
+                color: Color(0xFFBDBDBD),
+                fontSize: 12,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      );
+    }
+    
+    return BaseballGamesWidget(
+      apiKey: apiKey,
+      date: '', // Empty for current date
+      league: 1, // MLB league ID
+      season: DateTime.now().year,
+      theme: 'dark', // Use dark theme to match your app
+      refresh: 30, // Refresh every 30 seconds
+      showToolbar: true,
+      showLogos: true,
+      modalGame: true,
+      modalStandings: true,
+      modalShowLogos: true,
+      showErrors: false,
     );
   }
 

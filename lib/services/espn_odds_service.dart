@@ -107,13 +107,23 @@ class ESPNOddsService {
   Future<Map<String, dynamic>> _fetchOddsFromAllProviders(String eventId, String sportPath) async {
     // First try the site API (same as working ESPN calls)
     try {
-      final siteUri = Uri.parse('https://$_siteApiUrl/apis/site/v2/sports/$sportPath/summary?event=$eventId');
-      debugPrint('ESPN Odds API Call (Site): $siteUri');
-      
-      final siteResponse = await http.get(siteUri, headers: {
+      Uri siteUri;
+      Map<String, String> headers = {
         'Accept': 'application/json',
         'User-Agent': 'WagerLoop/1.0',
-      });
+      };
+      
+      if (kIsWeb) {
+        // Use CORS proxy for web platform
+        final targetUrl = 'https://$_siteApiUrl/apis/site/v2/sports/$sportPath/summary?event=$eventId';
+        siteUri = Uri.parse('https://api.allorigins.win/raw?url=${Uri.encodeComponent(targetUrl)}');
+      } else {
+        siteUri = Uri.parse('https://$_siteApiUrl/apis/site/v2/sports/$sportPath/summary?event=$eventId');
+      }
+      
+      debugPrint('ESPN Odds API Call (Site): $siteUri');
+      
+      final siteResponse = await http.get(siteUri, headers: headers);
 
       debugPrint('ESPN Odds API Response Status (Site): ${siteResponse.statusCode}');
       if (siteResponse.statusCode == 200) {
@@ -138,13 +148,23 @@ class ESPNOddsService {
     
     // Try direct odds API endpoint
     try {
-      final oddsUri = Uri.parse('https://$_coreApiUrl/v2/sports/$sportPath/events/$eventId/competitions/$eventId/odds');
-      debugPrint('ESPN Direct Odds API Call: $oddsUri');
-      
-      final oddsResponse = await http.get(oddsUri, headers: {
+      Uri oddsUri;
+      Map<String, String> oddsHeaders = {
         'Accept': 'application/json',
         'User-Agent': 'WagerLoop/1.0',
-      });
+      };
+      
+      if (kIsWeb) {
+        // Use CORS proxy for web platform
+        final targetUrl = 'https://$_coreApiUrl/v2/sports/$sportPath/events/$eventId/competitions/$eventId/odds';
+        oddsUri = Uri.parse('https://api.allorigins.win/raw?url=${Uri.encodeComponent(targetUrl)}');
+      } else {
+        oddsUri = Uri.parse('https://$_coreApiUrl/v2/sports/$sportPath/events/$eventId/competitions/$eventId/odds');
+      }
+      
+      debugPrint('ESPN Direct Odds API Call: $oddsUri');
+      
+      final oddsResponse = await http.get(oddsUri, headers: oddsHeaders);
       
       debugPrint('ESPN Direct Odds API Response Status: ${oddsResponse.statusCode}');
       if (oddsResponse.statusCode == 200) {
@@ -161,13 +181,23 @@ class ESPNOddsService {
     
     // Try alternative ESPN BET odds endpoint
     try {
-      final espnBetUri = Uri.parse('https://$_siteApiUrl/apis/site/v2/sports/$sportPath/events/$eventId/odds');
-      debugPrint('ESPN BET Odds API Call: $espnBetUri');
-      
-      final espnBetResponse = await http.get(espnBetUri, headers: {
+      Uri espnBetUri;
+      Map<String, String> espnBetHeaders = {
         'Accept': 'application/json',
         'User-Agent': 'WagerLoop/1.0',
-      });
+      };
+      
+      if (kIsWeb) {
+        // Use CORS proxy for web platform
+        final targetUrl = 'https://$_siteApiUrl/apis/site/v2/sports/$sportPath/events/$eventId/odds';
+        espnBetUri = Uri.parse('https://api.allorigins.win/raw?url=${Uri.encodeComponent(targetUrl)}');
+      } else {
+        espnBetUri = Uri.parse('https://$_siteApiUrl/apis/site/v2/sports/$sportPath/events/$eventId/odds');
+      }
+      
+      debugPrint('ESPN BET Odds API Call: $espnBetUri');
+      
+      final espnBetResponse = await http.get(espnBetUri, headers: espnBetHeaders);
       
       debugPrint('ESPN BET Odds API Response Status: ${espnBetResponse.statusCode}');
       if (espnBetResponse.statusCode == 200) {

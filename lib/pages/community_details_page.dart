@@ -11,6 +11,7 @@ import '../widgets/profile_avatar.dart';
 import '../utils/loading_utils.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:image_picker/image_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:typed_data';
 
 class CommunityDetailsPage extends StatefulWidget {
@@ -49,6 +50,9 @@ class _CommunityDetailsPageState extends State<CommunityDetailsPage>
   CommunityPostType _selectedPostType = CommunityPostType.chat;
   Uint8List? _selectedMediaBytes;
   String? _selectedMediaMimeType;
+
+  // Community profile picture update
+  bool _isUpdatingProfilePicture = false;
 
   @override
   void initState() {
@@ -277,6 +281,82 @@ class _CommunityDetailsPageState extends State<CommunityDetailsPage>
     }
   }
 
+  Future<void> _updateCommunityProfilePicture() async {
+    if (_community == null) return;
+
+    try {
+      final XFile? image = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 512,
+        maxHeight: 512,
+        imageQuality: 80,
+      );
+
+      if (image == null) return;
+
+      setState(() {
+        _isUpdatingProfilePicture = true;
+      });
+
+      final bytes = await image.readAsBytes();
+      
+      // Upload the new image
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final fileName = 'community_profile_${_community!.id}_$timestamp.jpg';
+      
+      // Upload using direct storage call (similar to community posts service)
+      const bucketName = 'avatars';
+      final filePath = 'community_media/$fileName';
+
+      await SupabaseConfig.supabase.storage
+          .from(bucketName)
+          .uploadBinary(
+            filePath,
+            bytes,
+            fileOptions: const FileOptions(
+              cacheControl: '3600',
+              upsert: true,
+            ),
+          );
+
+      final imageUrl = SupabaseConfig.supabase.storage
+          .from(bucketName)
+          .getPublicUrl(filePath);
+
+      // Update community in database
+      await SupabaseConfig.supabase
+          .from('communities')
+          .update({
+            'image_url': imageUrl,
+            'updated_at': DateTime.now().toUtc().toIso8601String(),
+          })
+          .eq('id', _community!.id);
+
+      // Update local community object
+      setState(() {
+        _community = _community!.copyWith(imageUrl: imageUrl);
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Community profile picture updated successfully!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to update profile picture: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      setState(() {
+        _isUpdatingProfilePicture = false;
+      });
+    }
+  }
+
   Widget _buildCommunityHeader() {
     if (_community == null) return Container();
 
@@ -303,27 +383,102 @@ class _CommunityDetailsPageState extends State<CommunityDetailsPage>
       child: Column(
         children: [
           // Community avatar
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Colors.purple, Colors.pink],
-              ),
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.purple.withOpacity(0.3),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
+          Stack(
+            children: [
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  gradient: _community!.imageUrl != null ? null : LinearGradient(
+                    colors: [Colors.purple, Colors.pink],
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.purple.withOpacity(0.3),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.2),
+                    width: 2,
+                  ),
                 ),
-              ],
-            ),
-            child: Icon(
-              Icons.group,
-              color: Colors.white,
-              size: 36,
-            ),
+                child: _community!.imageUrl != null
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(18),
+                        child: Image.network(
+                          _community!.imageUrl!,
+                          width: 80,
+                          height: 80,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [Colors.purple, Colors.pink],
+                                ),
+                                borderRadius: BorderRadius.circular(18),
+                              ),
+                              child: Icon(
+                                Icons.group,
+                                color: Colors.white,
+                                size: 36,
+                              ),
+                            );
+                          },
+                        ),
+                      )
+                    : Icon(
+                        Icons.group,
+                        color: Colors.white,
+                        size: 36,
+                      ),
+              ),
+              
+              // Edit button for community owners
+              if (_community!.creatorId == _authService.currentUser?.id)
+                Positioned(
+                  bottom: -2,
+                  right: -2,
+                  child: GestureDetector(
+                    onTap: _isUpdatingProfilePicture ? null : _updateCommunityProfilePicture,
+                    child: Container(
+                      width: 28,
+                      height: 28,
+                      decoration: BoxDecoration(
+                        color: Colors.purple,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: Colors.white,
+                          width: 2,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: _isUpdatingProfilePicture
+                          ? Padding(
+                              padding: const EdgeInsets.all(6),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Icon(
+                              Icons.camera_alt,
+                              color: Colors.white,
+                              size: 14,
+                            ),
+                    ),
+                  ),
+                ),
+            ],
           ),
           const SizedBox(height: 16),
 

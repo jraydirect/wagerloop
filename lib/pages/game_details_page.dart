@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:convert';
@@ -115,9 +116,20 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
   Future<List<Map<String, dynamic>>> _fetchTeamRoster(String teamId, bool isHome) async {
     try {
       final sportPath = widget.sport; // e.g., 'football/nfl'
-      final response = await http.get(Uri.parse(
-        'https://site.api.espn.com/apis/site/v2/sports/$sportPath/teams/$teamId/roster'
-      ));
+      
+      // Use CORS proxy for web platform to avoid CORS issues
+      Uri uri;
+      Map<String, String> headers = {};
+      
+      if (kIsWeb) {
+        // Use a CORS proxy for web platform
+        final targetUrl = 'https://site.api.espn.com/apis/site/v2/sports/$sportPath/teams/$teamId/roster';
+        uri = Uri.parse('https://api.allorigins.win/raw?url=${Uri.encodeComponent(targetUrl)}');
+      } else {
+        uri = Uri.parse('https://site.api.espn.com/apis/site/v2/sports/$sportPath/teams/$teamId/roster');
+      }
+      
+      final response = await http.get(uri, headers: headers);
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -155,9 +167,19 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
       final eventId = widget.game['id']; // ESPN event ID
       final sportPath = widget.sport; // e.g., 'football/nfl'
       
-      final response = await http.get(Uri.parse(
-        'https://site.api.espn.com/apis/site/v2/sports/$sportPath/summary?event=$eventId'
-      ));
+      // Use CORS proxy for web platform to avoid CORS issues
+      Uri uri;
+      Map<String, String> headers = {};
+      
+      if (kIsWeb) {
+        // Use a CORS proxy for web platform
+        final targetUrl = 'https://site.api.espn.com/apis/site/v2/sports/$sportPath/summary?event=$eventId';
+        uri = Uri.parse('https://api.allorigins.win/raw?url=${Uri.encodeComponent(targetUrl)}');
+      } else {
+        uri = Uri.parse('https://site.api.espn.com/apis/site/v2/sports/$sportPath/summary?event=$eventId');
+      }
+      
+      final response = await http.get(uri, headers: headers);
       
       if (response.statusCode == 200) {
         final data = json.decode(response.body);

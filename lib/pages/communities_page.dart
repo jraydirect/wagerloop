@@ -277,16 +277,45 @@ class _CommunitiesPageState extends State<CommunitiesPage>
                       width: 50,
                       height: 50,
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
+                        gradient: community.imageUrl != null ? null : LinearGradient(
                           colors: [Colors.purple, Colors.pink],
                         ),
                         borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.1),
+                          width: 1,
+                        ),
                       ),
-                      child: Icon(
-                        Icons.group,
-                        color: Colors.white,
-                        size: 24,
-                      ),
+                      child: community.imageUrl != null
+                          ? ClipRRect(
+                              borderRadius: BorderRadius.circular(11),
+                              child: Image.network(
+                                community.imageUrl!,
+                                width: 50,
+                                height: 50,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Container(
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        colors: [Colors.purple, Colors.pink],
+                                      ),
+                                      borderRadius: BorderRadius.circular(11),
+                                    ),
+                                    child: Icon(
+                                      Icons.group,
+                                      color: Colors.white,
+                                      size: 24,
+                                    ),
+                                  );
+                                },
+                              ),
+                            )
+                          : Icon(
+                              Icons.group,
+                              color: Colors.white,
+                              size: 24,
+                            ),
                     ),
                     const SizedBox(width: 12),
                     

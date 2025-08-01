@@ -328,7 +328,16 @@ class SportsApiService {
     }
   
     final sportCode = _sportCodes[sport]!;
-    final uri = Uri.https(_baseUrl, '/apis/site/v2/sports/$sportCode/scoreboard');
+    
+    // Use CORS proxy for web platform to avoid CORS issues
+    Uri uri;
+    if (kIsWeb) {
+      // Use a CORS proxy for web platform
+      final targetUrl = 'https://$_baseUrl/apis/site/v2/sports/$sportCode/scoreboard';
+      uri = Uri.parse('https://api.allorigins.win/raw?url=${Uri.encodeComponent(targetUrl)}');
+    } else {
+      uri = Uri.https(_baseUrl, '/apis/site/v2/sports/$sportCode/scoreboard');
+    }
   
     try {
       final headers = <String, String>{
@@ -338,6 +347,8 @@ class SportsApiService {
       if (_apiKey != null && _apiKey!.isNotEmpty) {
         headers['Authorization'] = 'Bearer $_apiKey';
       }
+      
+
   
       final response = await http.get(uri, headers: headers);
   

@@ -474,7 +474,7 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
           barrierDismissible: false,
           builder: (BuildContext context) {
             return AlertDialog(
-              backgroundColor: Colors.grey[800],
+              backgroundColor: const Color(0xFF1F2937),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -543,7 +543,7 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: Colors.grey[800],
+        backgroundColor: const Color(0xFF1F2937),
         title: const Text(
           'Delete Post',
           style: TextStyle(color: Colors.white),
@@ -596,7 +596,7 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
     
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.grey[700],
+      backgroundColor: const Color(0xFF1F2937),
       isScrollControlled: true,
       builder: (context) => SizedBox(
         height: MediaQuery.of(context).size.height * 0.75,
@@ -749,7 +749,7 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.grey[700],
+      backgroundColor: const Color(0xFF1F2937),
       isScrollControlled: true,
       builder: (context) => StatefulBuilder(
         builder: (context, setModalState) => Padding(
@@ -847,14 +847,22 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
       return Container(
         margin: const EdgeInsets.only(bottom: 16),
         decoration: BoxDecoration(
-          color: Colors.grey[750],
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.green.withOpacity(0.3), width: 1),
+          color: const Color(0xFF1F2937).withOpacity(0.9),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: Colors.green.withOpacity(0.5),
+            width: 1.2,
+          ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.2),
-              blurRadius: 8,
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 16,
               offset: const Offset(0, 4),
+            ),
+            BoxShadow(
+              color: Colors.green.withOpacity(0.1),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
             ),
           ],
         ),
@@ -932,8 +940,12 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
               Container(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 decoration: BoxDecoration(
-                  color: Colors.grey[800]?.withOpacity(0.3),
-                  borderRadius: BorderRadius.circular(12),
+                  color: const Color(0xFF374151).withOpacity(0.6),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: Colors.green.withOpacity(0.1),
+                    width: 1,
+                  ),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -967,14 +979,22 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: Colors.grey[750],
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.green.withOpacity(0.3), width: 1),
+        color: const Color(0xFF1F2937).withOpacity(0.9),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: Colors.green.withOpacity(0.5),
+          width: 1.2,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            blurRadius: 8,
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 16,
             offset: const Offset(0, 4),
+          ),
+          BoxShadow(
+            color: Colors.green.withOpacity(0.1),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
@@ -1130,8 +1150,12 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
             Container(
               padding: const EdgeInsets.symmetric(vertical: 8),
               decoration: BoxDecoration(
-                color: Colors.grey[800]?.withOpacity(0.3),
-                borderRadius: BorderRadius.circular(12),
+                color: const Color(0xFF374151).withOpacity(0.6),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: Colors.green.withOpacity(0.1),
+                  width: 1,
+                ),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -1200,14 +1224,22 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
       padding: const EdgeInsets.all(16),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.grey[750],
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.green.withOpacity(0.3), width: 1),
+          color: const Color(0xFF1F2937).withOpacity(0.9),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: Colors.green.withOpacity(0.5),
+            width: 1.2,
+          ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.15),
-              blurRadius: 6,
-              offset: const Offset(0, 2),
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 16,
+              offset: const Offset(0, 4),
+            ),
+            BoxShadow(
+              color: Colors.green.withOpacity(0.1),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
             ),
           ],
         ),
@@ -1366,48 +1398,142 @@ class _SocialFeedPageState extends State<SocialFeedPage> with RealTimeProfileMix
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[850],
-              appBar: AppBar(
-          backgroundColor: Colors.grey[850],
-          elevation: 0,
-          title: Image.asset(
-            'assets/9d514000-7637-4e02-bc87-df46fcb2fe36_removalai_preview.png',
-            height: 40,
-            fit: BoxFit.contain,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              const Color(0xFF111827), // Dark blue-gray at top
+              const Color(0xFF0F172A), // Darker slate in middle
+              const Color(0xFF0C1220), // Even darker at bottom
+            ],
+            stops: const [0.0, 0.6, 1.0],
           ),
-          centerTitle: true,
         ),
-      body: Column(
-        children: [
-          _buildCreatePost(),
-          Expanded(
-            child: _error != null
-                ? Center(
-                    child: Text(_error!,
-                        style: const TextStyle(color: Colors.red)),
-                  )
-                : RefreshIndicator(
-                    color: Colors.green,
-                    onRefresh: _loadPosts,
-                    child: ListView.builder(
-                      controller: _scrollController,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      itemCount: _posts.length + (_hasMore ? 1 : 0),
-                      itemBuilder: (context, index) {
-                        if (index == _posts.length) {
-                          return const Center(
-                            child: Padding(
-                              padding: EdgeInsets.all(16),
-                              child: CircularProgressIndicator(color: Colors.green),
-                            ),
-                          );
-                        }
-                        return _buildPostCard(_posts[index]);
-                      },
+        child: SafeArea(
+          child: Column(
+            children: [
+              // Header with modern styling
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                child: Row(
+                  children: [
+                    Text(
+                      'Social',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                        letterSpacing: -0.8,
+                        height: 1.1,
+                      ),
                     ),
-                  ),
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF10B981).withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: const Color(0xFF10B981).withOpacity(0.4)),
+                      ),
+                      child: Text(
+                        'LIVE',
+                        style: TextStyle(
+                          color: const Color(0xFF10B981),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.8,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              
+              // Content area
+              Expanded(
+                child: Column(
+                  children: [
+                    _buildCreatePost(),
+                    Expanded(
+                      child: _error != null
+                          ? Center(
+                              child: Container(
+                                margin: const EdgeInsets.all(20),
+                                padding: const EdgeInsets.all(28),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF1F2937).withOpacity(0.9),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: Colors.red.withOpacity(0.3),
+                                    width: 1,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.2),
+                                      blurRadius: 12,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(
+                                      Icons.error_outline,
+                                      size: 48,
+                                      color: Colors.red,
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      'Unable to load posts',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      _error!,
+                                      style: const TextStyle(
+                                        color: Colors.grey,
+                                        fontSize: 14,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            )
+                          : RefreshIndicator(
+                              color: Colors.green,
+                              onRefresh: _loadPosts,
+                              child: ListView.builder(
+                                controller: _scrollController,
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                itemCount: _posts.length + (_hasMore ? 1 : 0),
+                                itemBuilder: (context, index) {
+                                  if (index == _posts.length) {
+                                    return const Center(
+                                      child: Padding(
+                                        padding: EdgeInsets.all(16),
+                                        child: CircularProgressIndicator(color: Colors.green),
+                                      ),
+                                    );
+                                  }
+                                  return _buildPostCard(_posts[index]);
+                                },
+                              ),
+                            ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

@@ -3,6 +3,8 @@ import 'package:flutter/foundation.dart';
 import 'package:device_preview/device_preview.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:webview_flutter/webview_flutter.dart';
+import 'package:webview_flutter_web/webview_flutter_web.dart';
 import 'services/supabase_config.dart';
 import 'wrappers/auth_wrapper.dart';
 import 'pages/auth/login_page.dart';
@@ -18,6 +20,11 @@ import 'dart:io' show Platform;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize WebView platform for web - must be done before any WebView widgets
+  if (kIsWeb) {
+    WebViewPlatform.instance = WebWebViewPlatform();
+  }
 
   // Suppress Google Sign-In library errors
   FlutterError.onError = (FlutterErrorDetails details) {
