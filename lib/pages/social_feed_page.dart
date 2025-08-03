@@ -20,6 +20,7 @@ import '../services/realtime_profile_service.dart';
 import 'user_profile_page.dart';
 import '../services/scan_service.dart';
 import 'scan_results_page.dart';
+import 'user_search_page.dart';
 
 class SocialFeedPage extends StatefulWidget {
   const SocialFeedPage({Key? key}) : super(key: key);
@@ -982,6 +983,7 @@ class _SocialFeedPageState extends State<SocialFeedPage> with TickerProviderStat
               ),
             ),
           ),
+
           // Football laces bar positioned to overlap header turf bottom
           Positioned(
             bottom: 0, // Moved down just a tiny bit more
@@ -1002,6 +1004,81 @@ class _SocialFeedPageState extends State<SocialFeedPage> with TickerProviderStat
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSearchSection() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () async {
+            print('Search button pressed'); // Debug log
+            try {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const UserSearchPage(),
+                ),
+              );
+            } catch (e) {
+              print('Error navigating to search page: $e');
+              // Show error to user
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Error opening search: $e'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            decoration: BoxDecoration(
+              color: const Color(0xFF1F2937).withOpacity(0.9),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: Colors.green.withOpacity(0.5),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.search,
+                  color: Colors.grey[400],
+                  size: 24,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Search for users...',
+                    style: TextStyle(
+                      color: Colors.grey[400],
+                      fontSize: 16,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                ),
+                Icon(
+                  Icons.arrow_forward_ios,
+                  color: Colors.grey[500],
+                  size: 16,
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -1612,6 +1689,11 @@ class _SocialFeedPageState extends State<SocialFeedPage> with TickerProviderStat
                         // Header
                         SliverToBoxAdapter(
                           child: _buildHeader(),
+                        ),
+                        
+                        // Search Section
+                        SliverToBoxAdapter(
+                          child: _buildSearchSection(),
                         ),
                         
                         // Create Post Section
