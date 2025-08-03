@@ -4,6 +4,8 @@ import '../../models/pick_post.dart';
 import '../../services/sports_api_service.dart';
 import '../../services/supabase_config.dart';
 import '../../services/auth_service.dart';
+import '../../widgets/all_games_odds_widget.dart';
+import '../../widgets/pick_slip_widget.dart';
 
 class CreatePickPage extends StatefulWidget {
   const CreatePickPage({Key? key}) : super(key: key);
@@ -13,175 +15,21 @@ class CreatePickPage extends StatefulWidget {
 }
 
 class _CreatePickPageState extends State<CreatePickPage> {
-  final _searchController = TextEditingController();
   final _contentController = TextEditingController();
-  final _sportsApiService = SportsApiService();
   final _socialFeedService = SupabaseConfig.socialFeedService;
   final _authService = AuthService();
   
-  List<Game> _searchResults = [];
-  List<Pick> _selectedPicks = []; // Changed: Now storing multiple picks
-  Game? _currentGame; // Currently selected game for making a pick
-  PickType? _selectedPickType;
-  PickSide? _selectedPickSide;
-  String? _selectedOdds;
-  double? _stake;
-  bool _isSearching = false;
+  List<Pick> _selectedPicks = []; // Storing multiple picks
+  List<Map<String, dynamic>> _oddsPickSlip = []; // New: for odds widget picks
   bool _isCreatingPost = false;
-  bool _isParlay = false; // New: Track if this is a parlay
+  bool _isParlay = false; // Track if this is a parlay
 
   @override
   void initState() {
     super.initState();
-    // Set the search controller for the sports API service
-    SportsApiService.searchController = _searchController;
   }
 
-  Future<void> _searchGames(String query) async {
-    if (query.trim().isEmpty) {
-      setState(() {
-        _searchResults = [];
-      });
-      return;
-    }
 
-    setState(() {
-      _isSearching = true;
-    });
-
-    try {
-      final results = await _sportsApiService.searchGamesByTeam(
-        query,
-        onIncrementalResults: (games) {
-          if (mounted) {
-            setState(() {
-              _searchResults = games;
-            });
-          }
-        },
-      );
-
-      if (mounted) {
-        setState(() {
-          _searchResults = results;
-        });
-      }
-    } catch (e) {
-      print('Error searching games: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error searching games: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isSearching = false;
-        });
-      }
-    }
-  }
-
-  void _selectGame(Game game) {
-    setState(() {
-      _currentGame = game;
-      _selectedPickType = null;
-      _selectedPickSide = null;
-      _selectedOdds = null;
-    });
-  }
-
-  void _selectPickType(PickType pickType) {
-    setState(() {
-      _selectedPickType = pickType;
-      _selectedPickSide = null;
-      _selectedOdds = null;
-    });
-  }
-
-  void _selectPickSide(PickSide pickSide) {
-    setState(() {
-      _selectedPickSide = pickSide;
-      _updateOdds();
-    });
-  }
-
-  void _updateOdds() {
-    if (_currentGame == null || _selectedPickType == null || _selectedPickSide == null) {
-      return;
-    }
-
-    // Try to get odds from sportsbook data first
-    if (_currentGame!.sportsbookOdds != null && _currentGame!.sportsbookOdds!.isNotEmpty) {
-      final oddsData = _currentGame!.sportsbookOdds!.values.first;
-      
-      switch (_selectedPickType!) {
-        case PickType.moneyline:
-          _selectedOdds = oddsData.getMoneylineDisplay(_selectedPickSide!.name);
-          break;
-        case PickType.spread:
-          _selectedOdds = oddsData.getSpreadDisplay(_selectedPickSide!.name);
-          break;
-        case PickType.total:
-          _selectedOdds = oddsData.getTotalDisplay(_selectedPickSide!.name);
-          break;
-        case PickType.playerProp:
-          _selectedOdds = '-110'; // Default for player props
-          break;
-      }
-    } else {
-      // Fallback to default odds
-      _selectedOdds = '-110';
-    }
-  }
-
-  // New: Add current pick to the list
-  void _addPickToList() {
-    if (_currentGame == null || _selectedPickType == null || _selectedPickSide == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please complete your pick selection'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    final pick = Pick(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      game: _currentGame!,
-      pickType: _selectedPickType!,
-      pickSide: _selectedPickSide!,
-      odds: _selectedOdds ?? '-110',
-      stake: _stake,
-    );
-
-    setState(() {
-      _selectedPicks.add(pick);
-      _currentGame = null;
-      _selectedPickType = null;
-      _selectedPickSide = null;
-      _selectedOdds = null;
-      _stake = null;
-      _searchController.clear();
-      _searchResults.clear();
-      
-      // If this is the second pick, automatically make it a parlay
-      if (_selectedPicks.length >= 2) {
-        _isParlay = true;
-      }
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Pick added! (${_selectedPicks.length} total)'),
-        backgroundColor: Colors.green,
-      ),
-    );
-  }
 
   // New: Remove pick from list
   void _removePick(int index) {
@@ -305,6 +153,135 @@ class _CreatePickPageState extends State<CreatePickPage> {
     return decimalToAmerican(product);
   }
 
+  // New: Handle pick selection from odds widget
+  void _onOddsPickSelected(Map<String, dynamic> pickData) {
+    debugPrint('🎯 CreatePickPage received pick data: $pickData');
+    
+    setState(() {
+      // Avoid duplicates by checking if similar pick already exists
+      bool isDuplicate = _oddsPickSlip.any((existing) =>
+          existing['gameText'] == pickData['gameText'] &&
+          existing['oddsText'] == pickData['oddsText']);
+      
+      debugPrint('🔍 Duplicate check: $isDuplicate');
+      debugPrint('📋 Current slip size: ${_oddsPickSlip.length}');
+      
+      if (!isDuplicate) {
+        _oddsPickSlip.add(pickData);
+        debugPrint('✅ Added pick to slip. New size: ${_oddsPickSlip.length}');
+        
+        // Update parlay status
+        _isParlay = _oddsPickSlip.length > 1;
+        debugPrint('🎰 Parlay status: $_isParlay');
+        
+        // Show confirmation
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Added to pick slip: ${_getOddsPickDisplayText(pickData)}'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 3),
+            behavior: SnackBarBehavior.floating,
+            action: SnackBarAction(
+              label: 'View',
+              textColor: Colors.white,
+              onPressed: () {
+                // Could scroll to pick slip or expand it
+              },
+            ),
+          ),
+        );
+      } else {
+        debugPrint('⚠️ Pick already exists in slip');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('This pick is already in your slip'),
+            backgroundColor: Colors.orange,
+            duration: Duration(seconds: 2),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    });
+  }
+
+  // New: Remove pick from odds pick slip
+  void _removeOddsPick(int index) {
+    setState(() {
+      _oddsPickSlip.removeAt(index);
+      _isParlay = _oddsPickSlip.length > 1;
+    });
+  }
+
+  // New: Clear all odds picks
+  void _clearAllOddsPicks() {
+    setState(() {
+      _oddsPickSlip.clear();
+      _isParlay = false;
+    });
+  }
+
+  // New: Create post from odds picks
+  void _createPostFromOddsPicks() async {
+    if (_oddsPickSlip.isEmpty) return;
+
+    // Convert odds picks to standard Pick objects
+    List<Pick> picks = _oddsPickSlip.map((oddsData) {
+      return Pick(
+        id: 'odds_${DateTime.now().millisecondsSinceEpoch}_${_oddsPickSlip.indexOf(oddsData)}',
+        game: Game(
+          id: 'odds_${DateTime.now().millisecondsSinceEpoch}',
+          homeTeam: oddsData['team2'] ?? 'Unknown',
+          awayTeam: oddsData['team1'] ?? 'Unknown',
+          sport: 'Unknown',
+          league: 'Unknown',
+          gameTime: DateTime.now(),
+          status: 'upcoming',
+        ),
+        pickType: _parsePickType(oddsData['marketType']),
+        pickSide: PickSide.home, // Default, could be improved with better parsing
+        odds: oddsData['odds'] ?? 'N/A',
+        stake: 0, // Default
+      );
+    }).toList().cast<Pick>();
+
+    setState(() {
+      _selectedPicks = picks;
+      _isParlay = picks.length > 1;
+    });
+
+    // Create the post
+    await _createPickPost();
+  }
+
+  // Helper: Convert odds pick to display text
+  String _getOddsPickDisplayText(Map<String, dynamic> pick) {
+    String game = '';
+    if (pick['team1']?.isNotEmpty == true && pick['team2']?.isNotEmpty == true) {
+      game = '${pick['team1']} vs ${pick['team2']}';
+    } else {
+      game = pick['gameText'] ?? 'Unknown Game';
+    }
+    
+    String market = pick['marketType'] ?? 'Bet';
+    String odds = pick['odds'] ?? 'N/A';
+    
+    return '$game - $market ($odds)';
+  }
+
+  // Helper: Parse market type to PickType
+  PickType _parsePickType(String? marketType) {
+    switch (marketType?.toLowerCase()) {
+      case 'moneyline':
+        return PickType.moneyline;
+      case 'spread':
+        return PickType.spread;
+      case 'total':
+        return PickType.total;
+      default:
+        return PickType.moneyline;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -333,72 +310,27 @@ class _CreatePickPageState extends State<CreatePickPage> {
         ],
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              // Show selected picks summary if any
-              if (_selectedPicks.isNotEmpty) _buildSelectedPicksSummary(),
+        child: Column(
+          children: [
+            // Show selected picks summary if any
+            if (_selectedPicks.isNotEmpty) 
+              _buildSelectedPicksSummary(),
 
-              // Search Section
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _selectedPicks.isEmpty 
-                          ? 'Search for a game:' 
-                          : 'Add another game:',
-                      style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: _searchController,
-                      style: const TextStyle(color: Colors.white),
-                      decoration: InputDecoration(
-                        hintText: 'Enter team name (e.g., "Kentucky", "Lakers")',
-                        hintStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
-                        prefixIcon: const Icon(Icons.search, color: Colors.white),
-                        suffixIcon: _isSearching
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: Padding(
-                                  padding: EdgeInsets.all(12),
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              )
-                            : null,
-                        filled: true,
-                        fillColor: Colors.grey[700],
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                      ),
-                      onChanged: (value) {
-                        // Debounce search
-                        Future.delayed(const Duration(milliseconds: 500), () {
-                          if (_searchController.text == value) {
-                            _searchGames(value);
-                          }
-                        });
-                      },
-                    ),
-                  ],
-                ),
+                                      // Main content area - full width odds widget
+            Expanded(
+              child: AllGamesOddsWidget(
+                onPickSelected: _onOddsPickSelected,
               ),
-
-              // Main content area
-              SizedBox(
-                height: MediaQuery.of(context).size.height * 0.5,
-                child: _buildMainContent(),
-              ),
-            ],
-          ),
+            ),
+            
+            // Pick slip at bottom
+            PickSlipWidget(
+              picks: _oddsPickSlip,
+              onClearAll: _clearAllOddsPicks,
+              onRemovePick: _removeOddsPick,
+              onCreatePost: _createPostFromOddsPicks,
+            ),
+          ],
         ),
       ),
     );
@@ -633,330 +565,14 @@ class _CreatePickPageState extends State<CreatePickPage> {
     );
   }
 
-  Widget _buildMainContent() {
-    if (_searchResults.isNotEmpty) {
-      return _currentGame == null
-          ? _buildGamesList()
-          : _buildPickSelection();
-    } else if (_currentGame != null) {
-      return _buildPickSelection();
-    } else {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              _selectedPicks.isEmpty ? Icons.search : Icons.add,
-              color: Colors.grey[400],
-              size: 64,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              _selectedPicks.isEmpty 
-                  ? 'Search for a team to see available games'
-                  : 'Search for another team to add more picks',
-              style: TextStyle(color: Colors.grey[400], fontSize: 16),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      );
-    }
-  }
 
-  Widget _buildGamesList() {
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      itemCount: _searchResults.length,
-      itemBuilder: (context, index) {
-        final game = _searchResults[index];
-        
-        // Check if this game is already selected
-        final isAlreadySelected = _selectedPicks.any((pick) => pick.game.id == game.id);
-        
-        return Card(
-          color: isAlreadySelected ? Colors.grey[600] : Colors.grey[700],
-          margin: const EdgeInsets.only(bottom: 8),
-          child: ListTile(
-            leading: CircleAvatar(
-              backgroundColor: isAlreadySelected ? Colors.grey : Colors.blue,
-              child: Text(
-                game.sport,
-                style: const TextStyle(color: Colors.white, fontSize: 10),
-              ),
-            ),
-            title: Text(
-              '${game.awayTeam} @ ${game.homeTeam}',
-              style: TextStyle(
-                color: isAlreadySelected ? Colors.grey[400] : Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  game.formattedGameTime,
-                  style: TextStyle(color: Colors.grey[400]),
-                ),
-                Text(
-                  '${game.sport} • ${game.status.toUpperCase()}',
-                  style: TextStyle(color: Colors.grey[400], fontSize: 12),
-                ),
-                if (isAlreadySelected)
-                  Text(
-                    'Already selected',
-                    style: TextStyle(
-                      color: Colors.orange[300],
-                      fontSize: 12,
-                      fontStyle: FontStyle.italic,
-                    ),
-                  ),
-              ],
-            ),
-            trailing: Icon(
-              isAlreadySelected ? Icons.check_circle : Icons.arrow_forward_ios,
-              color: isAlreadySelected ? Colors.orange : Colors.white,
-              size: 16,
-            ),
-            onTap: isAlreadySelected ? null : () => _selectGame(game),
-          ),
-        );
-      },
-    );
-  }
 
-  Widget _buildPickSelection() {
-    if (_currentGame == null) return const SizedBox.shrink();
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Selected Game Info
-          Card(
-            color: Colors.grey[700],
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          '${_currentGame!.awayTeam} @ ${_currentGame!.homeTeam}',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          setState(() {
-                            _currentGame = null;
-                            _selectedPickType = null;
-                            _selectedPickSide = null;
-                            _selectedOdds = null;
-                          });
-                        },
-                        child: const Text('Change Game', style: TextStyle(color: Colors.green)),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    _currentGame!.formattedGameTime,
-                    style: TextStyle(color: Colors.grey[400]),
-                  ),
-                  Text(
-                    '${_currentGame!.sport} • ${_currentGame!.status.toUpperCase()}',
-                    style: TextStyle(color: Colors.grey[400], fontSize: 12),
-                  ),
-                ],
-              ),
-            ),
-          ),
 
-          const SizedBox(height: 16),
-
-          // Pick Type Selection
-          const Text(
-            'Choose bet type:',
-            style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            children: PickType.values.map((type) {
-              final isSelected = _selectedPickType == type;
-              return ChoiceChip(
-                label: Text(_getPickTypeDisplayName(type)),
-                selected: isSelected,
-                onSelected: (selected) {
-                  if (selected) _selectPickType(type);
-                },
-                selectedColor: Colors.green,
-                backgroundColor: Colors.grey[600],
-                labelStyle: TextStyle(
-                  color: isSelected ? Colors.white : Colors.grey[300],
-                ),
-              );
-            }).toList(),
-          ),
-
-          if (_selectedPickType != null) ...[
-            const SizedBox(height: 16),
-            const Text(
-              'Choose your pick:',
-              style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            _buildPickSideSelection(),
-          ],
-
-          if (_selectedPickSide != null) ...[
-            const SizedBox(height: 16),
-
-            // Pick Summary
-            Card(
-              color: Colors.green.withOpacity(0.2),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Your Pick:',
-                      style: TextStyle(
-                        color: Colors.green,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      _getPickDisplayText(),
-                      style: const TextStyle(color: Colors.white, fontSize: 16),
-                    ),
-                    if (_selectedOdds != null) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        'Odds: $_selectedOdds',
-                        style: TextStyle(color: Colors.grey[300]),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // Add Pick Button
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _addPickToList,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
-                child: Text(
-                  _selectedPicks.isEmpty ? 'Add Pick' : 'Add Another Pick',
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPickSideSelection() {
-    if (_selectedPickType == null) return const SizedBox.shrink();
-
-    List<PickSide> availableSides;
-    switch (_selectedPickType!) {
-      case PickType.moneyline:
-        availableSides = [PickSide.home, PickSide.away];
-        if (_currentGame!.sport == 'Soccer') {
-          availableSides.add(PickSide.draw);
-        }
-        break;
-      case PickType.spread:
-        availableSides = [PickSide.home, PickSide.away];
-        break;
-      case PickType.total:
-        availableSides = [PickSide.over, PickSide.under];
-        break;
-      case PickType.playerProp:
-        availableSides = [PickSide.over, PickSide.under];
-        break;
-    }
-
-    return Wrap(
-      spacing: 8,
-      children: availableSides.map((side) {
-        final isSelected = _selectedPickSide == side;
-        return ChoiceChip(
-          label: Text(_getPickSideDisplayName(side)),
-          selected: isSelected,
-          onSelected: (selected) {
-            if (selected) _selectPickSide(side);
-          },
-          selectedColor: Colors.green,
-          backgroundColor: Colors.grey[600],
-          labelStyle: TextStyle(
-            color: isSelected ? Colors.white : Colors.grey[300],
-          ),
-        );
-      }).toList(),
-    );
-  }
-
-  String _getPickTypeDisplayName(PickType type) {
-    switch (type) {
-      case PickType.moneyline:
-        return 'Moneyline';
-      case PickType.spread:
-        return 'Spread';
-      case PickType.total:
-        return 'Over/Under';
-      case PickType.playerProp:
-        return 'Player Prop';
-    }
-  }
-
-  String _getPickSideDisplayName(PickSide side) {
-    switch (side) {
-      case PickSide.home:
-        return _currentGame?.homeTeam ?? 'Home';
-      case PickSide.away:
-        return _currentGame?.awayTeam ?? 'Away';
-      case PickSide.over:
-        return 'Over';
-      case PickSide.under:
-        return 'Under';
-      case PickSide.draw:
-        return 'Draw';
-    }
-  }
-
-  String _getPickDisplayText([Pick? pick]) {
-    final game = pick?.game ?? _currentGame;
-    final pickType = pick?.pickType ?? _selectedPickType;
-    final pickSide = pick?.pickSide ?? _selectedPickSide;
-    
-    if (game == null || pickType == null || pickSide == null) {
-      return '';
-    }
+  String _getPickDisplayText(Pick pick) {
+    final game = pick.game;
+    final pickType = pick.pickType;
+    final pickSide = pick.pickSide;
 
     switch (pickType) {
       case PickType.moneyline:
@@ -973,18 +589,19 @@ class _CreatePickPageState extends State<CreatePickPage> {
         return '$side Total';
       
       case PickType.playerProp:
-        if (pick?.playerName != null && pick?.propType != null && pick?.propValue != null) {
+        if (pick.playerName != null && pick.propType != null && pick.propValue != null) {
           String side = pickSide == PickSide.over ? 'Over' : 'Under';
-          return '${pick!.playerName} $side ${pick.propValue} ${pick.propType}';
+          return '${pick.playerName} $side ${pick.propValue} ${pick.propType}';
         }
         String side = pickSide == PickSide.over ? 'Over' : 'Under';
         return 'Player Prop $side';
     }
   }
 
+
+
   @override
   void dispose() {
-    _searchController.dispose();
     _contentController.dispose();
     super.dispose();
   }

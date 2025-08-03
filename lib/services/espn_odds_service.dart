@@ -18,7 +18,7 @@ class ESPNOddsService {
 
   // ESPN API base URLs for betting data  
   final String _coreApiUrl = 'sports.core.api.espn.com';
-  final String _siteApiUrl = 'site.api.espn.com'; // Alternative working API
+  final String _siteApiUrl = 'site.api.espn.com'; // For basic game data
   
   // Cache for odds data to improve performance
   final Map<String, dynamic> _oddsCache = {};
@@ -103,9 +103,48 @@ class ESPNOddsService {
     }
   }
 
-  /// Fetches odds from all available ESPN sportsbook providers
+  /// Fetches odds from all available ESPN sportsbook providers using correct API patterns
   Future<Map<String, dynamic>> _fetchOddsFromAllProviders(String eventId, String sportPath) async {
-    // First try the site API (same as working ESPN calls)
+    
+    // Try the primary core API odds endpoint
+    try {
+      Uri coreOddsUri;
+      Map<String, String> headers = {
+        'Accept': 'application/json',
+        'User-Agent': 'WagerLoop/1.0',
+      };
+      
+      if (kIsWeb) {
+        // Use CORS proxy for web platform
+        final targetUrl = 'https://$_coreApiUrl/v2/sports/$sportPath/events/$eventId/competitions/$eventId/odds';
+        coreOddsUri = Uri.parse('https://api.allorigins.win/raw?url=${Uri.encodeComponent(targetUrl)}');
+      } else {
+        coreOddsUri = Uri.parse('https://$_coreApiUrl/v2/sports/$sportPath/events/$eventId/competitions/$eventId/odds');
+      }
+      
+      debugPrint('ESPN Core Odds API Call: $coreOddsUri');
+      
+      final coreResponse = await http.get(coreOddsUri, headers: headers);
+      
+      debugPrint('ESPN Core Odds API Response Status: ${coreResponse.statusCode}');
+      if (coreResponse.statusCode == 200) {
+        debugPrint('ESPN Core Odds API Response Body Length: ${coreResponse.body.length}');
+        final data = jsonDecode(coreResponse.body);
+        debugPrint('ESPN Core Odds API Response Keys: ${data.keys.toList()}');
+        
+        final result = _parseESPNOddsResponse(data);
+        if (result['odds'] != null && result['odds'] is Map && (result['odds'] as Map).isNotEmpty) {
+          debugPrint('Found odds data from core API with ${(result['odds'] as Map).length} providers');
+          return result;
+        }
+      } else {
+        debugPrint('ESPN Core Odds API failed with status: ${coreResponse.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('ESPN Core Odds API Error: $e');
+    }
+    
+    // Try the alternative site API summary endpoint which might contain odds
     try {
       Uri siteUri;
       Map<String, String> headers = {
@@ -114,106 +153,88 @@ class ESPNOddsService {
       };
       
       if (kIsWeb) {
-        // Use CORS proxy for web platform
         final targetUrl = 'https://$_siteApiUrl/apis/site/v2/sports/$sportPath/summary?event=$eventId';
         siteUri = Uri.parse('https://api.allorigins.win/raw?url=${Uri.encodeComponent(targetUrl)}');
       } else {
         siteUri = Uri.parse('https://$_siteApiUrl/apis/site/v2/sports/$sportPath/summary?event=$eventId');
       }
       
-      debugPrint('ESPN Odds API Call (Site): $siteUri');
+      debugPrint('ESPN Site Summary API Call: $siteUri');
       
       final siteResponse = await http.get(siteUri, headers: headers);
 
-      debugPrint('ESPN Odds API Response Status (Site): ${siteResponse.statusCode}');
+      debugPrint('ESPN Site Summary API Response Status: ${siteResponse.statusCode}');
       if (siteResponse.statusCode == 200) {
-        debugPrint('ESPN Odds API Response Body Length (Site): ${siteResponse.body.length}');
         final data = jsonDecode(siteResponse.body);
-        debugPrint('ESPN Odds API Response Keys (Site): ${data.keys.toList()}');
+        debugPrint('ESPN Site Summary API Response Keys: ${data.keys.toList()}');
         
-        // Check if odds data is available in the summary response
-        if (data['odds'] != null) {
-          debugPrint('Found odds data in ESPN summary response');
-          debugPrint('Odds data type: ${data['odds'].runtimeType}');
-          debugPrint('Odds data content: ${data['odds']}');
+        if (data['odds'] != null || data['pickcenter'] != null) {
+          debugPrint('Found odds data in ESPN site summary response');
           final result = _parseESPNSummaryResponse(data);
           if (result['odds'] != null && result['odds'] is Map && (result['odds'] as Map).isNotEmpty) {
+            debugPrint('Parsed odds data from site summary with ${(result['odds'] as Map).length} providers');
             return result;
           }
         }
       }
     } catch (e) {
-      debugPrint('ESPN Site API Error: $e');
+      debugPrint('ESPN Site Summary API Error: $e');
     }
-    
-    // Try direct odds API endpoint
+
+    // Try getting a list of all events and find this specific event with odds
     try {
-      Uri oddsUri;
-      Map<String, String> oddsHeaders = {
+      Uri eventsUri;
+      Map<String, String> headers = {
         'Accept': 'application/json',
         'User-Agent': 'WagerLoop/1.0',
       };
       
+      // Get current date for events endpoint
+      final now = DateTime.now();
+      final dateStr = '${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}';
+      
       if (kIsWeb) {
-        // Use CORS proxy for web platform
-        final targetUrl = 'https://$_coreApiUrl/v2/sports/$sportPath/events/$eventId/competitions/$eventId/odds';
-        oddsUri = Uri.parse('https://api.allorigins.win/raw?url=${Uri.encodeComponent(targetUrl)}');
+        final targetUrl = 'https://$_coreApiUrl/v2/sports/$sportPath/events?dates=$dateStr&limit=100';
+        eventsUri = Uri.parse('https://api.allorigins.win/raw?url=${Uri.encodeComponent(targetUrl)}');
       } else {
-        oddsUri = Uri.parse('https://$_coreApiUrl/v2/sports/$sportPath/events/$eventId/competitions/$eventId/odds');
+        eventsUri = Uri.parse('https://$_coreApiUrl/v2/sports/$sportPath/events?dates=$dateStr&limit=100');
       }
       
-      debugPrint('ESPN Direct Odds API Call: $oddsUri');
+      debugPrint('ESPN Events List API Call: $eventsUri');
       
-      final oddsResponse = await http.get(oddsUri, headers: oddsHeaders);
+      final eventsResponse = await http.get(eventsUri, headers: headers);
       
-      debugPrint('ESPN Direct Odds API Response Status: ${oddsResponse.statusCode}');
-      if (oddsResponse.statusCode == 200) {
-        final data = jsonDecode(oddsResponse.body);
-        debugPrint('ESPN Direct Odds API Response: ${data.keys.toList()}');
-        final result = _parseESPNOddsResponse(data);
-        if (result['odds'] != null && result['odds'] is Map && (result['odds'] as Map).isNotEmpty) {
-          return result;
+      debugPrint('ESPN Events List API Response Status: ${eventsResponse.statusCode}');
+      if (eventsResponse.statusCode == 200) {
+        final data = jsonDecode(eventsResponse.body);
+        debugPrint('ESPN Events List API Response Keys: ${data.keys.toList()}');
+        
+        // Look for our specific event in the list
+        if (data['items'] != null && data['items'] is List) {
+          final events = data['items'] as List;
+          debugPrint('Found ${events.length} events in list');
+          
+          for (var event in events) {
+            if (event['id']?.toString() == eventId) {
+              debugPrint('Found matching event with ID: $eventId');
+              if (event['competitions'] != null && (event['competitions'] as List).isNotEmpty) {
+                final competition = (event['competitions'] as List).first;
+                if (competition['odds'] != null) {
+                  debugPrint('Found odds in event competition data');
+                  return {
+                    'odds': _convertOddsListToMap(competition['odds'] is List ? competition['odds'] : [competition['odds']])
+                  };
+                }
+              }
+            }
+          }
         }
       }
     } catch (e) {
-      debugPrint('ESPN Direct Odds API Error: $e');
+      debugPrint('ESPN Events List API Error: $e');
     }
     
-    // Try alternative ESPN BET odds endpoint
-    try {
-      Uri espnBetUri;
-      Map<String, String> espnBetHeaders = {
-        'Accept': 'application/json',
-        'User-Agent': 'WagerLoop/1.0',
-      };
-      
-      if (kIsWeb) {
-        // Use CORS proxy for web platform
-        final targetUrl = 'https://$_siteApiUrl/apis/site/v2/sports/$sportPath/events/$eventId/odds';
-        espnBetUri = Uri.parse('https://api.allorigins.win/raw?url=${Uri.encodeComponent(targetUrl)}');
-      } else {
-        espnBetUri = Uri.parse('https://$_siteApiUrl/apis/site/v2/sports/$sportPath/events/$eventId/odds');
-      }
-      
-      debugPrint('ESPN BET Odds API Call: $espnBetUri');
-      
-      final espnBetResponse = await http.get(espnBetUri, headers: espnBetHeaders);
-      
-      debugPrint('ESPN BET Odds API Response Status: ${espnBetResponse.statusCode}');
-      if (espnBetResponse.statusCode == 200) {
-        final data = jsonDecode(espnBetResponse.body);
-        debugPrint('ESPN BET Odds API Response: ${data.keys.toList()}');
-        if (data['items'] != null && data['items'] is List && (data['items'] as List).isNotEmpty) {
-          return {
-            'odds': _convertOddsListToMap(data['items'])
-          };
-        }
-      }
-    } catch (e) {
-      debugPrint('ESPN BET Odds API Error: $e');
-    }
-    
-    debugPrint('No odds data found from any ESPN API endpoint');
+    debugPrint('No odds data found from any ESPN API endpoint for event: $eventId');
     return {};
   }
 
@@ -469,55 +490,114 @@ class ESPNOddsService {
       
       for (var item in oddsData) {
         if (item is Map<String, dynamic>) {
-          // Extract provider/sportsbook information
-          final provider = item['provider'];
-          final providerName = provider is Map ? (provider['name'] ?? 'Unknown') : 'Unknown';
+          // Extract provider/sportsbook information - try different structures
+          String providerName = 'Unknown';
+          String providerId = 'unknown';
           
-          debugPrint('Processing provider: $providerName');
+          if (item['provider'] != null) {
+            final provider = item['provider'];
+            if (provider is Map) {
+              providerName = provider['name']?.toString() ?? 'Unknown';
+              providerId = provider['id']?.toString() ?? 'unknown';
+            } else {
+              providerName = provider.toString();
+            }
+          } else if (item['details'] != null) {
+            providerName = item['details']?.toString() ?? 'ESPN';
+          } else if (item['name'] != null) {
+            providerName = item['name']?.toString() ?? 'ESPN';
+          } else {
+            providerName = 'ESPN';
+          }
           
-          // Extract betting markets in the new ESPN format
+          debugPrint('Processing provider: $providerName (ID: $providerId)');
+          
+          // Extract betting markets - try multiple formats
           final Map<String, dynamic> markets = {};
           
-          // Moneyline odds - use the direct moneyLine values
-          if (item['awayTeamOdds']?['moneyLine'] != null && item['homeTeamOdds']?['moneyLine'] != null) {
-            markets['moneyline'] = {
-              'away': {
-                'american': _formatOdds(item['awayTeamOdds']['moneyLine']),
-                'odds': item['awayTeamOdds']['moneyLine'],
-              },
-              'home': {
-                'american': _formatOdds(item['homeTeamOdds']['moneyLine']),
-                'odds': item['homeTeamOdds']['moneyLine'],
-              }
-            };
-            debugPrint('Added moneyline: Away ${item['awayTeamOdds']['moneyLine']}, Home ${item['homeTeamOdds']['moneyLine']}');
-          }
-          
-          // Spread odds - use the spread value and current spread odds
-          if (item['spread'] != null) {
-            final spreadValue = item['spread'];
-            final awaySpreadOdds = item['awayTeamOdds']?['current']?['spread']?['american'];
-            final homeSpreadOdds = item['homeTeamOdds']?['current']?['spread']?['american'];
+          // Try format 1: awayTeamOdds/homeTeamOdds structure
+          if (item['awayTeamOdds'] != null && item['homeTeamOdds'] != null) {
+            // Moneyline odds
+            final awayML = item['awayTeamOdds']['moneyLine'];
+            final homeML = item['homeTeamOdds']['moneyLine'];
+            if (awayML != null && homeML != null) {
+              markets['moneyline'] = {
+                'away': {
+                  'american': _formatOdds(awayML),
+                  'odds': awayML,
+                },
+                'home': {
+                  'american': _formatOdds(homeML),
+                  'odds': homeML,
+                }
+              };
+              debugPrint('Added moneyline: Away $awayML, Home $homeML');
+            }
             
-            markets['spread'] = {
-              'spread': spreadValue,
-              'away': {
-                'point': '+$spreadValue',
-                'odds': awaySpreadOdds ?? 'N/A',
-              },
-              'home': {
-                'point': '-$spreadValue', 
-                'odds': homeSpreadOdds ?? 'N/A',
-              }
-            };
-            debugPrint('Added spread: $spreadValue with odds Away: $awaySpreadOdds, Home: $homeSpreadOdds');
+            // Spread odds
+            if (item['spread'] != null) {
+              final spreadValue = item['spread'];
+              final awaySpreadOdds = item['awayTeamOdds']['current']?['spread']?['american'] ?? 
+                                    item['awayTeamOdds']['spreadOdds'];
+              final homeSpreadOdds = item['homeTeamOdds']['current']?['spread']?['american'] ?? 
+                                    item['homeTeamOdds']['spreadOdds'];
+              
+              markets['spread'] = {
+                'spread': spreadValue,
+                'away': {
+                  'point': '+$spreadValue',
+                  'odds': _formatOdds(awaySpreadOdds),
+                },
+                'home': {
+                  'point': '-$spreadValue', 
+                  'odds': _formatOdds(homeSpreadOdds),
+                }
+              };
+              debugPrint('Added spread: $spreadValue with odds Away: $awaySpreadOdds, Home: $homeSpreadOdds');
+            }
           }
           
-          // Over/Under (Totals) - use overUnder value and current over/under odds
+          // Try format 2: direct odds structure
+          if (item['moneyline'] != null) {
+            final ml = item['moneyline'];
+            if (ml is Map) {
+              markets['moneyline'] = {
+                'away': {
+                  'american': _formatOdds(ml['away']),
+                  'odds': ml['away'],
+                },
+                'home': {
+                  'american': _formatOdds(ml['home']),
+                  'odds': ml['home'],
+                }
+              };
+            }
+          }
+          
+          if (item['spread'] != null && item['spread'] is Map) {
+            final spread = item['spread'];
+            markets['spread'] = {
+              'spread': spread['value'] ?? spread['line'],
+              'away': {
+                'point': '+${spread['value'] ?? spread['line']}',
+                'odds': _formatOdds(spread['awayOdds'] ?? spread['away']),
+              },
+              'home': {
+                'point': '-${spread['value'] ?? spread['line']}',
+                'odds': _formatOdds(spread['homeOdds'] ?? spread['home']),
+              }
+            };
+          }
+          
+          // Over/Under (Totals) - try multiple formats
           if (item['overUnder'] != null) {
             final totalValue = item['overUnder'];
-            final overOdds = item['current']?['over']?['american'] ?? item['overOdds'];
-            final underOdds = item['current']?['under']?['american'] ?? item['underOdds'];
+            final overOdds = item['current']?['over']?['american'] ?? 
+                            item['overOdds'] ?? 
+                            item['total']?['over'];
+            final underOdds = item['current']?['under']?['american'] ?? 
+                             item['underOdds'] ?? 
+                             item['total']?['under'];
             
             markets['total'] = {
               'total': totalValue,
@@ -531,16 +611,31 @@ class ESPNOddsService {
               }
             };
             debugPrint('Added totals: O/U $totalValue with Over: $overOdds, Under: $underOdds');
+          } else if (item['total'] != null && item['total'] is Map) {
+            final total = item['total'];
+            markets['total'] = {
+              'total': total['value'] ?? total['line'],
+              'over': {
+                'american': _formatOdds(total['over']),
+                'odds': total['over'],
+              },
+              'under': {
+                'american': _formatOdds(total['under']),
+                'odds': total['under'],
+              }
+            };
           }
           
           if (markets.isNotEmpty) {
             result[providerName] = {
               'provider': providerName,
-              'providerId': provider?['id']?.toString() ?? 'unknown',
+              'providerId': providerId,
               'lastUpdated': DateTime.now().toIso8601String(),
               ...markets,
             };
             debugPrint('Added markets for $providerName: ${markets.keys.toList()}');
+          } else {
+            debugPrint('No valid markets found for $providerName - item keys: ${item.keys.toList()}');
           }
         }
       }
@@ -550,6 +645,7 @@ class ESPNOddsService {
       return result;
     } catch (e) {
       debugPrint('Error converting odds list to map: $e');
+      debugPrint('Odds data causing error: $oddsData');
       return {};
     }
   }
@@ -776,6 +872,64 @@ class ESPNOddsService {
     }
   }
 
+  /// Test method to debug ESPN API responses
+  Future<void> debugESPNAPI() async {
+    try {
+      debugPrint('=== ESPN API DEBUG TEST ===');
+      
+      // Test different endpoints for NFL
+      final endpoints = [
+        'https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard',
+        'https://sports.core.api.espn.com/v2/sports/football/leagues/nfl/events',
+      ];
+      
+      for (String endpoint in endpoints) {
+        try {
+          debugPrint('\n--- Testing endpoint: $endpoint ---');
+          final response = await http.get(
+            Uri.parse(endpoint),
+            headers: {
+              'Accept': 'application/json',
+              'User-Agent': 'WagerLoop/1.0',
+            },
+          );
+          
+          debugPrint('Status: ${response.statusCode}');
+          if (response.statusCode == 200) {
+            final data = jsonDecode(response.body);
+            debugPrint('Response keys: ${data.keys.toList()}');
+            
+            if (data['events'] != null && (data['events'] as List).isNotEmpty) {
+              final firstEvent = (data['events'] as List).first;
+              debugPrint('First event keys: ${firstEvent.keys.toList()}');
+              debugPrint('First event ID: ${firstEvent['id']}');
+              
+              if (firstEvent['competitions'] != null && (firstEvent['competitions'] as List).isNotEmpty) {
+                final competition = (firstEvent['competitions'] as List).first;
+                debugPrint('Competition keys: ${competition.keys.toList()}');
+                
+                if (competition['odds'] != null) {
+                  debugPrint('FOUND ODDS! Type: ${competition['odds'].runtimeType}');
+                  debugPrint('Odds content: ${competition['odds']}');
+                } else {
+                  debugPrint('No odds in competition');
+                }
+              }
+            }
+          } else {
+            debugPrint('Failed with status: ${response.statusCode}');
+          }
+        } catch (e) {
+          debugPrint('Error testing $endpoint: $e');
+        }
+      }
+      
+      debugPrint('=== END ESPN API DEBUG TEST ===');
+    } catch (e) {
+      debugPrint('Debug test error: $e');
+    }
+  }
+
   /// Helper method to safely parse odds values from ESPN API
   /// ESPN sometimes returns odds as strings, so we need to convert them to integers
   int? _parseOddsValue(dynamic value) {
@@ -813,6 +967,76 @@ class ESPNOddsService {
       debugPrint('Error parsing double value $value: $e');
       return null;
     }
+  }
+
+  /// Fetch current games with odds from ESPN scoreboard
+  /// This is often more reliable than individual game endpoints
+  Future<Map<String, Map<String, dynamic>>> fetchTodaysGamesWithOdds(String sport) async {
+    try {
+      final sportPath = _sportPaths[sport];
+      if (sportPath == null) return {};
+
+      // Get today's date for scoreboard
+      final now = DateTime.now();
+      final dateStr = '${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}';
+
+      Uri scoreboardUri;
+      Map<String, String> headers = {
+        'Accept': 'application/json',
+        'User-Agent': 'WagerLoop/1.0',
+      };
+
+      if (kIsWeb) {
+        final targetUrl = 'https://$_siteApiUrl/apis/site/v2/sports/$sportPath/scoreboard?dates=$dateStr';
+        scoreboardUri = Uri.parse('https://api.allorigins.win/raw?url=${Uri.encodeComponent(targetUrl)}');
+      } else {
+        scoreboardUri = Uri.parse('https://$_siteApiUrl/apis/site/v2/sports/$sportPath/scoreboard?dates=$dateStr');
+      }
+
+      debugPrint('ESPN Scoreboard Odds API Call: $scoreboardUri');
+
+      final response = await http.get(scoreboardUri, headers: headers);
+
+      debugPrint('ESPN Scoreboard API Response Status: ${response.statusCode}');
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        debugPrint('ESPN Scoreboard API Response Keys: ${data.keys.toList()}');
+
+        final Map<String, Map<String, dynamic>> gamesWithOdds = {};
+
+        if (data['events'] != null && data['events'] is List) {
+          final events = data['events'] as List;
+          debugPrint('Found ${events.length} events in scoreboard');
+
+          for (var event in events) {
+            final eventId = event['id']?.toString();
+            if (eventId == null) continue;
+
+            // Check if this event has odds in competitions
+            if (event['competitions'] != null && (event['competitions'] as List).isNotEmpty) {
+              final competition = (event['competitions'] as List).first;
+              if (competition['odds'] != null && (competition['odds'] as List).isNotEmpty) {
+                debugPrint('Found odds for event $eventId in scoreboard');
+                final oddsData = {
+                  'odds': _convertOddsListToMap(competition['odds']),
+                  'lastUpdated': DateTime.now().toIso8601String(),
+                };
+                gamesWithOdds[eventId] = oddsData;
+              }
+            }
+          }
+        }
+
+        debugPrint('Found odds for ${gamesWithOdds.length} games from scoreboard');
+        return gamesWithOdds;
+      } else {
+        debugPrint('ESPN Scoreboard API failed with status: ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('ESPN Scoreboard Odds Error: $e');
+    }
+
+    return {};
   }
 
   /// Creates mock odds data for testing purposes

@@ -7,6 +7,7 @@ import 'referees_info_page.dart';
 import 'wager_gpt_page.dart';
 import 'weather_info_page.dart';
 import 'communities_page.dart';
+import '../widgets/sketchfab_3d_widget.dart';
 
 class DiscoverPage extends StatefulWidget {
   const DiscoverPage({Key? key}) : super(key: key);
@@ -998,6 +999,13 @@ class _DiscoverPageState extends State<DiscoverPage> with TickerProviderStateMix
                   );
                 },
               ),
+            ),
+            // Sketchfab 3D Boxing Ring in top right corner - HIGHEST Z-INDEX
+            Sketchfab3DWidget(
+              size: 100.0, // Bigger for testing
+              top: 10, // Move higher
+              right: 10, // Move more to the right
+              sketchfabUrl: 'https://sketchfab.com/models/861f09ce71014e4baebeb79b2f99b1d2/embed',
             ),
           ],
         ),
