@@ -400,6 +400,88 @@ class CommunityService {
     }).toList();
   }
 
+  /// Updates a member's role in a community
+  /// 
+  /// Parameters:
+  ///   - communityId: ID of the community
+  ///   - memberId: ID of the member whose role to update
+  ///   - newRole: New role to assign ('admin', 'moderator', 'member')
+  /// 
+  /// Returns: Updated member data
+  /// 
+  /// Throws: Exception if update fails or user doesn't have permission
+  Future<Map<String, dynamic>> updateMemberRole({
+    required String communityId,
+    required String memberId,
+    required String newRole,
+  }) async {
+    final user = _supabase.auth.currentUser;
+    if (user == null) throw Exception('User not authenticated');
+
+    // Validate role
+    const validRoles = ['admin', 'moderator', 'member'];
+    if (!validRoles.contains(newRole)) {
+      throw Exception('Invalid role: $newRole');
+    }
+
+    // Check if current user is the owner of the community
+    final community = await _supabase
+        .from('communities')
+        .select('creator_id')
+        .eq('id', communityId)
+        .single();
+
+    if (community['creator_id'] != user.id) {
+      throw Exception('Only community owners can assign roles');
+    }
+
+    // Check if target member exists in the community
+    final existingMember = await _supabase
+        .from('community_members')
+        .select('role')
+        .eq('community_id', communityId)
+        .eq('user_id', memberId)
+        .maybeSingle();
+
+    if (existingMember == null) {
+      throw Exception('Member not found in community');
+    }
+
+    // Prevent changing owner role
+    if (existingMember['role'] == 'owner') {
+      throw Exception('Cannot change owner role');
+    }
+
+    // Update the member's role
+    final response = await _supabase
+        .from('community_members')
+        .update({'role': newRole})
+        .eq('community_id', communityId)
+        .eq('user_id', memberId);
+
+    // Get updated member data with profile info
+    final updatedMember = await _supabase
+        .from('community_members')
+        .select('''
+          role,
+          joined_at,
+          profiles (
+            id,
+            username,
+            avatar_url
+          )
+        ''')
+        .eq('community_id', communityId)
+        .eq('user_id', memberId)
+        .single();
+
+    return {
+      'role': updatedMember['role'],
+      'joined_at': updatedMember['joined_at'],
+      'user': updatedMember['profiles'],
+    };
+  }
+
   /// Gets communities by sport
   /// 
   /// Parameters:

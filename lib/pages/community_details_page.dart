@@ -790,27 +790,9 @@ class _CommunityDetailsPageState extends State<CommunityDetailsPage>
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        if (role == 'owner') ...[
+                        if (role != 'member') ...[
                           const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: Colors.purple.withOpacity(0.3),
-                              borderRadius: BorderRadius.circular(6),
-                              border: Border.all(
-                                color: Colors.purple.withOpacity(0.5),
-                                width: 0.5,
-                              ),
-                            ),
-                            child: Text(
-                              'OWNER',
-                              style: TextStyle(
-                                color: Colors.purple[300],
-                                fontSize: 8,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
+                          _buildRoleBadge(role),
                         ],
                       ],
                     ),
@@ -825,11 +807,137 @@ class _CommunityDetailsPageState extends State<CommunityDetailsPage>
                   ],
                 ),
               ),
+              
+              // Role management for owners
+              if (_isOwner() && role != 'owner') ...[
+                const SizedBox(width: 8),
+                PopupMenuButton<String>(
+                  icon: Icon(
+                    Icons.more_vert,
+                    color: Colors.grey[400],
+                    size: 16,
+                  ),
+                  color: Colors.grey[800],
+                  onSelected: (newRole) => _updateMemberRole(user['id'], newRole, index),
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                      value: 'admin',
+                      child: Row(
+                        children: [
+                          Icon(Icons.admin_panel_settings, color: Colors.orange[300], size: 16),
+                          const SizedBox(width: 8),
+                          const Text('Make Admin', style: TextStyle(color: Colors.white)),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: 'moderator',
+                      child: Row(
+                        children: [
+                          Icon(Icons.shield, color: Colors.blue[300], size: 16),
+                          const SizedBox(width: 8),
+                          const Text('Make Moderator', style: TextStyle(color: Colors.white)),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: 'member',
+                      child: Row(
+                        children: [
+                          Icon(Icons.person, color: Colors.grey[400], size: 16),
+                          const SizedBox(width: 8),
+                          const Text('Make Member', style: TextStyle(color: Colors.white)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ],
           ),
         );
       },
     );
+  }
+
+  Widget _buildRoleBadge(String role) {
+    Color color;
+    Color borderColor;
+    String label;
+    
+    switch (role) {
+      case 'owner':
+        color = Colors.purple.withOpacity(0.3);
+        borderColor = Colors.purple.withOpacity(0.5);
+        label = 'OWNER';
+        break;
+      case 'admin':
+        color = Colors.orange.withOpacity(0.3);
+        borderColor = Colors.orange.withOpacity(0.5);
+        label = 'ADMIN';
+        break;
+      case 'moderator':
+        color = Colors.blue.withOpacity(0.3);
+        borderColor = Colors.blue.withOpacity(0.5);
+        label = 'MOD';
+        break;
+      default:
+        return const SizedBox.shrink();
+    }
+    
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: borderColor,
+          width: 0.5,
+        ),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: role == 'owner' ? Colors.purple[300] :
+                role == 'admin' ? Colors.orange[300] : Colors.blue[300],
+          fontSize: 8,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+
+  bool _isOwner() {
+    final user = SupabaseConfig.supabase.auth.currentUser;
+    return user != null && _community != null && _community!.creatorId == user.id;
+  }
+
+  Future<void> _updateMemberRole(String memberId, String newRole, int memberIndex) async {
+    try {
+      final updatedMember = await _communityService.updateMemberRole(
+        communityId: widget.communityId,
+        memberId: memberId,
+        newRole: newRole,
+      );
+
+      setState(() {
+        _members[memberIndex] = updatedMember;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Role updated to ${newRole.toUpperCase()}'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to update role: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   Future<void> _selectMedia() async {
