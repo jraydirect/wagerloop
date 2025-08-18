@@ -203,7 +203,7 @@ class _CreatePickPageState extends State<CreatePickPage> {
     });
   }
 
-  // New: Create post from odds picks
+  // Show pick creation dialog with caption input
   void _createPostFromOddsPicks() async {
     if (_oddsPickSlip.isEmpty) return;
 
@@ -232,11 +232,63 @@ class _CreatePickPageState extends State<CreatePickPage> {
       _isParlay = picks.length > 1;
     });
 
-    // Create the post
-    await _createPickPost();
+    // Show the picks summary screen instead of immediately creating post
+    _showPicksSummaryScreen();
   }
 
+  // Show the picks summary screen for caption input
+  void _showPicksSummaryScreen() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => _buildPicksSummaryPage(),
+      ),
+    ).then((result) {
+      // If user created a post, navigate back with the result
+      if (result != null) {
+        Navigator.pop(context, result);
+      }
+    });
+  }
 
+  // Build the picks summary page as a separate screen
+  Widget _buildPicksSummaryPage() {
+    return Scaffold(
+      backgroundColor: Colors.grey[800],
+      appBar: AppBar(
+        title: Text(_isParlay ? 'Create Parlay' : 'Create Pick'),
+        backgroundColor: Colors.grey[800],
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
+        actions: [
+          TextButton(
+            onPressed: _isCreatingPost ? null : () async {
+              await _createPickPost();
+            },
+            child: _isCreatingPost
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : const Text(
+                    'Post',
+                    style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
+                  ),
+          ),
+        ],
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: _buildSelectedPicksSummary(),
+        ),
+      ),
+    );
+  }
 
   // Helper: Parse market type to PickType
   PickType _parsePickType(String? marketType) {
@@ -257,35 +309,12 @@ class _CreatePickPageState extends State<CreatePickPage> {
     return Scaffold(
       backgroundColor: Colors.grey[800],
       appBar: AppBar(
-        title: Text(_isParlay ? 'Create Parlay' : 'Create Pick'),
+        title: const Text('Create Pick'),
         backgroundColor: Colors.grey[800],
-        actions: [
-          if (_selectedPicks.isNotEmpty)
-            TextButton(
-              onPressed: _isCreatingPost ? null : _createPickPost,
-              child: _isCreatingPost
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : const Text(
-                      'Post',
-                      style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
-                    ),
-            ),
-        ],
       ),
       body: SafeArea(
         child: Column(
           children: [
-            // Show selected picks summary if any
-            if (_selectedPicks.isNotEmpty) 
-              _buildSelectedPicksSummary(),
-
             // Main content area - custom odds display
             Expanded(
               child: CustomOddsDisplayWidget(
@@ -309,186 +338,188 @@ class _CreatePickPageState extends State<CreatePickPage> {
   }
 
   Widget _buildSelectedPicksSummary() {
-    return Container(
-      margin: const EdgeInsets.all(16),
+    return Padding(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: _isParlay ? Colors.green.withOpacity(0.2) : Colors.green.withOpacity(0.2),
-        border: Border.all(
-          color: _isParlay ? Colors.green.withOpacity(0.5) : Colors.green.withOpacity(0.5),
-        ),
-        borderRadius: BorderRadius.circular(12),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           // Header with parlay info
-          Row(
-            children: [
-              Icon(
-                _isParlay ? Icons.layers : Icons.sports_basketball,
-                color: _isParlay ? Colors.green : Colors.green,
-                size: 20,
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: _isParlay ? Colors.green.withOpacity(0.2) : Colors.green.withOpacity(0.2),
+              border: Border.all(
+                color: _isParlay ? Colors.green.withOpacity(0.5) : Colors.green.withOpacity(0.5),
               ),
-              const SizedBox(width: 8),
-              Text(
-                _isParlay ? '${_selectedPicks.length}-Leg Parlay' : 'Single Pick',
-                style: TextStyle(
-                  color: _isParlay ? Colors.green : Colors.green,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  _isParlay ? Icons.layers : Icons.sports_basketball,
+                  color: Colors.green,
+                  size: 20,
                 ),
-              ),
-              const Spacer(),
-              if (_isParlay)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.yellow.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.yellow.withOpacity(0.5)),
+                const SizedBox(width: 8),
+                Text(
+                  _isParlay ? '${_selectedPicks.length}-Leg Parlay' : 'Single Pick',
+                  style: const TextStyle(
+                    color: Colors.green,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
                   ),
-                  child: Text(
-                    getParlayOdds() ?? '+0',
-                    style: const TextStyle(
-                      color: Colors.yellow,
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
+                ),
+                const Spacer(),
+                if (_isParlay)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.yellow.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.yellow.withOpacity(0.5)),
+                    ),
+                    child: Text(
+                      getParlayOdds() ?? '+0',
+                      style: const TextStyle(
+                        color: Colors.yellow,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
+          
           const SizedBox(height: 16),
           
           // Picks list with improved formatting
-          Column(
-            children: _selectedPicks.asMap().entries.map((entry) {
-              final index = entry.key;
-              final pick = entry.value;
-              return Container(
-                margin: const EdgeInsets.only(bottom: 12),
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.grey[800],
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: _isParlay ? Colors.green.withOpacity(0.3) : Colors.green.withOpacity(0.3),
-                  ),
+          ..._selectedPicks.asMap().entries.map((entry) {
+            final index = entry.key;
+            final pick = entry.value;
+            return Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.grey[700],
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Colors.grey[600]!,
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Game matchup
+                            Text(
+                              '${pick.game.awayTeam} @ ${pick.game.homeTeam}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            // Game time and sport
+                            Text(
+                              'Today • ${pick.game.sport}',
+                              style: TextStyle(
+                                color: Colors.grey[400],
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => _removePick(index),
+                        icon: const Icon(Icons.close, color: Colors.red, size: 20),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  // Pick details with better layout
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: Colors.green.withOpacity(0.3),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Game matchup
-                              Text(
-                                '${pick.game.awayTeam} @ ${pick.game.homeTeam}',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              // Game time and sport
-                              Text(
-                                '${pick.game.formattedGameTime} • ${pick.game.sport}',
-                                style: TextStyle(
-                                  color: Colors.grey[400],
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
+                          child: Text(
+                            _getPickDisplayText(pick),
+                            style: const TextStyle(
+                              color: Colors.green,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
                           ),
                         ),
-                        IconButton(
-                          onPressed: () => _removePick(index),
-                          icon: const Icon(Icons.close, color: Colors.red, size: 20),
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.yellow.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            pick.odds,
+                            style: const TextStyle(
+                              color: Colors.yellow,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
-                    // Pick details with better layout
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: (_isParlay ? Colors.green : Colors.green).withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: (_isParlay ? Colors.green : Colors.green).withOpacity(0.3),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Text(
-                              _getPickDisplayText(pick),
-                              style: TextStyle(
-                                color: _isParlay ? Colors.green : Colors.green,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: Colors.yellow.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              pick.odds,
-                              style: const TextStyle(
-                                color: Colors.yellow,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }).toList(),
-          ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+          
+          const SizedBox(height: 16),
           
           // Comment text field
-          if (_selectedPicks.isNotEmpty) ...[
-            const SizedBox(height: 16),
-            TextField(
-              controller: _contentController,
-              style: const TextStyle(color: Colors.white),
-              maxLines: 2,
-              decoration: InputDecoration(
-                hintText: _isParlay ? 'Add a comment about your parlay...' : 'Add a comment about your pick...',
-                hintStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
-                filled: true,
-                fillColor: Colors.grey[700],
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
-                contentPadding: const EdgeInsets.all(16),
+          TextField(
+            controller: _contentController,
+            style: const TextStyle(color: Colors.white),
+            maxLines: 3,
+            decoration: InputDecoration(
+              hintText: _isParlay ? 'Add a comment about your parlay...' : 'Add a comment about your pick...',
+              hintStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
+              filled: true,
+              fillColor: Colors.grey[700],
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
               ),
+              contentPadding: const EdgeInsets.all(16),
             ),
-          ],
+          ),
           
           // Parlay odds summary (larger display)
           if (_isParlay) ...[
             const SizedBox(height: 16),
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
@@ -516,7 +547,7 @@ class _CreatePickPageState extends State<CreatePickPage> {
                     getParlayOdds() ?? '+0',
                     style: const TextStyle(
                       color: Colors.yellow,
-                      fontSize: 24,
+                      fontSize: 32,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
