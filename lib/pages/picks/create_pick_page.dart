@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../models/sports/game.dart';
 import '../../models/pick_post.dart';
-import '../../services/sports_api_service.dart';
+
 import '../../services/supabase_config.dart';
 import '../../services/auth_service.dart';
-import '../../widgets/all_games_odds_widget.dart';
+import '../../widgets/custom_odds_display_widget.dart';
 import '../../widgets/pick_slip_widget.dart';
 
 class CreatePickPage extends StatefulWidget {
@@ -153,7 +153,7 @@ class _CreatePickPageState extends State<CreatePickPage> {
     return decimalToAmerican(product);
   }
 
-  // New: Handle pick selection from odds widget
+  // Handle pick selection from custom odds widget
   void _onOddsPickSelected(Map<String, dynamic> pickData) {
     debugPrint('🎯 CreatePickPage received pick data: $pickData');
     
@@ -173,23 +173,6 @@ class _CreatePickPageState extends State<CreatePickPage> {
         // Update parlay status
         _isParlay = _oddsPickSlip.length > 1;
         debugPrint('🎰 Parlay status: $_isParlay');
-        
-        // Show confirmation
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Added to pick slip: ${_getOddsPickDisplayText(pickData)}'),
-            backgroundColor: Colors.green,
-            duration: const Duration(seconds: 3),
-            behavior: SnackBarBehavior.floating,
-            action: SnackBarAction(
-              label: 'View',
-              textColor: Colors.white,
-              onPressed: () {
-                // Could scroll to pick slip or expand it
-              },
-            ),
-          ),
-        );
       } else {
         debugPrint('⚠️ Pick already exists in slip');
         ScaffoldMessenger.of(context).showSnackBar(
@@ -253,20 +236,7 @@ class _CreatePickPageState extends State<CreatePickPage> {
     await _createPickPost();
   }
 
-  // Helper: Convert odds pick to display text
-  String _getOddsPickDisplayText(Map<String, dynamic> pick) {
-    String game = '';
-    if (pick['team1']?.isNotEmpty == true && pick['team2']?.isNotEmpty == true) {
-      game = '${pick['team1']} vs ${pick['team2']}';
-    } else {
-      game = pick['gameText'] ?? 'Unknown Game';
-    }
-    
-    String market = pick['marketType'] ?? 'Bet';
-    String odds = pick['odds'] ?? 'N/A';
-    
-    return '$game - $market ($odds)';
-  }
+
 
   // Helper: Parse market type to PickType
   PickType _parsePickType(String? marketType) {
@@ -316,10 +286,12 @@ class _CreatePickPageState extends State<CreatePickPage> {
             if (_selectedPicks.isNotEmpty) 
               _buildSelectedPicksSummary(),
 
-                                      // Main content area - full width odds widget
+            // Main content area - custom odds display
             Expanded(
-              child: AllGamesOddsWidget(
-                onPickSelected: _onOddsPickSelected,
+              child: CustomOddsDisplayWidget(
+                onOddsSelected: _onOddsPickSelected,
+                preferredBookmaker: 'fanduel', // User's preferred bookmaker
+                markets: ['h2h', 'spreads', 'totals'], // Markets to show
               ),
             ),
             
